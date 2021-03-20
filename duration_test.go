@@ -8,7 +8,7 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-func TestOfDuration(t *testing.T) {
+func TestDurationOf(t *testing.T) {
 	for _, tt := range []struct {
 		name string
 		of   chrono.Extent
@@ -41,8 +41,8 @@ func TestOfDuration(t *testing.T) {
 		},
 		{
 			name: "of hours",
-			of:   2.5 * chrono.Hour,
-			nsec: 9000000000000,
+			of:   2 * chrono.Hour,
+			nsec: 7200000000000,
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -104,6 +104,65 @@ func TestDurationUnits(t *testing.T) {
 				t.Fatalf("%v() = %f, want %f",
 					runtime.FuncForPC(reflect.ValueOf(tt.f).Pointer()).Name(),
 					out, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDurationFormat(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		of        chrono.Extent
+		exclusive []chrono.Designator
+		expected  string
+	}{
+		{
+			name:      "exclusive hms",
+			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
+			exclusive: []chrono.Designator{chrono.Hours, chrono.Minutes, chrono.Seconds},
+			expected:  "PT1H15M30.5S",
+		},
+		{
+			name:      "exclusive hm",
+			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 600*chrono.Millisecond,
+			exclusive: []chrono.Designator{chrono.Hours, chrono.Minutes},
+			expected:  "PT1H15.51M",
+		},
+		{
+			name:      "exclusive hs",
+			of:        12*chrono.Hour + 1*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
+			exclusive: []chrono.Designator{chrono.Hours, chrono.Seconds},
+			expected:  "PT12H90.5S",
+		},
+		{
+			name:      "exclusive h",
+			of:        1*chrono.Hour + 30*chrono.Minute + 36*chrono.Second + 36*chrono.Millisecond,
+			exclusive: []chrono.Designator{chrono.Hours},
+			expected:  "PT1.51001H",
+		},
+		{
+			name:      "exclusive ms",
+			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
+			exclusive: []chrono.Designator{chrono.Minutes, chrono.Seconds},
+			expected:  "PT75M30.5S",
+		},
+		{
+			name:      "exclusive m",
+			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 600*chrono.Millisecond,
+			exclusive: []chrono.Designator{chrono.Minutes},
+			expected:  "PT75.51M",
+		},
+		{
+			name:      "exclusive s",
+			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
+			exclusive: []chrono.Designator{chrono.Seconds},
+			expected:  "PT4530.5S",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			d := chrono.DurationOf(tt.of)
+			if out := d.Format(tt.exclusive...); out != tt.expected {
+				t.Fatalf("formatted duration = %s, want %s", out, tt.expected)
 			}
 		})
 	}
