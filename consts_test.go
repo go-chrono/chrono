@@ -32,7 +32,7 @@ func TestWeekdayString(t *testing.T) {
 	}
 }
 
-func TestMondayString(t *testing.T) {
+func TestMonthString(t *testing.T) {
 	for _, tt := range []struct {
 		day      chrono.Month
 		expected string
