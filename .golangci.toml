@@ -1,0 +1,12 @@
+[linters-settings]
+
+  [linters-settings.golint]
+    min-confidence = 0.0
+
+[linters]
+  disable-all = true
+  enable = [
+    "goimports",
+    "govet",
+    "staticcheck"
+  ]
