@@ -194,6 +194,6 @@ func MaxDuration() *Duration {
 	return &maxDuration
 }
 
-var minDuration = Duration{secs: 0, nsec: 0}
+var minDuration = Duration{secs: math.MinInt64, nsec: 0}
 
 var maxDuration = Duration{secs: math.MaxInt64, nsec: 1e9 - 1}
