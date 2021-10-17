@@ -77,7 +77,7 @@ func parseDuration(s string, periodAllowed bool) (secs int64, nsec uint32, err e
 
 				_secsInt := int64(_secs)
 
-				// TODO check overflow
+				// TODO check overflow and underflow
 				secs += _secsInt
 				nsec += _nsec
 
