@@ -45,29 +45,6 @@ func (d Duration) CanAdd(d2 Duration) bool {
 	return err == nil
 }
 
-func checkAdd(v1, v2 int64) (underflows, overflows bool) {
-	if v2 > 0 {
-		v := math.MaxInt64 - v1
-		if v < 0 {
-			v = -v
-		}
-
-		if v < v2 {
-			return false, true
-		}
-	} else if v2 < 0 {
-		v := math.MinInt64 + v1
-		if v < 0 {
-			v = -v
-		}
-
-		if -v > v2 { // v < -v2 can't be used because -math.MinInt64 > math.MaxInt64
-			return true, false
-		}
-	}
-	return false, false
-}
-
 func (d Duration) add(d2 Duration) (Duration, error) {
 	if under, over := checkAdd(d.secs, d2.secs); under {
 		return Duration{}, fmt.Errorf("d2 + d underflows Duration seconds")
@@ -89,6 +66,29 @@ func (d Duration) add(d2 Duration) (Duration, error) {
 	out.secs += secs
 	out.nsec = nsec
 	return out, nil
+}
+
+func checkAdd(v1, v2 int64) (underflows, overflows bool) {
+	if v2 > 0 {
+		v := math.MaxInt64 - v1
+		if v < 0 {
+			v = -v
+		}
+
+		if v < v2 {
+			return false, true
+		}
+	} else if v2 < 0 {
+		v := math.MinInt64 + v1
+		if v < 0 {
+			v = -v
+		}
+
+		if -v > v2 { // v < -v2 can't be used because -math.MinInt64 > math.MaxInt64
+			return true, false
+		}
+	}
+	return false, false
 }
 
 // Nanoseconds returns the duration as a floating point number of nanoseconds.
