@@ -15,34 +15,64 @@ func TestDurationOf(t *testing.T) {
 		nsec float64
 	}{
 		{
-			name: "of nanoseconds",
+			name: "of positive nanoseconds",
 			of:   9000000000000 * chrono.Nanosecond,
 			nsec: 9000000000000,
 		},
 		{
-			name: "of microsecond",
+			name: "of positive microsecond",
 			of:   9000000000 * chrono.Microsecond,
 			nsec: 9000000000000,
 		},
 		{
-			name: "of milliseconds",
+			name: "of positive milliseconds",
 			of:   9000000 * chrono.Millisecond,
 			nsec: 9000000000000,
 		},
 		{
-			name: "of seconds",
+			name: "of positive seconds",
 			of:   9000 * chrono.Second,
 			nsec: 9000000000000,
 		},
 		{
-			name: "of minutes",
+			name: "of positive minutes",
 			of:   150 * chrono.Minute,
 			nsec: 9000000000000,
 		},
 		{
-			name: "of hours",
+			name: "of positive hours",
 			of:   2 * chrono.Hour,
 			nsec: 7200000000000,
+		},
+		{
+			name: "of negative nanoseconds",
+			of:   -9000000000000 * chrono.Nanosecond,
+			nsec: -9000000000000,
+		},
+		{
+			name: "of negative microsecond",
+			of:   -9000000000 * chrono.Microsecond,
+			nsec: -9000000000000,
+		},
+		{
+			name: "of negative milliseconds",
+			of:   -9000000 * chrono.Millisecond,
+			nsec: -9000000000000,
+		},
+		{
+			name: "of negative seconds",
+			of:   -9000 * chrono.Second,
+			nsec: -9000000000000,
+		},
+		{
+			name: "of negative minutes",
+			of:   -150 * chrono.Minute,
+			nsec: -9000000000000,
+		},
+		{
+			name: "of negative hours",
+			of:   -2 * chrono.Hour,
+			nsec: -7200000000000,
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -62,40 +92,76 @@ func TestDurationUnits(t *testing.T) {
 		expected float64
 	}{
 		{
-			name:     "nanoseconds",
+			name:     "positive nanoseconds",
 			of:       9000000000000 * chrono.Nanosecond,
 			f:        chrono.Duration.Nanoseconds,
 			expected: 9000000000000,
 		},
 		{
-			name:     "microseconds",
+			name:     "positive microseconds",
 			of:       9000000000000 * chrono.Nanosecond,
 			f:        chrono.Duration.Microseconds,
 			expected: 9000000000,
 		},
 		{
-			name:     "milliseconds",
+			name:     "positive milliseconds",
 			of:       9000000000000 * chrono.Nanosecond,
 			f:        chrono.Duration.Milliseconds,
 			expected: 9000000,
 		},
 		{
-			name:     "seconds",
+			name:     "positive seconds",
 			of:       9000000000000 * chrono.Nanosecond,
 			f:        chrono.Duration.Seconds,
 			expected: 9000,
 		},
 		{
-			name:     "minutes",
+			name:     "positive minutes",
 			of:       9000000000000 * chrono.Nanosecond,
 			f:        chrono.Duration.Minutes,
 			expected: 150,
 		},
 		{
-			name:     "hours",
+			name:     "positive hours",
 			of:       9000000000000 * chrono.Nanosecond,
 			f:        chrono.Duration.Hours,
 			expected: 2.5,
+		},
+		{
+			name:     "negative nanoseconds",
+			of:       -9000000000000 * chrono.Nanosecond,
+			f:        chrono.Duration.Nanoseconds,
+			expected: -9000000000000,
+		},
+		{
+			name:     "negative microseconds",
+			of:       -9000000000000 * chrono.Nanosecond,
+			f:        chrono.Duration.Microseconds,
+			expected: -9000000000,
+		},
+		{
+			name:     "negative milliseconds",
+			of:       -9000000000000 * chrono.Nanosecond,
+			f:        chrono.Duration.Milliseconds,
+			expected: -9000000,
+		},
+		{
+			name:     "negative seconds",
+			of:       -9000000000000 * chrono.Nanosecond,
+			f:        chrono.Duration.Seconds,
+			expected: -9000,
+		},
+		{
+			name:     "negative minutes",
+			of:       -9000000000000 * chrono.Nanosecond,
+			f:        chrono.Duration.Minutes,
+			expected: -150,
+		},
+		{
+			name:     "negative hours",
+			of:       -9000000000000 * chrono.Nanosecond,
+			f:        chrono.Duration.Hours,
+			expected: -2.5,
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -117,85 +183,85 @@ func TestDurationFormat(t *testing.T) {
 		expected  string
 	}{
 		{
-			name:      "default hms",
+			name:      "default HMS",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{},
 			expected:  "PT1H15M30.5S",
 		},
 		{
-			name:      "default hm",
+			name:      "default HM",
 			of:        1*chrono.Hour + 15*chrono.Minute,
 			exclusive: []chrono.Designator{},
 			expected:  "PT1H15M",
 		},
 		{
-			name:      "default hs",
+			name:      "default HS",
 			of:        12*chrono.Hour + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{},
 			expected:  "PT12H0M30.5S",
 		},
 		{
-			name:      "default h",
+			name:      "default H",
 			of:        1 * chrono.Hour,
 			exclusive: []chrono.Designator{},
 			expected:  "PT1H",
 		},
 		{
-			name:      "default ms",
+			name:      "default MS",
 			of:        15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{},
 			expected:  "PT15M30.5S",
 		},
 		{
-			name:      "default m",
+			name:      "default M",
 			of:        15 * chrono.Minute,
 			exclusive: []chrono.Designator{},
 			expected:  "PT15M",
 		},
 		{
-			name:      "default s",
+			name:      "default S",
 			of:        30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{},
 			expected:  "PT30.5S",
 		},
 		{
-			name:      "exclusive hms",
+			name:      "exclusive HMS",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Hours, chrono.Minutes, chrono.Seconds},
 			expected:  "PT1H15M30.5S",
 		},
 		{
-			name:      "exclusive hm",
+			name:      "exclusive HM",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 600*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Hours, chrono.Minutes},
 			expected:  "PT1H15.51M",
 		},
 		{
-			name:      "exclusive hs",
+			name:      "exclusive HS",
 			of:        12*chrono.Hour + 1*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Hours, chrono.Seconds},
 			expected:  "PT12H90.5S",
 		},
 		{
-			name:      "exclusive h",
+			name:      "exclusive H",
 			of:        1*chrono.Hour + 30*chrono.Minute + 36*chrono.Second + 36*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Hours},
 			expected:  "PT1.51001H",
 		},
 		{
-			name:      "exclusive ms",
+			name:      "exclusive MS",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Minutes, chrono.Seconds},
 			expected:  "PT75M30.5S",
 		},
 		{
-			name:      "exclusive m",
+			name:      "exclusive M",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 600*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Minutes},
 			expected:  "PT75.51M",
 		},
 		{
-			name:      "exclusive s",
+			name:      "exclusive S",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Seconds},
 			expected:  "PT4530.5S",
