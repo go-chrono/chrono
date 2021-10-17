@@ -1,6 +1,7 @@
 package chrono
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -28,16 +29,66 @@ func (d Duration) Equal(d2 Duration) bool {
 }
 
 // Add returns the duration d+d2.
+// If the operation would overflow the maximum duration, or underflow the minimum duration, it panics.
+// Use CanAdd to test whether aa panic would occur.
 func (d Duration) Add(d2 Duration) Duration {
-	nsec := float64(d2.secs*1e9) + float64(d2.nsec) + float64(d.secs*1e9) + float64(d.nsec) // TODO fix me - float
-	if nsec > math.MaxUint64 {
-		panic("d2 + d overflows Duration")
+	out, err := d.add(d2)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
+}
+
+// CanAdd returns false if Add would panic if passed the same argument.
+func (d Duration) CanAdd(d2 Duration) bool {
+	_, err := d.add(d2)
+	return err == nil
+}
+
+func checkAdd(v1, v2 int64) (underflows, overflows bool) {
+	if v2 > 0 {
+		v := math.MaxInt64 - v1
+		if v < 0 {
+			v = -v
+		}
+
+		if v < v2 {
+			return false, true
+		}
+	} else if v2 < 0 {
+		v := math.MinInt64 + v1
+		if v < 0 {
+			v = -v
+		}
+
+		if -v > v2 { // v < -v2 can't be used because -math.MinInt64 > math.MaxInt64
+			return true, false
+		}
+	}
+	return false, false
+}
+
+func (d Duration) add(d2 Duration) (Duration, error) {
+	if under, over := checkAdd(d.secs, d2.secs); under {
+		return Duration{}, fmt.Errorf("d2 + d underflows Duration seconds")
+	} else if over {
+		return Duration{}, fmt.Errorf("d2 + d overflows Duration seconds")
 	}
 
-	return Duration{
-		secs: int64(nsec / 1e9),
-		nsec: uint32(math.Mod(nsec, 1e9)),
+	out := Duration{secs: d.secs + d2.secs}
+
+	nsec := d.nsec + d2.nsec
+	secs := int64(nsec / 1e9)
+
+	if under, over := checkAdd(out.secs, secs); under {
+		return Duration{}, fmt.Errorf("d2 + d underflows Duration nanoseconds")
+	} else if over {
+		return Duration{}, fmt.Errorf("d2 + d overflows Duration nanoseconds")
 	}
+
+	out.secs += secs
+	out.nsec = nsec
+	return out, nil
 }
 
 // Nanoseconds returns the duration as a floating point number of nanoseconds.

@@ -175,6 +175,137 @@ func TestDurationUnits(t *testing.T) {
 	}
 }
 
+func TestDurationAdd(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		d1       chrono.Duration
+		d2       chrono.Duration
+		expected chrono.Duration
+	}{
+		{
+			name:     "add seconds component",
+			d1:       chrono.DurationOf(1 * chrono.Hour),
+			d2:       chrono.DurationOf(1 * chrono.Hour),
+			expected: chrono.DurationOf(2 * chrono.Hour),
+		},
+		{
+			name:     "add nanoseconds component",
+			d1:       chrono.DurationOf(1 * chrono.Millisecond),
+			d2:       chrono.DurationOf(1 * chrono.Millisecond),
+			expected: chrono.DurationOf(2 * chrono.Millisecond),
+		},
+		{
+			name:     "add both components",
+			d1:       chrono.DurationOf((1 * chrono.Hour) + (2 * chrono.Millisecond)),
+			d2:       chrono.DurationOf((1 * chrono.Hour) + (2 * chrono.Millisecond)),
+			expected: chrono.DurationOf((2 * chrono.Hour) + (4 * chrono.Millisecond)),
+		},
+		{
+			name:     "minus seconds component",
+			d1:       chrono.DurationOf(2 * chrono.Hour),
+			d2:       chrono.DurationOf(-1 * chrono.Hour),
+			expected: chrono.DurationOf(1 * chrono.Hour),
+		},
+		{
+			name:     "minus nanoseconds component",
+			d1:       chrono.DurationOf(2 * chrono.Millisecond),
+			d2:       chrono.DurationOf(-1 * chrono.Millisecond),
+			expected: chrono.DurationOf(1 * chrono.Millisecond),
+		},
+		{
+			name:     "minus both components",
+			d1:       chrono.DurationOf((2 * chrono.Hour) + (4 * chrono.Millisecond)),
+			d2:       chrono.DurationOf(-((1 * chrono.Hour) + (2 * chrono.Millisecond))),
+			expected: chrono.DurationOf((1 * chrono.Hour) + (2 * chrono.Millisecond)),
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Run("d1.Add(d2)", func(t *testing.T) {
+				if ok := tt.d1.CanAdd(tt.d2); !ok {
+					t.Fatalf("d1.CanAdd(d2) = false, want true")
+				}
+
+				d := tt.d1.Add(tt.d2)
+				if !d.Equal(tt.expected) {
+					t.Fatalf("d1.Add(d2) = %v, want %v", d, tt.expected)
+				}
+			})
+
+			t.Run("d2.Add(d1)", func(t *testing.T) {
+				if ok := tt.d2.CanAdd(tt.d1); !ok {
+					t.Fatalf("d2.CanAdd(d1) = false, want true")
+				}
+
+				d := tt.d2.Add(tt.d1)
+				if !d.Equal(tt.expected) {
+					t.Fatalf("d2.Add(d1) = %v, want %v", d, tt.expected)
+				}
+			})
+		})
+	}
+
+	for _, tt := range []struct {
+		name string
+		d1   chrono.Duration
+		d2   chrono.Duration
+	}{
+		{
+			name: "overflow on seconds component",
+			d1:   *chrono.MaxDuration(),
+			d2:   chrono.DurationOf(1 * chrono.Second),
+		},
+		{
+			name: "overflow on nanoseconds component",
+			d1:   chrono.MaxDuration().Add(chrono.DurationOf(-500 * chrono.Millisecond)),
+			d2:   chrono.DurationOf(501 * chrono.Millisecond),
+		},
+		{
+			name: "underflow on seconds component",
+			d1:   *chrono.MinDuration(),
+			d2:   chrono.DurationOf(-1 * chrono.Second),
+		},
+		{
+			name: "underflow on nanoseconds component",
+			d1:   chrono.MinDuration().Add(chrono.DurationOf(500 * chrono.Millisecond)),
+			d2:   chrono.DurationOf(-501 * chrono.Millisecond),
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Run("d1.Add(d2)", func(t *testing.T) {
+				if ok := tt.d1.CanAdd(tt.d2); ok {
+					t.Fatalf("d1.CanAdd(d2) = true, want false")
+				}
+
+				func() {
+					defer func() {
+						if r := recover(); r == nil {
+							t.Fatalf("expecting panic that didn't occur")
+						}
+					}()
+
+					tt.d1.Add(tt.d2)
+				}()
+			})
+
+			t.Run("d2.Add(d1)", func(t *testing.T) {
+				if ok := tt.d2.CanAdd(tt.d1); ok {
+					t.Fatalf("d2.CanAdd(d1) = true, want false")
+				}
+
+				func() {
+					defer func() {
+						if r := recover(); r == nil {
+							t.Fatalf("expecting panic that didn't occur")
+						}
+					}()
+
+					tt.d2.Add(tt.d1)
+				}()
+			})
+		})
+	}
+}
+
 func TestDurationFormat(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
