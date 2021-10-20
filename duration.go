@@ -225,7 +225,7 @@ func (d Duration) Format(exclusive ...Designator) string {
 
 // Parse an ISO 8601 duration.
 func (d *Duration) Parse(s string) error {
-	secs, nsec, err := parseDuration(s, false)
+	_, _, _, secs, nsec, err := parseDuration(s, false)
 	if err != nil {
 		return err
 	}
