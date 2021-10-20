@@ -6,6 +6,15 @@ import (
 	"strconv"
 )
 
+// Period represents an amount of time in years, months, weeks and days.
+// A period is not a measurable quantity since the lengths of these components is ambiguous.
+type Period struct {
+	Years  float32
+	Months float32
+	Weeks  float32
+	Days   float32
+}
+
 func parseDuration(s string, periodAllowed bool) (years, months, weeks, days float32, secs int64, nsec uint32, err error) {
 	if len(s) == 0 || s[0] != 'P' {
 		return 0, 0, 0, 0, 0, 0, fmt.Errorf("expecting 'P'")
