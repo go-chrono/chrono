@@ -6,9 +6,9 @@ import (
 	"strconv"
 )
 
-func parseDuration(s string, periodAllowed bool) (years, months, days float32, secs int64, nsec uint32, err error) {
+func parseDuration(s string, periodAllowed bool) (years, months, weeks, days float32, secs int64, nsec uint32, err error) {
 	if len(s) == 0 || s[0] != 'P' {
-		return 0, 0, 0, 0, 0, fmt.Errorf("expecting 'P'")
+		return 0, 0, 0, 0, 0, 0, fmt.Errorf("expecting 'P'")
 	}
 
 	var value int
@@ -24,23 +24,25 @@ func parseDuration(s string, periodAllowed bool) (years, months, days float32, s
 				if !time {
 					time = true
 				} else {
-					return 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit", s[i])
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit", s[i])
 				}
 			} else {
-				return 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit or 'T'", s[i])
+				return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit or 'T'", s[i])
 			}
 		} else {
 			if !time {
 				if !periodAllowed {
-					return 0, 0, 0, 0, 0, fmt.Errorf("cannot parse duration as Duration")
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("cannot parse duration as Duration")
 				} else if digit {
 					continue
 				}
 
 				v, err := strconv.ParseFloat(s[value:i], 32)
 				if err != nil {
-					return 0, 0, 0, 0, 0, err
+					return 0, 0, 0, 0, 0, 0, err
 				}
+
+				// TODO handle weeks properly
 
 				switch s[i] {
 				case 'Y':
@@ -50,7 +52,7 @@ func parseDuration(s string, periodAllowed bool) (years, months, days float32, s
 				case 'D':
 					days = float32(v)
 				default:
-					return 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'Y', 'M' or 'D'", s[i])
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'Y', 'M' or 'D'", s[i])
 				}
 
 				value = 0
@@ -61,7 +63,7 @@ func parseDuration(s string, periodAllowed bool) (years, months, days float32, s
 
 				v, err := strconv.ParseFloat(s[value:i], 64)
 				if err != nil {
-					return 0, 0, 0, 0, 0, err
+					return 0, 0, 0, 0, 0, 0, err
 				}
 
 				var _secs float64
@@ -77,7 +79,7 @@ func parseDuration(s string, periodAllowed bool) (years, months, days float32, s
 					_secs = math.Floor(v)
 					_nsec = uint32((v * 1e9) - (_secs * 1e9))
 				default:
-					return 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'H', 'M' or 'S'", s[i])
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'H', 'M' or 'S'", s[i])
 				}
 
 				_secsInt := int64(_secs)
