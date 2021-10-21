@@ -15,6 +15,25 @@ type Period struct {
 	Days   float32
 }
 
+// Equal reports whether p and p2 represent the same period of time.
+func (p Period) Equal(p2 Period) bool {
+	return p2.Years == p.Years && p2.Months == p.Months && p2.Weeks == p.Weeks && p2.Days == p.Days
+}
+
+// Parse the period portion of an ISO 8601 duration.
+func (p *Period) Parse(s string) error {
+	years, months, weeks, days, _, _, err := parseDuration(s, true, false)
+	if err != nil {
+		return err
+	}
+
+	p.Years = years
+	p.Months = months
+	p.Weeks = weeks
+	p.Days = days
+	return nil
+}
+
 // ParseDuration parses a complete ISO 8601 duration.
 func ParseDuration(s string) (Period, Duration, error) {
 	years, months, weeks, days, secs, nsec, err := parseDuration(s, true, true)
