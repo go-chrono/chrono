@@ -15,13 +15,29 @@ type Period struct {
 	Days   float32
 }
 
-func parseDuration(s string, periodAllowed bool) (years, months, weeks, days float32, secs int64, nsec uint32, err error) {
+// ParseDuration parses a complete ISO 8601 duration.
+func ParseDuration(s string) (Period, Duration, error) {
+	years, months, weeks, days, secs, nsec, err := parseDuration(s, true, true)
+	return Period{
+			Years:  years,
+			Months: months,
+			Weeks:  weeks,
+			Days:   days,
+		},
+		Duration{
+			secs: secs,
+			nsec: nsec,
+		}, err
+}
+
+func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks, days float32, secs int64, nsec uint32, err error) {
 	if len(s) == 0 || s[0] != 'P' {
 		return 0, 0, 0, 0, 0, 0, fmt.Errorf("expecting 'P'")
 	}
 
 	var value int
-	var time bool
+	var onTime bool
+	var haveUnit bool
 
 	for i := 1; i < len(s); i++ {
 		digit := (s[i] >= '0' && s[i] <= '9') || s[i] == '.'
@@ -30,8 +46,8 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 			if digit {
 				value = i
 			} else if s[i] == 'T' {
-				if !time {
-					time = true
+				if !onTime {
+					onTime = true
 				} else {
 					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit", s[i])
 				}
@@ -39,8 +55,8 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 				return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit or 'T'", s[i])
 			}
 		} else {
-			if !time {
-				if !periodAllowed {
+			if !onTime {
+				if !parsePeriod {
 					return 0, 0, 0, 0, 0, 0, fmt.Errorf("cannot parse duration as Duration")
 				} else if digit {
 					continue
@@ -65,6 +81,7 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 				}
 
 				value = 0
+				haveUnit = true
 			} else {
 				if digit {
 					continue
@@ -103,8 +120,13 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 				}
 
 				value = 0
+				haveUnit = true
 			}
 		}
+	}
+
+	if !haveUnit {
+		return 0, 0, 0, 0, 0, 0, fmt.Errorf("expecting at least one unit")
 	}
 
 	return

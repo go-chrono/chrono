@@ -407,7 +407,7 @@ func TestDurationFormat(t *testing.T) {
 	}
 }
 
-func TestParseDuration(t *testing.T) {
+func TestDurationParse(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		input    string
