@@ -486,8 +486,7 @@ func TestDurationParse(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			var d chrono.Duration
-			err := d.Parse(tt.input)
-			if err != nil {
+			if err := d.Parse(tt.input); err != nil {
 				t.Fatalf("failed to parse duation: %v", err)
 			}
 
@@ -496,4 +495,18 @@ func TestDurationParse(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("overflows", func(t *testing.T) {
+		var d chrono.Duration
+		if err := d.Parse("PT2562047788015216H"); err == nil {
+			t.Fatal("expecting error but got nil")
+		}
+	})
+
+	t.Run("underflows", func(t *testing.T) {
+		var d chrono.Duration
+		if err := d.Parse("PT-2562047788015215H"); err == nil {
+			t.Fatal("expecting error but got nil")
+		}
+	})
 }

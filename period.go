@@ -108,16 +108,25 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'H', 'M' or 'S'", s[i])
 				}
 
-				_secsInt := int64(_secs)
-
-				// TODO check overflow and underflow
-				secs += _secsInt
-				nsec += _nsec
-
-				if nsec >= 1e9 {
-					secs++
-					nsec -= 1e9
+				if _secs < math.MinInt64 {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds underflow")
+				} else if _secs > math.MaxInt64 {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds overflow")
 				}
+
+				var under, over bool
+				if secs, under, over = addInt64(secs, int64(_secs)); under {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds underflow")
+				} else if over {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds overflow")
+				}
+
+				if secs, under, over = addInt64(secs, int64(_nsec/1e9)); under {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds underflow")
+				} else if over {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds overflow")
+				}
+				nsec = _nsec % 1e9
 
 				value = 0
 				haveUnit = true
