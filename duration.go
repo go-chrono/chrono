@@ -236,15 +236,11 @@ func (d *Duration) Parse(s string) error {
 }
 
 // MinDuration returns the minimum allowed Duration of 0 ns.
-func MinDuration() *Duration {
-	return &minDuration
+func MinDuration() Duration {
+	return Duration{secs: math.MinInt64, nsec: 0}
 }
 
 // MaxDuration returns the maximum allowed Duration of 18446744073709551615 s and 999999999 ns (5.846e11 years).
-func MaxDuration() *Duration {
-	return &maxDuration
+func MaxDuration() Duration {
+	return Duration{secs: math.MaxInt64, nsec: 1e9 - 1}
 }
-
-var minDuration = Duration{secs: math.MinInt64, nsec: 0}
-
-var maxDuration = Duration{secs: math.MaxInt64, nsec: 1e9 - 1}

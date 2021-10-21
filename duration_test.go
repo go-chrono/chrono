@@ -251,7 +251,7 @@ func TestDurationAdd(t *testing.T) {
 	}{
 		{
 			name: "overflow on seconds component",
-			d1:   *chrono.MaxDuration(),
+			d1:   chrono.MaxDuration(),
 			d2:   chrono.DurationOf(1 * chrono.Second),
 		},
 		{
@@ -261,7 +261,7 @@ func TestDurationAdd(t *testing.T) {
 		},
 		{
 			name: "underflow on seconds component",
-			d1:   *chrono.MinDuration(),
+			d1:   chrono.MinDuration(),
 			d2:   chrono.DurationOf(-1 * chrono.Second),
 		},
 		{
