@@ -57,6 +57,7 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 	var value int
 	var onTime bool
 	var haveUnit bool
+	var haveWeeks int // 0 = undecided, 1 = W, -1 = YMD
 
 	for i := 1; i < len(s); i++ {
 		digit := (s[i] >= '0' && s[i] <= '9') || s[i] == '.'
@@ -86,17 +87,33 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 					return 0, 0, 0, 0, 0, 0, err
 				}
 
-				// TODO handle weeks properly
+				if s[i] == 'W' {
+					switch {
+					case haveWeeks == 0:
+						haveWeeks++
+					case haveWeeks < 0:
+						return 0, 0, 0, 0, 0, 0, fmt.Errorf("cannot mix 'W' with 'Y'/'M'/'D'")
+					}
 
-				switch s[i] {
-				case 'Y':
-					years = float32(v)
-				case 'M':
-					months = float32(v)
-				case 'D':
-					days = float32(v)
-				default:
-					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'Y', 'M' or 'D'", s[i])
+					weeks = float32(v)
+				} else {
+					switch {
+					case haveWeeks == 0:
+						haveWeeks--
+					case haveWeeks > 0:
+						return 0, 0, 0, 0, 0, 0, fmt.Errorf("cannot mix 'Y'/'M'/'D' with 'W'")
+					}
+
+					switch s[i] {
+					case 'Y':
+						years = float32(v)
+					case 'M':
+						months = float32(v)
+					case 'D':
+						days = float32(v)
+					default:
+						return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'Y', 'M' or 'D'", s[i])
+					}
 				}
 
 				value = 0
