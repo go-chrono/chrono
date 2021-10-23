@@ -79,6 +79,42 @@ func TestPeriodParse(t *testing.T) {
 }
 
 func TestParseDuration(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		input    string
+		period   chrono.Period
+		duration chrono.Duration
+	}{
+		{
+			name:     "period only",
+			input:    "P2.5Y",
+			period:   chrono.Period{Years: 2.5},
+			duration: chrono.Duration{},
+		},
+		{
+			name:     "duration only",
+			input:    "PT6.5H",
+			period:   chrono.Period{},
+			duration: chrono.DurationOf((6 * chrono.Hour) + (30 * chrono.Minute)),
+		},
+		{
+			name:     "both period and duration",
+			input:    "P2.5YT6.5H",
+			period:   chrono.Period{Years: 2.5},
+			duration: chrono.DurationOf((6 * chrono.Hour) + (30 * chrono.Minute)),
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if p, d, err := chrono.ParseDuration(tt.input); err != nil {
+				t.Fatalf("failed to parse period & duration: %v", err)
+			} else if !p.Equal(tt.period) {
+				t.Fatalf("parsed period = %v, want %v", p, tt.period)
+			} else if !d.Equal(tt.duration) {
+				t.Fatalf("parsed duration = %v, want %v", d, tt.duration)
+			}
+		})
+	}
+
 	t.Run("invalid strings", func(t *testing.T) {
 		for _, tt := range []string{
 			"P",
