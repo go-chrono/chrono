@@ -57,9 +57,7 @@ func TestPeriodParse(t *testing.T) {
 			var p chrono.Period
 			if err := p.Parse(tt.input); err != nil {
 				t.Fatalf("failed to parse period: %v", err)
-			}
-
-			if !p.Equal(tt.expected) {
+			} else if !p.Equal(tt.expected) {
 				t.Fatalf("parsed period = %v, want %v", p, tt.expected)
 			}
 		})

@@ -488,9 +488,7 @@ func TestDurationParse(t *testing.T) {
 			var d chrono.Duration
 			if err := d.Parse(tt.input); err != nil {
 				t.Fatalf("failed to parse duation: %v", err)
-			}
-
-			if !d.Equal(tt.expected) {
+			} else if !d.Equal(tt.expected) {
 				t.Fatalf("parsed duration = %v, want %v", d, tt.expected)
 			}
 		})
