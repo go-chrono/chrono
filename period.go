@@ -15,13 +15,49 @@ type Period struct {
 	Days   float32
 }
 
-func parseDuration(s string, periodAllowed bool) (years, months, weeks, days float32, secs int64, nsec uint32, err error) {
+// Equal reports whether p and p2 represent the same period of time.
+func (p Period) Equal(p2 Period) bool {
+	return p2.Years == p.Years && p2.Months == p.Months && p2.Weeks == p.Weeks && p2.Days == p.Days
+}
+
+// Parse the period portion of an ISO 8601 duration.
+func (p *Period) Parse(s string) error {
+	years, months, weeks, days, _, _, err := parseDuration(s, true, false)
+	if err != nil {
+		return err
+	}
+
+	p.Years = years
+	p.Months = months
+	p.Weeks = weeks
+	p.Days = days
+	return nil
+}
+
+// ParseDuration parses a complete ISO 8601 duration.
+func ParseDuration(s string) (Period, Duration, error) {
+	years, months, weeks, days, secs, nsec, err := parseDuration(s, true, true)
+	return Period{
+			Years:  years,
+			Months: months,
+			Weeks:  weeks,
+			Days:   days,
+		},
+		Duration{
+			secs: secs,
+			nsec: nsec,
+		}, err
+}
+
+func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks, days float32, secs int64, nsec uint32, err error) {
 	if len(s) == 0 || s[0] != 'P' {
 		return 0, 0, 0, 0, 0, 0, fmt.Errorf("expecting 'P'")
 	}
 
 	var value int
-	var time bool
+	var onTime bool
+	var haveUnit bool
+	var haveWeeks int // 0 = undecided, 1 = W, -1 = YMD
 
 	for i := 1; i < len(s); i++ {
 		digit := (s[i] >= '0' && s[i] <= '9') || s[i] == '.'
@@ -30,8 +66,8 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 			if digit {
 				value = i
 			} else if s[i] == 'T' {
-				if !time {
-					time = true
+				if !onTime {
+					onTime = true
 				} else {
 					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit", s[i])
 				}
@@ -39,8 +75,8 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 				return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting digit or 'T'", s[i])
 			}
 		} else {
-			if !time {
-				if !periodAllowed {
+			if !onTime {
+				if !parsePeriod {
 					return 0, 0, 0, 0, 0, 0, fmt.Errorf("cannot parse duration as Duration")
 				} else if digit {
 					continue
@@ -51,20 +87,37 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 					return 0, 0, 0, 0, 0, 0, err
 				}
 
-				// TODO handle weeks properly
+				if s[i] == 'W' {
+					switch {
+					case haveWeeks == 0:
+						haveWeeks++
+					case haveWeeks < 0:
+						return 0, 0, 0, 0, 0, 0, fmt.Errorf("cannot mix 'W' with 'Y'/'M'/'D'")
+					}
 
-				switch s[i] {
-				case 'Y':
-					years = float32(v)
-				case 'M':
-					months = float32(v)
-				case 'D':
-					days = float32(v)
-				default:
-					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'Y', 'M' or 'D'", s[i])
+					weeks = float32(v)
+				} else {
+					switch {
+					case haveWeeks == 0:
+						haveWeeks--
+					case haveWeeks > 0:
+						return 0, 0, 0, 0, 0, 0, fmt.Errorf("cannot mix 'Y'/'M'/'D' with 'W'")
+					}
+
+					switch s[i] {
+					case 'Y':
+						years = float32(v)
+					case 'M':
+						months = float32(v)
+					case 'D':
+						days = float32(v)
+					default:
+						return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'Y', 'M' or 'D'", s[i])
+					}
 				}
 
 				value = 0
+				haveUnit = true
 			} else {
 				if digit {
 					continue
@@ -91,20 +144,34 @@ func parseDuration(s string, periodAllowed bool) (years, months, weeks, days flo
 					return 0, 0, 0, 0, 0, 0, fmt.Errorf("unexpected '%c', expecting 'H', 'M' or 'S'", s[i])
 				}
 
-				_secsInt := int64(_secs)
-
-				// TODO check overflow and underflow
-				secs += _secsInt
-				nsec += _nsec
-
-				if nsec >= 1e9 {
-					secs++
-					nsec -= 1e9
+				if _secs < math.MinInt64 {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds underflow")
+				} else if _secs > math.MaxInt64 {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds overflow")
 				}
 
+				var under, over bool
+				if secs, under, over = addInt64(secs, int64(_secs)); under {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds underflow")
+				} else if over {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds overflow")
+				}
+
+				if secs, under, over = addInt64(secs, int64(_nsec/1e9)); under {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds underflow")
+				} else if over {
+					return 0, 0, 0, 0, 0, 0, fmt.Errorf("seconds overflow")
+				}
+				nsec = _nsec % 1e9
+
 				value = 0
+				haveUnit = true
 			}
 		}
+	}
+
+	if !haveUnit {
+		return 0, 0, 0, 0, 0, 0, fmt.Errorf("expecting at least one unit")
 	}
 
 	return

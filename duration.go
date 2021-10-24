@@ -46,49 +46,24 @@ func (d Duration) CanAdd(d2 Duration) bool {
 }
 
 func (d Duration) add(d2 Duration) (Duration, error) {
-	if under, over := checkAdd(d.secs, d2.secs); under {
+	var out Duration
+	var under, over bool
+	if out.secs, under, over = addInt64(d.secs, d2.secs); under {
 		return Duration{}, fmt.Errorf("d2 + d underflows Duration seconds")
 	} else if over {
 		return Duration{}, fmt.Errorf("d2 + d overflows Duration seconds")
 	}
 
-	out := Duration{secs: d.secs + d2.secs}
-
 	nsec := d.nsec + d2.nsec
 	secs := int64(nsec / 1e9)
+	out.nsec = nsec % 1e9
 
-	if under, over := checkAdd(out.secs, secs); under {
+	if out.secs, under, over = addInt64(out.secs, secs); under {
 		return Duration{}, fmt.Errorf("d2 + d underflows Duration nanoseconds")
 	} else if over {
 		return Duration{}, fmt.Errorf("d2 + d overflows Duration nanoseconds")
 	}
-
-	out.secs += secs
-	out.nsec = nsec
 	return out, nil
-}
-
-func checkAdd(v1, v2 int64) (underflows, overflows bool) {
-	if v2 > 0 {
-		v := math.MaxInt64 - v1
-		if v < 0 {
-			v = -v
-		}
-
-		if v < v2 {
-			return false, true
-		}
-	} else if v2 < 0 {
-		v := math.MinInt64 + v1
-		if v < 0 {
-			v = -v
-		}
-
-		if -v > v2 { // v < -v2 can't be used because -math.MinInt64 > math.MaxInt64
-			return true, false
-		}
-	}
-	return false, false
 }
 
 // Nanoseconds returns the duration as a floating point number of nanoseconds.
@@ -225,9 +200,9 @@ func (d Duration) Format(exclusive ...Designator) string {
 	return out
 }
 
-// Parse an ISO 8601 duration.
+// Parse the time portion of an ISO 8601 duration.
 func (d *Duration) Parse(s string) error {
-	_, _, _, _, secs, nsec, err := parseDuration(s, false)
+	_, _, _, _, secs, nsec, err := parseDuration(s, false, true)
 	if err != nil {
 		return err
 	}

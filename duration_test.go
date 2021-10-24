@@ -190,15 +190,15 @@ func TestDurationAdd(t *testing.T) {
 		},
 		{
 			name:     "add nanoseconds component",
-			d1:       chrono.DurationOf(1 * chrono.Millisecond),
-			d2:       chrono.DurationOf(1 * chrono.Millisecond),
-			expected: chrono.DurationOf(2 * chrono.Millisecond),
+			d1:       chrono.DurationOf(750 * chrono.Millisecond),
+			d2:       chrono.DurationOf(550 * chrono.Millisecond),
+			expected: chrono.DurationOf((1 * chrono.Second) + (300 * chrono.Millisecond)),
 		},
 		{
 			name:     "add both components",
-			d1:       chrono.DurationOf((1 * chrono.Hour) + (2 * chrono.Millisecond)),
-			d2:       chrono.DurationOf((1 * chrono.Hour) + (2 * chrono.Millisecond)),
-			expected: chrono.DurationOf((2 * chrono.Hour) + (4 * chrono.Millisecond)),
+			d1:       chrono.DurationOf((1 * chrono.Hour) + (750 * chrono.Millisecond)),
+			d2:       chrono.DurationOf((1 * chrono.Hour) + (550 * chrono.Millisecond)),
+			expected: chrono.DurationOf((2 * chrono.Hour) + (1 * chrono.Second) + (300 * chrono.Millisecond)),
 		},
 		{
 			name:     "minus seconds component",
@@ -208,15 +208,15 @@ func TestDurationAdd(t *testing.T) {
 		},
 		{
 			name:     "minus nanoseconds component",
-			d1:       chrono.DurationOf(2 * chrono.Millisecond),
-			d2:       chrono.DurationOf(-1 * chrono.Millisecond),
-			expected: chrono.DurationOf(1 * chrono.Millisecond),
+			d1:       chrono.DurationOf(750 * chrono.Millisecond),
+			d2:       chrono.DurationOf(-550 * chrono.Millisecond),
+			expected: chrono.DurationOf(200 * chrono.Millisecond),
 		},
 		{
 			name:     "minus both components",
-			d1:       chrono.DurationOf((2 * chrono.Hour) + (4 * chrono.Millisecond)),
-			d2:       chrono.DurationOf(-((1 * chrono.Hour) + (2 * chrono.Millisecond))),
-			expected: chrono.DurationOf((1 * chrono.Hour) + (2 * chrono.Millisecond)),
+			d1:       chrono.DurationOf((2 * chrono.Hour) + (750 * chrono.Millisecond)),
+			d2:       chrono.DurationOf(-((1 * chrono.Hour) + (550 * chrono.Millisecond))),
+			expected: chrono.DurationOf((1 * chrono.Hour) + (200 * chrono.Millisecond)),
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -455,7 +455,7 @@ func TestDurationFormat(t *testing.T) {
 	}
 }
 
-func TestParseDuration(t *testing.T) {
+func TestDurationParse(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		input    string
@@ -534,14 +534,25 @@ func TestParseDuration(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			var d chrono.Duration
-			err := d.Parse(tt.input)
-			if err != nil {
+			if err := d.Parse(tt.input); err != nil {
 				t.Fatalf("failed to parse duation: %v", err)
-			}
-
-			if !d.Equal(tt.expected) {
+			} else if !d.Equal(tt.expected) {
 				t.Fatalf("parsed duration = %v, want %v", d, tt.expected)
 			}
 		})
 	}
+
+	t.Run("overflows", func(t *testing.T) {
+		var d chrono.Duration
+		if err := d.Parse("PT2562047788015216H"); err == nil {
+			t.Fatal("expecting error but got nil")
+		}
+	})
+
+	t.Run("underflows", func(t *testing.T) {
+		var d chrono.Duration
+		if err := d.Parse("PT-2562047788015215H"); err == nil {
+			t.Fatal("expecting error but got nil")
+		}
+	})
 }
