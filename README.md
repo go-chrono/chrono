@@ -1,3 +1,4 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/go-chrono/chrono.svg)](https://pkg.go.dev/github.com/go-chrono/chrono)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/go-chrono/chrono/graphs/commit-activity)
 [![GoReportCard example](https://goreportcard.com/badge/github.com/go-chrono/chrono)](https://goreportcard.com/report/github.com/go-chrono/chrono)
 
@@ -28,7 +29,7 @@
 <td style="width:33%">Using <code>chrono</code></td>
 </tr>
 <tr>
-<td style="vertical-align:top">Format a duration according to ISO 8601. When interfacing with systems where the <code>time</code> package's duration formatting is not understood, ISO 8601 is a commonly-adopted standard.</td>
+<td style="vertical-align:top">Parse or format a duration according to ISO 8601. When interfacing with systems where the <code>time</code> package's duration formatting is not understood, ISO 8601 is a commonly-adopted standard.</td>
 <td style="vertical-align:top">
 
 `time` doesn't support ISO 8601 durations notation. A simple one-liner that uses only the seconds component is possible, but this is neither readable nor solves the problem of parsing such strings:
@@ -41,9 +42,12 @@ fmt.Printf("PT%dS", int(d.Seconds()))
 </td>
 <td style="vertical-align:top">
 
-`chrono` supports both formatting and parsing of ISO 8601 strings.
+`chrono` supports both formatting and parsing of ISO 8601 strings. Relevant functions:
 
-✅ [See an example](examples/duration_test.go).
+* [`chrono.ParseDuration`](https://pkg.go.dev/github.com/go-chrono/chrono#ParseDuration)
+* [`chrono.FormatDuration`](https://pkg.go.dev/github.com/go-chrono/chrono#FormatDuration)
+
+✅ [See some examples](examples/duration_period_test.go).
 
 </td>
 </tr>

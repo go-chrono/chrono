@@ -127,6 +127,10 @@ const (
 // Fractional values are automatically applied to the least significant unit, if applicable.
 // In order to format only integers, the round functions should be used before calling this function.
 func (d Duration) Format(exclusive ...Designator) string {
+	return "P" + d.format(exclusive...)
+}
+
+func (d Duration) format(exclusive ...Designator) string {
 	values := make(map[Designator]float64, 3)
 	if len(exclusive) >= 1 {
 		for _, d := range exclusive {
@@ -184,7 +188,7 @@ func (d Duration) Format(exclusive ...Designator) string {
 		values[Seconds] = float64(d.secs) + (float64(d.nsec) / 1e9)
 	}
 
-	out := "PT"
+	out := "T"
 	if v, ok := values[Hours]; ok {
 		out += strconv.FormatFloat(v, 'f', -1, 64) + "H"
 	}
@@ -196,7 +200,6 @@ func (d Duration) Format(exclusive ...Designator) string {
 	if v, ok := values[Seconds]; ok {
 		out += strconv.FormatFloat(v, 'f', -1, 64) + "S"
 	}
-
 	return out
 }
 
