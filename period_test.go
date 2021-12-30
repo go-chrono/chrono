@@ -6,6 +6,101 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
+func TestPeriodFormat(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		input    chrono.Period
+		expected string
+	}{
+		{
+			name:     "YMWD",
+			input:    chrono.Period{Years: 14, Months: 8, Weeks: 4, Days: 2},
+			expected: "P14Y8M4W2D",
+		},
+		{
+			name:     "YMW",
+			input:    chrono.Period{Years: 14, Months: 8, Weeks: 4},
+			expected: "P14Y8M4W",
+		},
+		{
+			name:     "YM",
+			input:    chrono.Period{Years: 14, Months: 8},
+			expected: "P14Y8M",
+		},
+		{
+			name:     "Y",
+			input:    chrono.Period{Years: 14},
+			expected: "P14Y",
+		},
+		{
+			name:     "YWD",
+			input:    chrono.Period{Years: 14, Weeks: 4, Days: 2},
+			expected: "P14Y4W2D",
+		},
+		{
+			name:     "YW",
+			input:    chrono.Period{Years: 14, Weeks: 4},
+			expected: "P14Y4W",
+		},
+		{
+			name:     "YMD",
+			input:    chrono.Period{Years: 14, Months: 8, Days: 2},
+			expected: "P14Y8M2D",
+		},
+		{
+			name:     "YM",
+			input:    chrono.Period{Years: 14, Months: 8},
+			expected: "P14Y8M",
+		},
+		{
+			name:     "YD",
+			input:    chrono.Period{Years: 14, Days: 2},
+			expected: "P14Y2D",
+		},
+		{
+			name:     "MWD",
+			input:    chrono.Period{Months: 8, Weeks: 4, Days: 2},
+			expected: "P8M4W2D",
+		},
+		{
+			name:     "MW",
+			input:    chrono.Period{Months: 8, Weeks: 4},
+			expected: "P8M4W",
+		},
+		{
+			name:     "M",
+			input:    chrono.Period{Months: 8},
+			expected: "P8M",
+		},
+		{
+			name:     "MD",
+			input:    chrono.Period{Months: 8, Days: 2},
+			expected: "P8M2D",
+		},
+		{
+			name:     "WD",
+			input:    chrono.Period{Weeks: 4, Days: 2},
+			expected: "P4W2D",
+		},
+		{
+			name:     "D",
+			input:    chrono.Period{Days: 2},
+			expected: "P2D",
+		},
+		{
+			name:     "empty",
+			input:    chrono.Period{},
+			expected: "P0D",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if out := tt.input.Format(); out != tt.expected {
+				t.Fatalf("formatted period = %s, want %s", out, tt.expected)
+			}
+		})
+	}
+}
+
 func TestPeriodParse(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
