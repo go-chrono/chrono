@@ -14,12 +14,6 @@
 
 ---
 
-## Durations and extents
-
-`Extent` is equivalent to `time.Duration`. It is an `int64` that represents a value in nanoseconds, and can therefore represent approximately ±292 years.
-
-`chrono` also introduces the distinct `Duration` type, which is semantically equivalent to `Extent` but can represent a much larger period of time of approximately ±292 billion years. `Duration` also forms part of the support for ISO 8601 durations.
-
 ## Use cases
 
 <table>
@@ -52,3 +46,15 @@ fmt.Printf("PT%dS", int(d.Seconds()))
 </td>
 </tr>
 </table>
+
+## Concepts
+
+### Durations, extents, and periods
+
+`Extent` is equivalent to `time.Duration`. It is an `int64` that represents a value in nanoseconds, and can therefore represent approximately ±292 years.
+
+`chrono` also introduces the distinct `Duration` type, which is semantically equivalent to `Extent` but can represent a much larger period of time of approximately ±292 billion years. `Duration` also forms part of the support for ISO 8601 durations.
+
+The other half of ISO 8601 duration support comes from the `Period` type. It consists of values for years, months, weeks and days, and has no equivalent in the standard library.
+
+When combined, `Period` and `Duration`, an ISO 8601 duration can be formatted to, and parsed from, a string, e.g. `P3Y6M4DT1M5S`.
