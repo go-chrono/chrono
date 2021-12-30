@@ -60,6 +60,11 @@ func (p *Period) Parse(s string) error {
 	return nil
 }
 
+// FormatDuration formats a combined period and duration to a complete ISO 8601 duration.
+func FormatDuration(p Period, d Duration, exclusive ...Designator) string {
+	return p.Format() + d.format(exclusive...)
+}
+
 // ParseDuration parses a complete ISO 8601 duration.
 func ParseDuration(s string) (Period, Duration, error) {
 	years, months, weeks, days, secs, nsec, err := parseDuration(s, true, true)
