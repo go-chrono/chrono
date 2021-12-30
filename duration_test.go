@@ -356,10 +356,22 @@ func TestDurationFormat(t *testing.T) {
 			expected:  "PT30.5S",
 		},
 		{
+			name:      "default zero value",
+			of:        0,
+			exclusive: []chrono.Designator{},
+			expected:  "PT0S",
+		},
+		{
 			name:      "exclusive HMS",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Hours, chrono.Minutes, chrono.Seconds},
 			expected:  "PT1H15M30.5S",
+		},
+		{
+			name:      "exclusive HMS zero value",
+			of:        0,
+			exclusive: []chrono.Designator{chrono.Hours, chrono.Minutes, chrono.Seconds},
+			expected:  "PT0H0M0S",
 		},
 		{
 			name:      "exclusive HM",
@@ -368,10 +380,22 @@ func TestDurationFormat(t *testing.T) {
 			expected:  "PT1H15.51M",
 		},
 		{
+			name:      "exclusive HM zero value",
+			of:        0,
+			exclusive: []chrono.Designator{chrono.Hours, chrono.Minutes},
+			expected:  "PT0H0M",
+		},
+		{
 			name:      "exclusive HS",
 			of:        12*chrono.Hour + 1*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Hours, chrono.Seconds},
 			expected:  "PT12H90.5S",
+		},
+		{
+			name:      "exclusive HS zero value",
+			of:        0,
+			exclusive: []chrono.Designator{chrono.Hours, chrono.Seconds},
+			expected:  "PT0H0S",
 		},
 		{
 			name:      "exclusive H",
@@ -380,10 +404,22 @@ func TestDurationFormat(t *testing.T) {
 			expected:  "PT1.51001H",
 		},
 		{
+			name:      "exclusive H zero value",
+			of:        0,
+			exclusive: []chrono.Designator{chrono.Hours},
+			expected:  "PT0H",
+		},
+		{
 			name:      "exclusive MS",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Minutes, chrono.Seconds},
 			expected:  "PT75M30.5S",
+		},
+		{
+			name:      "exclusive MS zero value",
+			of:        0,
+			exclusive: []chrono.Designator{chrono.Minutes, chrono.Seconds},
+			expected:  "PT0M0S",
 		},
 		{
 			name:      "exclusive M",
@@ -392,10 +428,22 @@ func TestDurationFormat(t *testing.T) {
 			expected:  "PT75.51M",
 		},
 		{
+			name:      "exclusive M zero value",
+			of:        0,
+			exclusive: []chrono.Designator{chrono.Minutes},
+			expected:  "PT0M",
+		},
+		{
 			name:      "exclusive S",
 			of:        1*chrono.Hour + 15*chrono.Minute + 30*chrono.Second + 500*chrono.Millisecond,
 			exclusive: []chrono.Designator{chrono.Seconds},
 			expected:  "PT4530.5S",
+		},
+		{
+			name:      "exclusive S zero value",
+			of:        0,
+			exclusive: []chrono.Designator{chrono.Seconds},
+			expected:  "PT0S",
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

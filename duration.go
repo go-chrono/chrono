@@ -177,6 +177,8 @@ func (d Duration) format(exclusive ...Designator) string {
 			if h && !m {
 				values[Minutes] = 0
 			}
+		} else if !h && !m {
+			values[Seconds] = 0
 		}
 	case s && m:
 		values[Seconds] = float64(d.secs%60) + (float64(d.nsec) / 1e9)
