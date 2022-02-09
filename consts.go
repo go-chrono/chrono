@@ -4,7 +4,7 @@ import "fmt"
 
 // Weekday specifies the day of the week (Monday = 0, ...).
 // Not compatible standard library's time.Weekday (in which Sunday = 0, ...).
-type Weekday uint
+type Weekday uint8
 
 // The days of the week.
 const (
@@ -35,7 +35,7 @@ var longDayNames = [7]string{
 }
 
 // Month specifies the month of the year (January = 1, ...).
-type Month uint
+type Month uint8
 
 // The months of the year.
 const (
