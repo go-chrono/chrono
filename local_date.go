@@ -26,28 +26,30 @@ type LocalDate int32
 // This function panics if the provided date would overflow the internal type,
 // or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func LocalDateOf(year int32, month Month, day uint8) LocalDate {
-	if year > maxYear {
-		panic("year overflows LocalDate")
-	} else if dateIsValid(year, month, day) {
+	if !dateIsValid(year, month, day) {
 		panic("invalid date")
 	}
 
-	y, m, d := year, int32(month), int32(day)
+	y, m, d := int64(year), int64(month), int64(day)
 	return LocalDate((1461*(y+4800+(m-14)/12))/4+(367*(m-2-12*((m-14)/12)))/12-(3*((y+4900+(m-14)/12)/100))/4+d-32075) - unixEpochJDN
 }
 
 // Date returns the ISO 8601 year, month and day represented by d.
 func (d LocalDate) Date() (year int32, month Month, day uint8) {
-	d += unixEpochJDN
+	if d < minJDN && d > maxJDN {
+		panic("invalid date")
+	}
 
-	f := int32(d) + 1401 + ((((4*int32(d) + 274277) / 146097) * 3) / 4) - 38
+	dd := int64(d + unixEpochJDN)
+
+	f := dd + 1401 + ((((4*dd + 274277) / 146097) * 3) / 4) - 38
 	e := 4*f + 3
 	g := (e % 1461) / 4
 	h := 5*g + 2
 
 	day = uint8((h%153)/5) + 1
 	month = Month((h/153+2)%12) + 1
-	year = int32(e/1461 - 4716 + (14-int32(month))/12)
+	year = int32(e/1461 - 4716 + (14-int64(month))/12)
 	return
 }
 
@@ -74,7 +76,6 @@ func (d LocalDate) YearDay() uint32 {
 func (d LocalDate) ISOWeek() (year int32, week uint8) {
 	year, month, day := d.Date()
 	week = uint8((10 + ordinalDate(year, month, day) - uint32(d.Weekday()) - 1) / 7)
-	fmt.Println(week)
 
 	if week == 0 {
 		if isLeapYear(year - 1) {
@@ -96,11 +97,11 @@ func (d LocalDate) String() string {
 }
 
 func MinLocalDate() LocalDate {
-	return LocalDateOf(minYear, minMonth, minDay)
+	return LocalDate(minJDN)
 }
 
 func MaxLocalDate() LocalDate {
-	return LocalDateOf(maxYear, maxMonth, maxDay)
+	return LocalDate(maxJDN)
 }
 
 func isLeapYear(y int32) bool {
@@ -117,21 +118,41 @@ func ordinalDate(y int32, m Month, d uint8) uint32 {
 		}
 	}
 
-	if isLeapYear(y) && ((m > February) || (m == February && d == 29)) {
+	if isLeapYear(y) && m > February {
 		out++
 	}
 	return out
 }
 
 func dateIsValid(y int32, m Month, d uint8) bool {
-	if m > December {
+	if y < minYear {
+		return false
+	} else if y == minYear {
+		if m < minMonth {
+			return false
+		} else if m == minMonth && d < minDay {
+			return false
+		}
+	}
+
+	if y > maxYear {
+		return false
+	} else if y == maxYear {
+		if m > maxMonth {
+			return false
+		} else if m == maxMonth && d > maxDay {
+			return false
+		}
+	}
+
+	if m < January || m > December {
 		return false
 	}
 
 	if isLeapYear(y) && m == February {
-		return d > 29
+		return d > 0 && d <= 29
 	} else {
-		return d > daysInMonths[m]
+		return d > 0 && d <= daysInMonths[m]
 	}
 }
 
@@ -158,9 +179,11 @@ const (
 	minYear  = -4713
 	minMonth = November
 	minDay   = 24
+	minJDN   = -unixEpochJDN
 
 	// The maximum representable date must fit into an int32.
-	maxYear  = math.MaxInt32 / 366
-	maxMonth = December
-	maxDay   = 31
+	maxYear  = 5874898
+	maxMonth = June
+	maxDay   = 3
+	maxJDN   = math.MaxInt32 - unixEpochJDN
 )

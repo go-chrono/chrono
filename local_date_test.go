@@ -19,6 +19,7 @@ func TestLocalDate(t *testing.T) {
 		isoWeek    uint8
 	}{
 		{-4713, chrono.November, 24, chrono.Monday, false, 328, -4713, 48}, // 4714 BCE
+		{+5874898, chrono.June, 3, chrono.Tuesday, false, 154, +5874898, 23},
 		{+1858, chrono.November, 17, chrono.Wednesday, false, 321, +1858, 46},
 		{+1968, chrono.May, 24, chrono.Friday, true, 145, +1968, 21},
 		{+1950, chrono.January, 1, chrono.Sunday, false, 1, +1949, 52},
@@ -29,6 +30,8 @@ func TestLocalDate(t *testing.T) {
 		{+200, chrono.March, 1, chrono.Saturday, false, 60, +200, 9},
 		{+2020, chrono.December, 31, chrono.Thursday, true, 366, +2020, 53},
 		{+2021, chrono.January, 1, chrono.Friday, false, 1, +2020, 53},
+		{+2000, chrono.February, 29, chrono.Tuesday, true, 60, +2000, 9},
+		{+2000, chrono.March, 1, chrono.Wednesday, true, 61, +2000, 9},
 	} {
 		t.Run(fmt.Sprintf("%+05d-%02d-%02d", tt.year, tt.month, tt.day), func(t *testing.T) {
 			d := chrono.LocalDateOf(tt.year, tt.month, tt.day)
@@ -78,24 +81,67 @@ func TestLocalDate(t *testing.T) {
 	}
 }
 
-func TestDefaultLocalDate(t *testing.T) {
-	var d chrono.LocalDate
+func TestLocalDateOf(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		year  int32
+		month chrono.Month
+		day   uint8
+	}{
+		{"year underflows", -4714, chrono.January, 1},
+		{"year & month underflows", -4713, chrono.October, 1},
+		{"year & month & day underflows", -4713, chrono.November, 23},
+		{"year overflows", 5874899, chrono.January, 1},
+		{"year & month overflows", 5874898, chrono.July, 1},
+		{"year & month & day overflows", 5874898, chrono.June, 4},
+		{"month underflows", 2001, 0, 1},
+		{"month overflows", 2001, 13, 1},
+		{"day underflows", 2001, chrono.February, 0},
+		{"day overflows", 2001, chrono.February, 29},
+		{"day overflows leap year", 2004, chrono.February, 30},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Fatalf("expecting panic that didn't occur")
+					}
+				}()
 
-	expectedYear, expectedMonth, expectedDay := int32(1970), chrono.January, uint8(1)
-
-	year, month, day := d.Date()
-	if year != expectedYear {
-		t.Errorf("d.Date() year = %d, want %d", year, expectedYear)
-		t.Fail()
+				chrono.LocalDateOf(tt.year, tt.month, tt.day)
+			}()
+		})
 	}
+}
 
-	if month != expectedMonth {
-		t.Errorf("d.Date() month = %s, want %s", month, expectedMonth)
-		t.Fail()
-	}
+func TestLocalDate_Date(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		d     chrono.LocalDate
+		year  int32
+		month chrono.Month
+		day   uint8
+	}{
+		{"default value", chrono.LocalDate(0), 1970, chrono.January, 1},
+		{"minimum value", chrono.MinLocalDate(), -4713, chrono.November, 24},
+		{"maximum value", chrono.MaxLocalDate(), 5874898, chrono.June, 3},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			year, month, day := tt.d.Date()
+			if year != tt.year {
+				t.Errorf("d.Date() year = %d, want %d", year, tt.year)
+				t.Fail()
+			}
 
-	if day != expectedDay {
-		t.Errorf("d.Date() day = %d, want %d", day, expectedDay)
-		t.Fail()
+			if month != tt.month {
+				t.Errorf("d.Date() month = %s, want %s", month, tt.month)
+				t.Fail()
+			}
+
+			if day != tt.day {
+				t.Errorf("d.Date() day = %d, want %d", day, tt.day)
+				t.Fail()
+			}
+		})
 	}
 }
