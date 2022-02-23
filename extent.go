@@ -2,7 +2,7 @@ package chrono
 
 // Extent represents a period of time measured in nanoseconds.
 // The represented value is exactly equivalent to the standard library's time.Duration.
-type Extent int
+type Extent int64
 
 // Common time-based durations relative to 1 nanosecond.
 const (
