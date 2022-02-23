@@ -9,14 +9,14 @@ import (
 
 func TestLocalDate(t *testing.T) {
 	for _, tt := range []struct {
-		year       int32
+		year       int
 		month      chrono.Month
-		day        uint8
+		day        int
 		weekday    chrono.Weekday
 		isLeapYear bool
-		yearDay    uint32
-		isoYear    int32
-		isoWeek    uint8
+		yearDay    int
+		isoYear    int
+		isoWeek    int
 	}{
 		{-4713, chrono.November, 24, chrono.Monday, false, 328, -4713, 48}, // 4714 BCE
 		{+5874898, chrono.June, 3, chrono.Tuesday, false, 154, +5874898, 23},
@@ -84,9 +84,9 @@ func TestLocalDate(t *testing.T) {
 func TestLocalDateOf(t *testing.T) {
 	for _, tt := range []struct {
 		name  string
-		year  int32
+		year  int
 		month chrono.Month
-		day   uint8
+		day   int
 	}{
 		{"year underflows", -4714, chrono.January, 1},
 		{"year & month underflows", -4713, chrono.October, 1},
@@ -118,9 +118,9 @@ func TestLocalDate_Date(t *testing.T) {
 	for _, tt := range []struct {
 		name  string
 		d     chrono.LocalDate
-		year  int32
+		year  int
 		month chrono.Month
-		day   uint8
+		day   int
 	}{
 		{"default value", chrono.LocalDate(0), 1970, chrono.January, 1},
 		{"minimum value", chrono.MinLocalDate(), -4713, chrono.November, 24},
