@@ -23,7 +23,7 @@
 <td style="width:33%">Using <code>chrono</code></td>
 </tr>
 <tr>
-<td style="vertical-align:top">Parse or format a duration according to ISO 8601. When interfacing with systems where the <code>time</code> package's duration formatting is not understood, ISO 8601 is a commonly-adopted standard.</td>
+<td style="vertical-align:top"><strong>Parse or format a duration according to ISO 8601.</strong> When interfacing with systems where the <code>time</code> package's duration formatting is not understood, ISO 8601 is a commonly-adopted standard.</td>
 <td style="vertical-align:top">
 
 `time` doesn't support ISO 8601 durations notation. A simple one-liner that uses only the seconds component is possible, but this is neither readable nor solves the problem of parsing such strings:
@@ -42,6 +42,34 @@ fmt.Printf("PT%dS", int(d.Seconds()))
 * [`chrono.FormatDuration`](https://pkg.go.dev/github.com/go-chrono/chrono#FormatDuration)
 
 ✅ [See some examples](examples/duration_period_test.go).
+
+</td>
+</tr>
+
+<tr>
+<td style="vertical-align:top"><strong>Work with local or "civil" dates.</strong> Often it's necessary to represent a date with no time component, and no time zone or time offset. For example, you might want to represent a birthday - an event that happens on a particular date, outside of the context of a physical location or time zone.</td>
+<td style="vertical-align:top">
+
+Using `time.Date`, the time components can be zeroed:
+
+```go
+time.Date(2020, time.August, 4, 0, 0, 0, 0, time.UTC)
+```
+
+Alternatively, some people use the [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package:
+
+```go
+civil.Date{Year: 2020, Month: time.August, Day: 4}
+```
+
+</td>
+<td style="vertical-align:top">
+
+`chrono` has a dedicated type to describe a local date. Since the date is represented as a single integer, `LocalDate`s are sortable and comparable with built-in operators.
+
+[`chrono.LocalDate`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDate)
+
+✅ [See some examples](examples/local_date_test.go).
 
 </td>
 </tr>
