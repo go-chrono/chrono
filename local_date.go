@@ -151,9 +151,8 @@ func dateIsValid(y int, m Month, d int) bool {
 
 	if isLeapYear(y) && m == February {
 		return d > 0 && d <= 29
-	} else {
-		return d > 0 && d <= daysInMonths[m-1]
 	}
+	return d > 0 && d <= daysInMonths[m-1]
 }
 
 var daysInMonths = [12]int{

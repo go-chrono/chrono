@@ -34,9 +34,9 @@ func TestLocalDate(t *testing.T) {
 		{+2000, chrono.March, 1, chrono.Wednesday, true, 61, +2000, 9},
 	} {
 		t.Run(fmt.Sprintf("%+05d-%02d-%02d", tt.year, tt.month, tt.day), func(t *testing.T) {
-			d := chrono.LocalDateOf(tt.year, tt.month, tt.day)
+			date := chrono.LocalDateOf(tt.year, tt.month, tt.day)
 
-			year, month, day := d.Date()
+			year, month, day := date.Date()
 			if year != tt.year {
 				t.Errorf("d.Date() year = %d, want %d", year, tt.year)
 				t.Fail()
@@ -52,22 +52,22 @@ func TestLocalDate(t *testing.T) {
 				t.Fail()
 			}
 
-			if weekday := d.Weekday(); weekday != tt.weekday {
+			if weekday := date.Weekday(); weekday != tt.weekday {
 				t.Errorf("d.Weekday() = %s, want %s", weekday, tt.weekday)
 				t.Fail()
 			}
 
-			if isLeapYear := d.IsLeapYear(); isLeapYear != tt.isLeapYear {
+			if isLeapYear := date.IsLeapYear(); isLeapYear != tt.isLeapYear {
 				t.Errorf("d.YearDay() = %t, want %t", isLeapYear, tt.isLeapYear)
 				t.Fail()
 			}
 
-			if yearDay := d.YearDay(); yearDay != tt.yearDay {
+			if yearDay := date.YearDay(); yearDay != tt.yearDay {
 				t.Errorf("d.YearDay() = %d, want %d", yearDay, tt.yearDay)
 				t.Fail()
 			}
 
-			isoYear, isoWeek := d.ISOWeek()
+			isoYear, isoWeek := date.ISOWeek()
 			if isoYear != tt.isoYear {
 				t.Errorf("d.ISOWeek() year = %d, want %d", isoYear, tt.isoYear)
 				t.Fail()
@@ -117,7 +117,7 @@ func TestLocalDateOf(t *testing.T) {
 func TestLocalDate_Date(t *testing.T) {
 	for _, tt := range []struct {
 		name  string
-		d     chrono.LocalDate
+		date  chrono.LocalDate
 		year  int
 		month chrono.Month
 		day   int
@@ -127,7 +127,7 @@ func TestLocalDate_Date(t *testing.T) {
 		{"maximum value", chrono.MaxLocalDate(), 5874898, chrono.June, 3},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			year, month, day := tt.d.Date()
+			year, month, day := tt.date.Date()
 			if year != tt.year {
 				t.Errorf("d.Date() year = %d, want %d", year, tt.year)
 				t.Fail()
