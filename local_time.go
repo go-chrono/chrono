@@ -29,6 +29,10 @@ func (t LocalTime) Nanosecond() int {
 	return int(t.v % Second)
 }
 
+func (t LocalTime) Sub(u LocalTime) Duration {
+	return DurationOf(t.v - u.v)
+}
+
 func (t LocalTime) String() string {
 	out := fmt.Sprintf("%02d:%02d:%02d", t.Hour(), t.Minute(), t.Second())
 	if nsec := t.Nanosecond(); nsec != 0 {
