@@ -6,7 +6,7 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-func TestExtentTruncate(t *testing.T) {
+func TestExtent_Truncate(t *testing.T) {
 	t.Run("positive", func(t *testing.T) {
 		e := 1*chrono.Hour + 20*chrono.Minute + 5*chrono.Second + 42*chrono.Millisecond + 307*chrono.Microsecond
 

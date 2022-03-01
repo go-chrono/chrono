@@ -6,7 +6,7 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-func TestPeriodFormat(t *testing.T) {
+func TestPeriod_Format(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		input    chrono.Period
@@ -101,7 +101,7 @@ func TestPeriodFormat(t *testing.T) {
 	}
 }
 
-func TestPeriodParse(t *testing.T) {
+func TestPeriod_Parse(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		input    string

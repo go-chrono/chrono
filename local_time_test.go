@@ -27,7 +27,7 @@ func TestLocalTime(t *testing.T) {
 	}
 }
 
-func TestLocalTimeBusinessHour(t *testing.T) {
+func TestLocalTime_BusinessHour(t *testing.T) {
 	time := chrono.LocalTimeOf(25, 0, 0, 0)
 
 	if hour := time.BusinessHour(); hour != 25 {
@@ -39,7 +39,7 @@ func TestLocalTimeBusinessHour(t *testing.T) {
 	}
 }
 
-func TestLocalTimeSub(t *testing.T) {
+func TestLocalTime_Sub(t *testing.T) {
 	for _, tt := range []struct {
 		t1   chrono.LocalTime
 		t2   chrono.LocalTime
@@ -56,7 +56,7 @@ func TestLocalTimeSub(t *testing.T) {
 	}
 }
 
-func TestLocalTimeAdd(t *testing.T) {
+func TestLocalTime_Add(t *testing.T) {
 	for _, tt := range []struct {
 		t        chrono.LocalTime
 		e        chrono.Extent
@@ -75,7 +75,7 @@ func TestLocalTimeAdd(t *testing.T) {
 	}
 }
 
-func TestLocalTimeCompare(t *testing.T) {
+func TestLocalTime_Compare(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		t        chrono.LocalTime

@@ -6,7 +6,7 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-func TestWeekdayString(t *testing.T) {
+func TestWeekday_String(t *testing.T) {
 	for _, tt := range []struct {
 		day      chrono.Weekday
 		expected string
@@ -32,7 +32,7 @@ func TestWeekdayString(t *testing.T) {
 	}
 }
 
-func TestMonthString(t *testing.T) {
+func TestMonth_String(t *testing.T) {
 	for _, tt := range []struct {
 		day      chrono.Month
 		expected string

@@ -84,7 +84,7 @@ func TestDurationOf(t *testing.T) {
 	}
 }
 
-func TestDurationUnits(t *testing.T) {
+func TestDuration_units(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		of       chrono.Extent
@@ -175,7 +175,7 @@ func TestDurationUnits(t *testing.T) {
 	}
 }
 
-func TestDurationAdd(t *testing.T) {
+func TestDuration_Add(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		d1       chrono.Duration
@@ -306,7 +306,7 @@ func TestDurationAdd(t *testing.T) {
 	}
 }
 
-func TestDurationFormat(t *testing.T) {
+func TestDuration_Format(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
 		of        chrono.Extent
@@ -455,7 +455,7 @@ func TestDurationFormat(t *testing.T) {
 	}
 }
 
-func TestDurationParse(t *testing.T) {
+func TestDuration_Parse(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		input    string
