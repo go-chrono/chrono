@@ -50,7 +50,7 @@ fmt.Println(chrono.FormatDuration(period, duration))
 
 Often it's necessary to represent a date with no time component, and no time zone or time offset. For example, you might want to represent a birthday - an event that happens on a particular date, outside of the context of a physical location or time zone.
 
-Usually, this is achieved using the standard library's `time.Date` function and setting the time values to `0`. Alternatively, some people use the `Date` type of Google's [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package
+Usually, this is achieved using the standard library's `time.Date` function and setting the time values to `0`. Alternatively, some people use the `Date` type of Google's [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package.
 
 `chrono` has a dedicated type to describe a local date. Since the date is represented as a single integer, a [`LocalDate`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDate) is sortable and comparable with built-in operators:
 
