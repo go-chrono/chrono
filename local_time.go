@@ -33,6 +33,19 @@ func (t LocalTime) Sub(u LocalTime) Duration {
 	return DurationOf(t.v - u.v)
 }
 
+// Compare compares t with u. If t is before u, it returns -1;
+// if t is after u, it returns 1; if they're the same, it returns 0.
+func (t LocalTime) Compare(u LocalTime) int {
+	switch {
+	case t.v < u.v:
+		return -1
+	case t.v > u.v:
+		return 1
+	default:
+		return 0
+	}
+}
+
 func (t LocalTime) String() string {
 	out := fmt.Sprintf("%02d:%02d:%02d", t.Hour(), t.Minute(), t.Second())
 	if nsec := t.Nanosecond(); nsec != 0 {

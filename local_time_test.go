@@ -43,3 +43,22 @@ func TestLocalTimeSub(t *testing.T) {
 		})
 	}
 }
+
+func TestLocalTimeCompare(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		t        chrono.LocalTime
+		u        chrono.LocalTime
+		expected int
+	}{
+		{"earlier", chrono.LocalTimeOf(11, 0, 0, 0), chrono.LocalTimeOf(12, 0, 0, 0), -1},
+		{"later", chrono.LocalTimeOf(13, 30, 0, 0), chrono.LocalTimeOf(13, 29, 55, 0), 1},
+		{"equal", chrono.LocalTimeOf(15, 0, 0, 1000), chrono.LocalTimeOf(15, 0, 0, 1000), 0},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if v := tt.t.Compare(tt.u); v != tt.expected {
+				t.Errorf("t.Compare(u) = %d, want %d", v, tt.expected)
+			}
+		})
+	}
+}
