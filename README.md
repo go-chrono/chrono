@@ -14,17 +14,11 @@
 
 ---
 
-## Use cases
+# Use cases
 
-<table>
-<tr>
-<td style="width:33%">Use case</td>
-<td style="width:33%">Using <code>time</code></td>
-<td style="width:33%">Using <code>chrono</code></td>
-</tr>
-<tr>
-<td style="vertical-align:top">Parse or format a duration according to ISO 8601. When interfacing with systems where the <code>time</code> package's duration formatting is not understood, ISO 8601 is a commonly-adopted standard.</td>
-<td style="vertical-align:top">
+## Parse and format ISO 8601 durations
+
+When interfacing with systems where the <code>time</code> package's duration formatting is not understood, ISO 8601 is a commonly-adopted standard.
 
 `time` doesn't support ISO 8601 durations notation. A simple one-liner that uses only the seconds component is possible, but this is neither readable nor solves the problem of parsing such strings:
 
@@ -33,28 +27,43 @@ var d time.Duration
 fmt.Printf("PT%dS", int(d.Seconds()))
 ```
 
-</td>
-<td style="vertical-align:top">
+`chrono` supports both [parsing](https://pkg.go.dev/github.com/go-chrono/chrono#ParseDuration) and [formatting](https://pkg.go.dev/github.com/go-chrono/chrono#FormatDuration) of ISO 8601 strings:
 
-`chrono` supports both formatting and parsing of ISO 8601 strings. Relevant functions:
+```go
+period, duration, _ := chrono.ParseDuration("P3Y6M4DT1M5S")
+fmt.Println(chrono.FormatDuration(period, duration))
+```
 
-* [`chrono.ParseDuration`](https://pkg.go.dev/github.com/go-chrono/chrono#ParseDuration)
-* [`chrono.FormatDuration`](https://pkg.go.dev/github.com/go-chrono/chrono#FormatDuration)
+Alternatively, a [`Period`](https://pkg.go.dev/github.com/go-chrono/chrono#Period) and [`Duration`](https://pkg.go.dev/github.com/go-chrono/chrono#Duration) can be initialized with numeric values:
 
-✅ [See some examples](examples/duration_period_test.go).
+```go
+period := chrono.Period{Years: 3, Months: 6, Days: 4}
+duration := chrono.DurationOf(1*chrono.Hour + 30*chrono.Minute + 5*chrono.Second)
+fmt.Println(chrono.FormatDuration(period, duration))
+```
 
-</td>
-</tr>
-</table>
+✅ [See more examples](examples/duration_period_test.go).
 
-## Concepts
+## Local (or "civil") dates and times
 
-### Durations, extents, and periods
+Often it's necessary to represent a date with no time component, and no time zone or time offset. For example, you might want to represent a birthday - an event that happens on a particular date, outside of the context of a physical location or time zone.
 
-`Extent` is equivalent to `time.Duration`. It is an `int64` that represents a value in nanoseconds, and can therefore represent approximately ±292 years.
+Using `time.Date`, the time components can be zeroed:
 
-`chrono` also introduces the distinct `Duration` type, which is semantically equivalent to `Extent` but can represent a much larger period of time of approximately ±292 billion years. `Duration` also forms part of the support for ISO 8601 durations.
+```go
+time.Date(2020, time.August, 4, 0, 0, 0, 0, time.UTC)
+```
 
-The other half of ISO 8601 duration support comes from the `Period` type. It consists of values for years, months, weeks and days, and has no equivalent in the standard library.
+Alternatively, some people use the [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package:
 
-When combined, `Period` and `Duration`, an ISO 8601 duration can be formatted to, and parsed from, a string, e.g. `P3Y6M4DT1M5S`.
+```go
+civil.Date{Year: 2020, Month: time.August, Day: 4}
+```
+
+`chrono` has a dedicated type to describe a local date. Since the date is represented as a single integer, [`LocalDate`s](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDate) are sortable and comparable with built-in operators:
+
+```go
+chrono.LocalDateOf(2007, chrono.May, 20)
+```
+
+✅ [See more examples](examples/local_date_test.go).
