@@ -64,6 +64,8 @@ func TestLocalTimeAdd(t *testing.T) {
 	}{
 		{chrono.LocalTimeOf(12, 0, 0, 0), 29 * chrono.Minute, chrono.LocalTimeOf(12, 29, 0, 0)},
 		{chrono.LocalTimeOf(14, 45, 0, 0), -22 * chrono.Minute, chrono.LocalTimeOf(14, 23, 0, 0)},
+		{chrono.LocalTimeOf(5, 0, 0, 0), -7 * chrono.Hour, chrono.LocalTimeOf(22, 0, 0, 0)},
+		{chrono.LocalTimeOf(5, 0, 0, 0), -31 * chrono.Hour, chrono.LocalTimeOf(22, 0, 0, 0)},
 	} {
 		t.Run(fmt.Sprintf("%s + %v", tt.t, tt.e), func(t *testing.T) {
 			if added := tt.t.Add(tt.e); added.Compare(tt.expected) != 0 {

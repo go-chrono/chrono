@@ -48,14 +48,21 @@ func (t LocalTime) Sub(u LocalTime) Duration {
 	return DurationOf(t.v - u.v)
 }
 
+// Add returns the time t+v. If the result exceeds the maximum representable time, this function panics.
+// If the result would be earlier than 00:00:00, the returned time is moved to the previous day,
+// e.g. 01:00:00 - 2 hours = 23:00:00.
 func (t LocalTime) Add(v Extent) LocalTime {
 	if v > maxLocalTime {
 		panic("invalid duration v")
 	}
 
 	out := t.v + v
-	if out < 0 || out > maxLocalTime {
+	if out > maxLocalTime {
 		panic("invalid time t+v")
+	}
+
+	if out < 0 {
+		return LocalTime{v: 24*Hour + (out % (24 * Hour))}
 	}
 	return LocalTime{v: out}
 }
