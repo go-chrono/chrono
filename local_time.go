@@ -33,6 +33,18 @@ func (t LocalTime) Sub(u LocalTime) Duration {
 	return DurationOf(t.v - u.v)
 }
 
+func (t LocalTime) Add(v Extent) LocalTime {
+	if v > maxLocalTime {
+		panic("invalid duration v")
+	}
+
+	out := t.v + v
+	if out < 0 || out > maxLocalTime {
+		panic("invalid time t+v")
+	}
+	return LocalTime{v: out}
+}
+
 // Compare compares t with u. If t is before u, it returns -1;
 // if t is after u, it returns 1; if they're the same, it returns 0.
 func (t LocalTime) Compare(u LocalTime) int {
@@ -53,3 +65,7 @@ func (t LocalTime) String() string {
 	}
 	return out
 }
+
+const (
+	maxLocalTime Extent = 359999999999999
+)
