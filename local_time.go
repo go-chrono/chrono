@@ -2,6 +2,12 @@ package chrono
 
 import "fmt"
 
+// LocalTime is a time without a time zone or date component.
+// It represents a time within the 24-hour clock system with nanosecond precision, according to ISO 8601.
+//
+// Additional flexibility is provided whereby times after 23:59:59.999999999 are also considered valid.
+// This feature supports various usecases where times such as 25:00 (instead of 01:00) represent
+// business hours that extend beyond midnight.
 type LocalTime struct {
 	v Extent
 }
@@ -13,8 +19,17 @@ func LocalTimeOf(hour, min, sec, nsec int) LocalTime {
 	return LocalTime{v: Extent(hour)*Hour + Extent(min)*Minute + Extent(sec)*Second + Extent(nsec)}
 }
 
-func (t LocalTime) Hour() int {
+// BusinessHour returns the hour specified by t.
+// If the hour is greater than 23, that hour is returned without normalization.
+func (t LocalTime) BusinessHour() int {
 	return int(t.v / Hour)
+}
+
+// Hour returns the hour specified by t.
+// If hour is greater than 23, the returned value is normalized so as to fit within
+// the 24-hour clock as specified by ISO 8601, e.g. 25 is returned as 01.
+func (t LocalTime) Hour() int {
+	return int((t.v % (24 * Hour)) / Hour)
 }
 
 func (t LocalTime) Minute() int {

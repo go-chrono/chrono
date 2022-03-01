@@ -27,6 +27,18 @@ func TestLocalTime(t *testing.T) {
 	}
 }
 
+func TestLocalTimeBusinessHour(t *testing.T) {
+	time := chrono.LocalTimeOf(25, 0, 0, 0)
+
+	if hour := time.BusinessHour(); hour != 25 {
+		t.Errorf("time.Hour() = %d, want 25", hour)
+	}
+
+	if hour := time.Hour(); hour != 1 {
+		t.Errorf("time.Hour() = %d, want 1", hour)
+	}
+}
+
 func TestLocalTimeSub(t *testing.T) {
 	for _, tt := range []struct {
 		t1   chrono.LocalTime
