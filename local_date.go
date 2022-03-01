@@ -22,7 +22,7 @@ import (
 // Thus, when using LocalDate, year 0 is intepreted to mean 1 BCE, and year -1 is 2 BCE, and so on.
 type LocalDate int32
 
-// LocalDate of returns a LocalDate that stores the specified year, month and day.
+// LocalDateOf returns a LocalDate that stores the specified year, month and day.
 // This function panics if the provided date would overflow the internal type,
 // or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func LocalDateOf(year int, month Month, day int) LocalDate {
@@ -96,10 +96,12 @@ func (d LocalDate) String() string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
 }
 
+// MinLocalDate returns the earliest supported date.
 func MinLocalDate() LocalDate {
 	return LocalDate(minJDN)
 }
 
+// MaxLocalDate returns the latest supported date.
 func MaxLocalDate() LocalDate {
 	return LocalDate(maxJDN)
 }
