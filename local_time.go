@@ -7,11 +7,13 @@ import "fmt"
 //
 // Additional flexibility is provided whereby times after 23:59:59.999999999 are also considered valid.
 // This feature supports various usecases where times such as 25:00 (instead of 01:00) represent
-// business hours that extend beyond midnight.
+// business hours that extend beyond midnight. LocalTime supports a maximum hour of 99.
 type LocalTime struct {
 	v Extent
 }
 
+// LocalTimeOf returns a LocalTime that represents the specified hour, minute, second and nanosecond offset within the specified second.
+// A valid time is between 00:00:00 and 99:59:59.999999999. If an invalid time is specified, this function panics.
 func LocalTimeOf(hour, min, sec, nsec int) LocalTime {
 	if hour < 0 || hour > 99 || min < 0 || min > 59 || sec < 0 || sec > 59 || nsec < 0 || nsec > 999999999 {
 		panic("invalid time")
@@ -32,18 +34,22 @@ func (t LocalTime) Hour() int {
 	return int((t.v % (24 * Hour)) / Hour)
 }
 
+// Minute returns the minute specified by t.
 func (t LocalTime) Minute() int {
 	return int(t.v % Hour / Minute)
 }
 
+// Second returns the second specified by t.
 func (t LocalTime) Second() int {
 	return int(t.v % Minute / Second)
 }
 
+// Nanosecond returns the nanosecond offset within the second specified by t, in the range [0, 999999999].
 func (t LocalTime) Nanosecond() int {
 	return int(t.v % Second)
 }
 
+// Sub returns the duration t-u.
 func (t LocalTime) Sub(u LocalTime) Duration {
 	return DurationOf(t.v - u.v)
 }
