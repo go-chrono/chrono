@@ -175,6 +175,27 @@ func TestDuration_units(t *testing.T) {
 	}
 }
 
+func TestDuration_Compare(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		d        chrono.Duration
+		d2       chrono.Duration
+		expected int
+	}{
+		{"seconds less", chrono.DurationOf(1 * chrono.Hour), chrono.DurationOf(2 * chrono.Hour), -1},
+		{"seconds more", chrono.DurationOf(2 * chrono.Hour), chrono.DurationOf(1 * chrono.Hour), 1},
+		{"nanos less", chrono.DurationOf(1 * chrono.Nanosecond), chrono.DurationOf(2 * chrono.Nanosecond), -1},
+		{"nanos more", chrono.DurationOf(2 * chrono.Nanosecond), chrono.DurationOf(1 * chrono.Nanosecond), 1},
+		{"equal", chrono.DurationOf(chrono.Minute), chrono.DurationOf(chrono.Minute), 0},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if v := tt.d.Compare(tt.d2); v != tt.expected {
+				t.Errorf("d.Compare(d2) = %d, want %d", v, tt.expected)
+			}
+		})
+	}
+}
+
 func TestDuration_Add(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
@@ -226,7 +247,7 @@ func TestDuration_Add(t *testing.T) {
 				}
 
 				d := tt.d1.Add(tt.d2)
-				if !d.Equal(tt.expected) {
+				if d.Compare(tt.expected) != 0 {
 					t.Fatalf("d1.Add(d2) = %v, want %v", d, tt.expected)
 				}
 			})
@@ -237,7 +258,7 @@ func TestDuration_Add(t *testing.T) {
 				}
 
 				d := tt.d2.Add(tt.d1)
-				if !d.Equal(tt.expected) {
+				if d.Compare(tt.expected) != 0 {
 					t.Fatalf("d2.Add(d1) = %v, want %v", d, tt.expected)
 				}
 			})
@@ -536,7 +557,7 @@ func TestDuration_Parse(t *testing.T) {
 			var d chrono.Duration
 			if err := d.Parse(tt.input); err != nil {
 				t.Fatalf("failed to parse duation: %v", err)
-			} else if !d.Equal(tt.expected) {
+			} else if d.Compare(tt.expected) != 0 {
 				t.Fatalf("parsed duration = %v, want %v", d, tt.expected)
 			}
 		})
