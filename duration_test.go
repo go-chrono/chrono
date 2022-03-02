@@ -178,8 +178,8 @@ func TestDuration_units(t *testing.T) {
 func TestDuration_Compare(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
-		t        chrono.Duration
-		u        chrono.Duration
+		d        chrono.Duration
+		d2       chrono.Duration
 		expected int
 	}{
 		{"seconds less", chrono.DurationOf(1 * chrono.Hour), chrono.DurationOf(2 * chrono.Hour), -1},
@@ -189,8 +189,8 @@ func TestDuration_Compare(t *testing.T) {
 		{"equal", chrono.DurationOf(chrono.Minute), chrono.DurationOf(chrono.Minute), 0},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			if v := tt.t.Compare(tt.u); v != tt.expected {
-				t.Errorf("t.Compare(u) = %d, want %d", v, tt.expected)
+			if v := tt.d.Compare(tt.d2); v != tt.expected {
+				t.Errorf("d.Compare(d2) = %d, want %d", v, tt.expected)
 			}
 		})
 	}

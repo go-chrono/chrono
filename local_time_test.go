@@ -88,7 +88,7 @@ func TestLocalTime_Compare(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if v := tt.t.Compare(tt.t2); v != tt.expected {
-				t.Errorf("t.Compare(u) = %d, want %d", v, tt.expected)
+				t.Errorf("t.Compare(t2) = %d, want %d", v, tt.expected)
 			}
 		})
 	}
