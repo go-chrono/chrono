@@ -23,8 +23,8 @@ func DurationOf(v Extent) Duration {
 	}
 }
 
-// Compare compares d with d2. If d is before d2, it returns -1;
-// if d is after d2, it returns 1; if they're the same, it returns 0.
+// Compare compares d with d2. If d is less than d2, it returns -1;
+// if d is greater than d2, it returns 1; if they're equal, it returns 0.
 func (d Duration) Compare(d2 Duration) int {
 	switch {
 	case d.secs < d2.secs:
