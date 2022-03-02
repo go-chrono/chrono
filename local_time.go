@@ -73,13 +73,13 @@ func (t LocalTime) Add(v Extent) LocalTime {
 	return LocalTime{v: out}
 }
 
-// Compare compares t with u. If t is before u, it returns -1;
-// if t is after u, it returns 1; if they're the same, it returns 0.
-func (t LocalTime) Compare(u LocalTime) int {
+// Compare compares t with t2. If t is before t2, it returns -1;
+// if t is after t2, it returns 1; if they're the same, it returns 0.
+func (t LocalTime) Compare(t2 LocalTime) int {
 	switch {
-	case t.v < u.v:
+	case t.v < t2.v:
 		return -1
-	case t.v > u.v:
+	case t.v > t2.v:
 		return 1
 	default:
 		return 0
