@@ -25,15 +25,15 @@ func (i Instant) String() string {
 }
 
 // Until returns the Duration that represents the elapsed time from i to v.
-func (i Instant) Until(v Instant) Duration {
+func (i Instant) Until(i2 Instant) Duration {
 	switch {
 	case i.v == nil:
 		panic("i is not initialized")
-	case v.v == nil:
-		panic("v is not initialized")
+	case i2.v == nil:
+		panic("i2 is not initialized")
 	}
 
-	iv, vv := *i.v, *v.v
+	iv, vv := *i.v, *i2.v
 	if vv < iv {
 		panic("v is smaller than i")
 	}
