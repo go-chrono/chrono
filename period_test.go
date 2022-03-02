@@ -204,7 +204,7 @@ func TestParseDuration(t *testing.T) {
 				t.Fatalf("failed to parse period & duration: %v", err)
 			} else if !p.Equal(tt.period) {
 				t.Fatalf("parsed period = %v, want %v", p, tt.period)
-			} else if !d.Equal(tt.duration) {
+			} else if d.Compare(tt.duration) != 0 {
 				t.Fatalf("parsed duration = %v, want %v", d, tt.duration)
 			}
 		})

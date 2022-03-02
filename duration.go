@@ -23,9 +23,21 @@ func DurationOf(v Extent) Duration {
 	}
 }
 
-// Equal reports whether d and d2 represent the same duration of time.
-func (d Duration) Equal(d2 Duration) bool {
-	return d2.secs == d.secs && d2.nsec == d.nsec
+// Compare compares d with d2. If d is before d2, it returns -1;
+// if d is after d2, it returns 1; if they're the same, it returns 0.
+func (d Duration) Compare(d2 Duration) int {
+	switch {
+	case d.secs < d2.secs:
+		return -1
+	case d.secs > d2.secs:
+		return 1
+	case d.nsec < d2.nsec:
+		return -1
+	case d.nsec > d2.nsec:
+		return 1
+	default:
+		return 0
+	}
 }
 
 // Add returns the duration d+d2.
