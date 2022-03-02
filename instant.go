@@ -61,3 +61,10 @@ func (i Instant) Until(i2 Instant) Duration {
 		nsec: uint32(d % 1e9),
 	}
 }
+
+// instant is used by the chronotest package.
+func instant(t int64) Instant {
+	return Instant{
+		v: &t,
+	}
+}
