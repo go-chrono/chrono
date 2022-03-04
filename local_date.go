@@ -26,21 +26,29 @@ type LocalDate int32
 // This function panics if the provided date would overflow the internal type,
 // or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func LocalDateOf(year int, month Month, day int) LocalDate {
+	return LocalDate(makeLocalDate(year, month, day))
+}
+
+func makeLocalDate(year int, month Month, day int) int64 {
 	if !dateIsValid(year, month, day) {
 		panic("invalid date")
 	}
 
 	y, m, d := int64(year), int64(month), int64(day)
-	return LocalDate((1461*(y+4800+(m-14)/12))/4+(367*(m-2-12*((m-14)/12)))/12-(3*((y+4900+(m-14)/12)/100))/4+d-32075) - unixEpochJDN
+	return (1461*(y+4800+(m-14)/12))/4 + (367*(m-2-12*((m-14)/12)))/12 - (3*((y+4900+(m-14)/12)/100))/4 + d - 32075 - unixEpochJDN
 }
 
 // Date returns the ISO 8601 year, month and day represented by d.
 func (d LocalDate) Date() (year int, month Month, day int) {
-	if d < minJDN && d > maxJDN {
+	return fromLocalDate(int64(d))
+}
+
+func fromLocalDate(v int64) (year int, month Month, day int) {
+	if v < minJDN && v > maxJDN {
 		panic("invalid date")
 	}
 
-	dd := int64(d + unixEpochJDN)
+	dd := int64(v + unixEpochJDN)
 
 	f := dd + 1401 + ((((4*dd + 274277) / 146097) * 3) / 4) - 38
 	e := 4*f + 3

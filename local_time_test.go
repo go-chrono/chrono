@@ -10,15 +10,16 @@ import (
 func TestLocalTime(t *testing.T) {
 	time := chrono.LocalTimeOf(12, 30, 59, 12345678)
 
-	if hour := time.Hour(); hour != 12 {
+	hour, min, sec := time.Clock()
+	if hour != 12 {
 		t.Errorf("time.Hour() = %d, want 12", hour)
 	}
 
-	if min := time.Minute(); min != 30 {
+	if min != 30 {
 		t.Errorf("time.Minute() = %d, want 30", min)
 	}
 
-	if sec := time.Second(); sec != 59 {
+	if sec != 59 {
 		t.Errorf("time.Second() = %d, want 59", sec)
 	}
 
@@ -34,7 +35,7 @@ func TestLocalTime_BusinessHour(t *testing.T) {
 		t.Errorf("time.Hour() = %d, want 25", hour)
 	}
 
-	if hour := time.Hour(); hour != 1 {
+	if hour, _, _ := time.Clock(); hour != 1 {
 		t.Errorf("time.Hour() = %d, want 1", hour)
 	}
 }
