@@ -26,7 +26,7 @@ func TestWeekday_String(t *testing.T) {
 	} {
 		t.Run(tt.expected, func(t *testing.T) {
 			if out := tt.day.String(); out != tt.expected {
-				t.Fatalf("stringified day = %s, want %s", out, tt.expected)
+				t.Errorf("stringified day = %s, want %s", out, tt.expected)
 			}
 		})
 	}
@@ -56,7 +56,7 @@ func TestMonth_String(t *testing.T) {
 	} {
 		t.Run(tt.expected, func(t *testing.T) {
 			if out := tt.day.String(); out != tt.expected {
-				t.Fatalf("stringified month = %s, want %s", out, tt.expected)
+				t.Errorf("stringified month = %s, want %s", out, tt.expected)
 			}
 		})
 	}

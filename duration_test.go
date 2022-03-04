@@ -78,7 +78,7 @@ func TestDurationOf(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d := chrono.DurationOf(tt.of)
 			if out := d.Nanoseconds(); out != tt.nsec {
-				t.Fatalf("d.Nanoseconds() = %f, want %f", out, tt.nsec)
+				t.Errorf("d.Nanoseconds() = %f, want %f", out, tt.nsec)
 			}
 		})
 	}
@@ -167,7 +167,7 @@ func TestDuration_units(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d := chrono.DurationOf(tt.of)
 			if out := tt.f(d); out != tt.expected {
-				t.Fatalf("%v() = %f, want %f",
+				t.Errorf("%v() = %f, want %f",
 					runtime.FuncForPC(reflect.ValueOf(tt.f).Pointer()).Name(),
 					out, tt.expected)
 			}
@@ -243,23 +243,23 @@ func TestDuration_Add(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Run("d1.Add(d2)", func(t *testing.T) {
 				if ok := tt.d1.CanAdd(tt.d2); !ok {
-					t.Fatalf("d1.CanAdd(d2) = false, want true")
+					t.Error("d1.CanAdd(d2) = false, want true")
 				}
 
 				d := tt.d1.Add(tt.d2)
 				if d.Compare(tt.expected) != 0 {
-					t.Fatalf("d1.Add(d2) = %v, want %v", d, tt.expected)
+					t.Errorf("d1.Add(d2) = %v, want %v", d, tt.expected)
 				}
 			})
 
 			t.Run("d2.Add(d1)", func(t *testing.T) {
 				if ok := tt.d2.CanAdd(tt.d1); !ok {
-					t.Fatalf("d2.CanAdd(d1) = false, want true")
+					t.Error("d2.CanAdd(d1) = false, want true")
 				}
 
 				d := tt.d2.Add(tt.d1)
 				if d.Compare(tt.expected) != 0 {
-					t.Fatalf("d2.Add(d1) = %v, want %v", d, tt.expected)
+					t.Errorf("d2.Add(d1) = %v, want %v", d, tt.expected)
 				}
 			})
 		})
@@ -294,13 +294,13 @@ func TestDuration_Add(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Run("d1.Add(d2)", func(t *testing.T) {
 				if ok := tt.d1.CanAdd(tt.d2); ok {
-					t.Fatalf("d1.CanAdd(d2) = true, want false")
+					t.Error("d1.CanAdd(d2) = true, want false")
 				}
 
 				func() {
 					defer func() {
 						if r := recover(); r == nil {
-							t.Fatalf("expecting panic that didn't occur")
+							t.Error("expecting panic that didn't occur")
 						}
 					}()
 
@@ -310,13 +310,13 @@ func TestDuration_Add(t *testing.T) {
 
 			t.Run("d2.Add(d1)", func(t *testing.T) {
 				if ok := tt.d2.CanAdd(tt.d1); ok {
-					t.Fatalf("d2.CanAdd(d1) = true, want false")
+					t.Error("d2.CanAdd(d1) = true, want false")
 				}
 
 				func() {
 					defer func() {
 						if r := recover(); r == nil {
-							t.Fatalf("expecting panic that didn't occur")
+							t.Error("expecting panic that didn't occur")
 						}
 					}()
 
@@ -470,7 +470,7 @@ func TestDuration_Format(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d := chrono.DurationOf(tt.of)
 			if out := d.Format(tt.exclusive...); out != tt.expected {
-				t.Fatalf("formatted duration = %s, want %s", out, tt.expected)
+				t.Errorf("formatted duration = %s, want %s", out, tt.expected)
 			}
 		})
 	}
@@ -556,9 +556,9 @@ func TestDuration_Parse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var d chrono.Duration
 			if err := d.Parse(tt.input); err != nil {
-				t.Fatalf("failed to parse duation: %v", err)
+				t.Errorf("failed to parse duation: %v", err)
 			} else if d.Compare(tt.expected) != 0 {
-				t.Fatalf("parsed duration = %v, want %v", d, tt.expected)
+				t.Errorf("parsed duration = %v, want %v", d, tt.expected)
 			}
 		})
 	}
@@ -566,14 +566,14 @@ func TestDuration_Parse(t *testing.T) {
 	t.Run("overflows", func(t *testing.T) {
 		var d chrono.Duration
 		if err := d.Parse("PT2562047788015216H"); err == nil {
-			t.Fatal("expecting error but got nil")
+			t.Error("expecting error but got nil")
 		}
 	})
 
 	t.Run("underflows", func(t *testing.T) {
 		var d chrono.Duration
 		if err := d.Parse("PT-2562047788015215H"); err == nil {
-			t.Fatal("expecting error but got nil")
+			t.Error("expecting error but got nil")
 		}
 	})
 }
