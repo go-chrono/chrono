@@ -52,7 +52,7 @@ func (d LocalDate) Date() (year int, month Month, day int) {
 }
 
 func fromLocalDate(v int64) (year int, month Month, day int) {
-	if v < minJDN && v > maxJDN {
+	if v < minJDN || v > maxJDN {
 		panic("invalid date")
 	}
 
@@ -214,7 +214,7 @@ var daysInMonths = [12]int{
 }
 
 const (
-	// unixEpochJDN is the JDN that corresponds to 1st January 1980 (Gregorian).
+	// unixEpochJDN is the JDN that corresponds to 1st January 1970 (Gregorian).
 	unixEpochJDN = 2440588
 
 	// The minimum representable date is JDN 0.

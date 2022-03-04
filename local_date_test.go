@@ -133,6 +133,26 @@ func TestLocalDate_Date(t *testing.T) {
 			}
 		})
 	}
+
+	for _, tt := range []struct {
+		name string
+		date chrono.LocalDate
+	}{
+		{"underflows", chrono.MinLocalDate() - 1},
+		{"overflows", chrono.MaxLocalDate() + 1},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				tt.date.Date()
+			}()
+		})
+	}
 }
 
 func TestLocalDate_Add(t *testing.T) {
@@ -153,7 +173,7 @@ func TestLocalDate_Add(t *testing.T) {
 		{"sub days", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, -15, chrono.LocalDateOf(2020, chrono.March, 3)},
 		{"time package example", chrono.LocalDateOf(2011, chrono.January, 1), -1, 2, 3, chrono.LocalDateOf(2010, chrono.March, 4)},
 		{"normalized time package example", chrono.LocalDateOf(2011, chrono.October, 31), 0, 1, 0, chrono.LocalDateOf(2011, chrono.December, 1)},
-		{"overflow day", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, 20, chrono.LocalDateOf(2020, chrono.April, 7)},
+		{"wrap around day", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, 20, chrono.LocalDateOf(2020, chrono.April, 7)},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if ok := tt.date.CanAdd(tt.addYears, tt.addMonths, tt.addDays); !ok {
