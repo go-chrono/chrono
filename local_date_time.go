@@ -15,8 +15,15 @@ type LocalDateTime struct {
 // hour, minute, second, and nanosecond offset within the specified second.
 // The same range of values as supported by OfLocalDate and OfLocalTime are allowed here.
 func LocalDateTimeOf(year int, month Month, day, hour, min, sec, nsec int) LocalDateTime {
-	date := makeLocalDate(year, month, day)
-	time := makeLocalTime(hour, min, sec, nsec)
+	date, err := makeLocalDate(year, month, day)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	time, err := makeLocalTime(hour, min, sec, nsec)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	nanos := big.NewInt(date)
 	nanos.Mul(nanos, dayExtent)

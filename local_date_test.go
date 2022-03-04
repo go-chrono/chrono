@@ -38,44 +38,36 @@ func TestLocalDate(t *testing.T) {
 
 			year, month, day := date.Date()
 			if year != tt.year {
-				t.Errorf("d.Date() year = %d, want %d", year, tt.year)
-				t.Fail()
+				t.Errorf("date.Date() year = %d, want %d", year, tt.year)
 			}
 
 			if month != tt.month {
-				t.Errorf("d.Date() month = %s, want %s", month, tt.month)
-				t.Fail()
+				t.Errorf("date.Date() month = %s, want %s", month, tt.month)
 			}
 
 			if day != tt.day {
-				t.Errorf("d.Date() day = %d, want %d", day, tt.day)
-				t.Fail()
+				t.Errorf("date.Date() day = %d, want %d", day, tt.day)
 			}
 
 			if weekday := date.Weekday(); weekday != tt.weekday {
-				t.Errorf("d.Weekday() = %s, want %s", weekday, tt.weekday)
-				t.Fail()
+				t.Errorf("date.Weekday() = %s, want %s", weekday, tt.weekday)
 			}
 
 			if isLeapYear := date.IsLeapYear(); isLeapYear != tt.isLeapYear {
-				t.Errorf("d.YearDay() = %t, want %t", isLeapYear, tt.isLeapYear)
-				t.Fail()
+				t.Errorf("date.YearDay() = %t, want %t", isLeapYear, tt.isLeapYear)
 			}
 
 			if yearDay := date.YearDay(); yearDay != tt.yearDay {
-				t.Errorf("d.YearDay() = %d, want %d", yearDay, tt.yearDay)
-				t.Fail()
+				t.Errorf("date.YearDay() = %d, want %d", yearDay, tt.yearDay)
 			}
 
 			isoYear, isoWeek := date.ISOWeek()
 			if isoYear != tt.isoYear {
-				t.Errorf("d.ISOWeek() year = %d, want %d", isoYear, tt.isoYear)
-				t.Fail()
+				t.Errorf("date.ISOWeek() year = %d, want %d", isoYear, tt.isoYear)
 			}
 
 			if isoWeek != tt.isoWeek {
-				t.Errorf("d.ISOWeek() week = %d, want %d", isoWeek, tt.isoWeek)
-				t.Fail()
+				t.Errorf("date.ISOWeek() week = %d, want %d", isoWeek, tt.isoWeek)
 			}
 		})
 	}
@@ -129,18 +121,43 @@ func TestLocalDate_Date(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			year, month, day := tt.date.Date()
 			if year != tt.year {
-				t.Errorf("d.Date() year = %d, want %d", year, tt.year)
-				t.Fail()
+				t.Errorf("date.Date() year = %d, want %d", year, tt.year)
 			}
 
 			if month != tt.month {
-				t.Errorf("d.Date() month = %s, want %s", month, tt.month)
-				t.Fail()
+				t.Errorf("date.Date() month = %s, want %s", month, tt.month)
 			}
 
 			if day != tt.day {
-				t.Errorf("d.Date() day = %d, want %d", day, tt.day)
-				t.Fail()
+				t.Errorf("date.Date() day = %d, want %d", day, tt.day)
+			}
+		})
+	}
+}
+
+func TestLocalDate_Add(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		date      chrono.LocalDate
+		addYears  int
+		addMonths int
+		addDays   int
+		expected  chrono.LocalDate
+	}{
+		{"nothing", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, 0, chrono.LocalDateOf(2020, chrono.March, 18)},
+		{"add years", chrono.LocalDateOf(2020, chrono.March, 18), 105, 0, 0, chrono.LocalDateOf(2125, chrono.March, 18)},
+		{"sub years", chrono.LocalDateOf(2020, chrono.March, 18), -280, 0, 0, chrono.LocalDateOf(1740, chrono.March, 18)},
+		{"add months", chrono.LocalDateOf(2020, chrono.March, 18), 0, 6, 0, chrono.LocalDateOf(2020, chrono.September, 18)},
+		{"sub months", chrono.LocalDateOf(2020, chrono.March, 18), 0, -2, 0, chrono.LocalDateOf(2020, chrono.January, 18)},
+		{"add days", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, 8, chrono.LocalDateOf(2020, chrono.March, 26)},
+		{"sub days", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, -15, chrono.LocalDateOf(2020, chrono.March, 3)},
+		{"time package example", chrono.LocalDateOf(2011, chrono.January, 1), -1, 2, 3, chrono.LocalDateOf(2010, chrono.March, 4)},
+		{"normalized time package example", chrono.LocalDateOf(2011, chrono.October, 31), 0, 1, 0, chrono.LocalDateOf(2011, chrono.November, 31)},
+		{"overflow day", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, 20, chrono.LocalDateOf(2020, chrono.April, 7)},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if date := tt.date.Add(tt.addYears, tt.addMonths, tt.addDays); date != tt.expected {
+				t.Errorf("date = %s, date.Add(%d, %d, %d) = %s, want %s", tt.date, tt.addYears, tt.addMonths, tt.addDays, date, tt.expected)
 			}
 		})
 	}

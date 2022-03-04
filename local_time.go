@@ -15,16 +15,20 @@ type LocalTime struct {
 // LocalTimeOf returns a LocalTime that represents the specified hour, minute, second, and nanosecond offset within the specified second.
 // A valid time is between 00:00:00 and 99:59:59.999999999. If an invalid time is specified, this function panics.
 func LocalTimeOf(hour, min, sec, nsec int) LocalTime {
-	return LocalTime{v: Extent(makeLocalTime(hour, min, sec, nsec))}
+	out, err := makeLocalTime(hour, min, sec, nsec)
+	if err != nil {
+		panic(err.Error())
+	}
+	return LocalTime{v: Extent(out)}
 }
 
-func makeLocalTime(hour, min, sec, nsec int) int64 {
+func makeLocalTime(hour, min, sec, nsec int) (int64, error) {
 	if hour < 0 || hour > 99 || min < 0 || min > 59 || sec < 0 || sec > 59 || nsec < 0 || nsec > 999999999 {
-		panic("invalid time")
+		return 0, fmt.Errorf("invalid time")
 	}
 
 	h, m, s, n := int64(hour), int64(min), int64(sec), int64(nsec)
-	return h*int64(Hour) + m*int64(Minute) + s*int64(Second) + n
+	return h*int64(Hour) + m*int64(Minute) + s*int64(Second) + n, nil
 }
 
 // BusinessHour returns the hour specified by t.
