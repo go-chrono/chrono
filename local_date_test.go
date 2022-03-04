@@ -104,7 +104,7 @@ func TestLocalDateOf(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r == nil {
-						t.Fatalf("expecting panic that didn't occur")
+						t.Error("expecting panic that didn't occur")
 					}
 				}()
 
