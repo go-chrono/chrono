@@ -156,9 +156,38 @@ func TestLocalDate_Add(t *testing.T) {
 		{"overflow day", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, 20, chrono.LocalDateOf(2020, chrono.April, 7)},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+			if ok := tt.date.CanAdd(tt.addYears, tt.addMonths, tt.addDays); !ok {
+				t.Errorf("date = %s, date.CanAdd(%d, %d, %d) = false, want true", tt.date, tt.addYears, tt.addMonths, tt.addDays)
+			}
+
 			if date := tt.date.Add(tt.addYears, tt.addMonths, tt.addDays); date != tt.expected {
 				t.Errorf("date = %s, date.Add(%d, %d, %d) = %s, want %s", tt.date, tt.addYears, tt.addMonths, tt.addDays, date, tt.expected)
 			}
+		})
+	}
+
+	for _, tt := range []struct {
+		name    string
+		date    chrono.LocalDate
+		addDays int
+	}{
+		{"underflow", chrono.MinLocalDate(), -1},
+		{"overflow", chrono.MaxLocalDate(), 1},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if ok := tt.date.CanAdd(0, 0, tt.addDays); ok {
+				t.Errorf("date = %s, date.CanAdd(0, 0, %d) = true, want false", tt.date, tt.addDays)
+			}
+
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				tt.date.Add(0, 0, tt.addDays)
+			}()
 		})
 	}
 }
