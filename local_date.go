@@ -48,12 +48,16 @@ func makeLocalDate(year int, month Month, day int) (int64, error) {
 
 // Date returns the ISO 8601 year, month and day represented by d.
 func (d LocalDate) Date() (year int, month Month, day int) {
-	return fromLocalDate(int64(d))
+	var err error
+	if year, month, day, err = fromLocalDate(int64(d)); err != nil {
+		panic(err.Error())
+	}
+	return
 }
 
-func fromLocalDate(v int64) (year int, month Month, day int) {
+func fromLocalDate(v int64) (year int, month Month, day int, err error) {
 	if v < minJDN || v > maxJDN {
-		panic("invalid date")
+		return 0, 0, 0, fmt.Errorf("invalid date")
 	}
 
 	dd := int64(v + unixEpochJDN)
@@ -123,7 +127,11 @@ func (d LocalDate) CanAdd(years, months, days int) bool {
 }
 
 func (d LocalDate) add(years, months, days int) (LocalDate, error) {
-	year, month, day := fromLocalDate(int64(d))
+	year, month, day, err := fromLocalDate(int64(d))
+	if err != nil {
+		return 0, err
+	}
+
 	out, err := makeLocalDate(year+years, month+Month(months), day+days)
 	return LocalDate(out), err
 }

@@ -1,6 +1,7 @@
 package chrono_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-chrono/chrono"
@@ -67,6 +68,63 @@ func TestLocalDateTime_Compare(t *testing.T) {
 			if v := tt.d.Compare(tt.d2); v != tt.expected {
 				t.Errorf("t.Compare(t2) = %d, want %d", v, tt.expected)
 			}
+		})
+	}
+}
+
+func TestLocalDateTime_Add(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		datetime  chrono.LocalDateTime
+		addYears  int
+		addMonths int
+		addDays   int
+		expected  chrono.LocalDateTime
+	}{
+		{"nothing", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), 0, 0, 0, chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0)},
+		{"add years", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), 105, 0, 0, chrono.LocalDateTimeOf(2125, chrono.March, 18, 0, 0, 0, 0)},
+		{"sub years", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), -280, 0, 0, chrono.LocalDateTimeOf(1740, chrono.March, 18, 0, 0, 0, 0)},
+		{"add months", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), 0, 6, 0, chrono.LocalDateTimeOf(2020, chrono.September, 18, 0, 0, 0, 0)},
+		{"sub months", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), 0, -2, 0, chrono.LocalDateTimeOf(2020, chrono.January, 18, 0, 0, 0, 0)},
+		{"add days", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), 0, 0, 8, chrono.LocalDateTimeOf(2020, chrono.March, 26, 0, 0, 0, 0)},
+		{"sub days", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), 0, 0, -15, chrono.LocalDateTimeOf(2020, chrono.March, 3, 0, 0, 0, 0)},
+		{"time package example", chrono.LocalDateTimeOf(2011, chrono.January, 1, 0, 0, 0, 0), -1, 2, 3, chrono.LocalDateTimeOf(2010, chrono.March, 4, 0, 0, 0, 0)},
+		{"normalized time package example", chrono.LocalDateTimeOf(2011, chrono.October, 31, 0, 0, 0, 0), 0, 1, 0, chrono.LocalDateTimeOf(2011, chrono.December, 1, 0, 0, 0, 0)},
+		{"wrap around day", chrono.LocalDateTimeOf(2020, chrono.March, 18, 0, 0, 0, 0), 0, 0, 20, chrono.LocalDateTimeOf(2020, chrono.April, 7, 0, 0, 0, 0)},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if ok := tt.datetime.CanAddDate(tt.addYears, tt.addMonths, tt.addDays); !ok {
+				t.Errorf("date = %s, date.CanAddDate(%d, %d, %d) = false, want true", tt.datetime, tt.addYears, tt.addMonths, tt.addDays)
+			}
+
+			if date := tt.datetime.AddDate(tt.addYears, tt.addMonths, tt.addDays); date.Compare(tt.expected) != 0 {
+				t.Errorf("date = %s, date.AddDate(%d, %d, %d) = %s, want %s", tt.datetime, tt.addYears, tt.addMonths, tt.addDays, date, tt.expected)
+			}
+		})
+	}
+
+	for _, tt := range []struct {
+		name     string
+		datetime chrono.LocalDateTime
+		addDays  int
+	}{
+		{"underflow", chrono.MinLocalDateTime(), -1},
+		{"overflow", chrono.MaxLocalDateTime(), 1},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if ok := tt.datetime.CanAddDate(0, 0, tt.addDays); ok {
+				t.Errorf("date = %s, date.CanAddDate(0, 0, %d) = true, want false", tt.datetime, tt.addDays)
+			}
+
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				fmt.Println(tt.datetime.AddDate(0, 0, tt.addDays))
+			}()
 		})
 	}
 }

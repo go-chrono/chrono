@@ -24,20 +24,18 @@ func LocalDateTimeOf(year int, month Month, day, hour, min, sec, nsec int) Local
 	if err != nil {
 		panic(err.Error())
 	}
-
-	nanos := big.NewInt(date)
-	nanos.Mul(nanos, dayExtent)
-	nanos.Add(nanos, big.NewInt(time))
-
-	return LocalDateTime{v: *nanos}
+	return makeLocalDateTime(date, time)
 }
 
 // OfLocalDateAndTime combines the supplied LocalDate and LocalTime into a single LocalDateTime.
 func OfLocalDateAndTime(date LocalDate, time LocalTime) LocalDateTime {
-	nanos := big.NewInt(int64(date))
-	nanos.Mul(nanos, dayExtent)
-	nanos.Add(nanos, big.NewInt(int64(time.v)))
+	return makeLocalDateTime(int64(date), int64(time.v))
+}
 
+func makeLocalDateTime(date, time int64) LocalDateTime {
+	nanos := big.NewInt(date)
+	nanos.Mul(nanos, dayExtent)
+	nanos.Add(nanos, big.NewInt(time))
 	return LocalDateTime{v: *nanos}
 }
 
@@ -53,10 +51,50 @@ func (d LocalDateTime) Split() (LocalDate, LocalTime) {
 	return LocalDate(date), LocalTime{v: Extent(time)}
 }
 
+// AddDate returns the datetime corresponding to adding the given number of years, months, and days to d.
+func (d LocalDateTime) AddDate(years, months, days int) LocalDateTime {
+	out, err := d.addDate(years, months, days)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
+}
+
+// CanAddDate returns false if AddDate would panic if passed the same arguments.
+func (d LocalDateTime) CanAddDate(years, months, days int) bool {
+	_, err := d.addDate(years, months, days)
+	return err == nil
+}
+
+func (d LocalDateTime) addDate(years, months, days int) (LocalDateTime, error) {
+	date, _ := d.Split()
+
+	added, err := date.add(years, months, days)
+	if err != nil {
+		return LocalDateTime{}, err
+	}
+
+	if added < minJDN || added > maxJDN {
+		return LocalDateTime{}, fmt.Errorf("date out of bounds")
+	}
+
+	diff := big.NewInt(int64(added - date))
+	diff.Mul(diff, dayExtent)
+
+	out := new(big.Int)
+	out.Set(&d.v)
+	out.Add(out, diff)
+
+	return LocalDateTime{v: *out}, nil
+}
+
 func (d LocalDateTime) String() string {
 	date, time := d.split()
-	year, month, day := fromLocalDate(date)
 	hour, min, sec, nsec := fromLocalTime(time)
+	year, month, day, err := fromLocalDate(date)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	out := fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, min, sec)
 	if nsec != 0 {
@@ -74,6 +112,19 @@ func (d LocalDateTime) split() (date, time int64) {
 	return _date.Int64(), _time.Int64()
 }
 
+// MinLocalDateTime returns the earliest supported datetime.
+func MinLocalDateTime() LocalDateTime {
+	return minLocalDateTime
+}
+
+// MaxLocalDateTime returns the latest supported datetime.
+func MaxLocalDateTime() LocalDateTime {
+	return maxLocalDateTime
+}
+
 var (
 	dayExtent = big.NewInt(24 * int64(Hour))
+
+	minLocalDateTime = OfLocalDateAndTime(MinLocalDate(), LocalTimeOf(0, 0, 0, 0))
+	maxLocalDateTime = OfLocalDateAndTime(MaxLocalDate(), LocalTimeOf(99, 59, 59, 999999999))
 )
