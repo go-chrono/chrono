@@ -68,9 +68,38 @@ func TestLocalTime_Add(t *testing.T) {
 		{chrono.LocalTimeOf(5, 0, 0, 0), -31 * chrono.Hour, chrono.LocalTimeOf(22, 0, 0, 0)},
 	} {
 		t.Run(fmt.Sprintf("%s + %v", tt.t, tt.e), func(t *testing.T) {
+			if ok := tt.t.CanAdd(tt.e); !ok {
+				t.Error("t.CanAdd(e) = false, want true")
+			}
+
 			if added := tt.t.Add(tt.e); added.Compare(tt.expected) != 0 {
 				t.Errorf("t.Add(e) = %s, want %s", added, tt.expected)
 			}
+		})
+	}
+
+	for _, tt := range []struct {
+		name string
+		t    chrono.LocalTime
+		e    chrono.Extent
+	}{
+		{"invalid duration", chrono.LocalTimeOf(0, 0, 0, 0), 200 * chrono.Hour},
+		{"invalid time", chrono.LocalTimeOf(90, 0, 0, 0), 20 * chrono.Hour},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if ok := tt.t.CanAdd(tt.e); ok {
+				t.Error("t.CanAdd(e) = true, want false")
+			}
+
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				tt.t.Add(tt.e)
+			}()
 		})
 	}
 }
