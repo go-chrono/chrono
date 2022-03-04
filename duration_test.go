@@ -246,9 +246,8 @@ func TestDuration_Add(t *testing.T) {
 					t.Error("d1.CanAdd(d2) = false, want true")
 				}
 
-				d := tt.d1.Add(tt.d2)
-				if d.Compare(tt.expected) != 0 {
-					t.Errorf("d1.Add(d2) = %v, want %v", d, tt.expected)
+				if added := tt.d1.Add(tt.d2); added.Compare(tt.expected) != 0 {
+					t.Errorf("d1.Add(d2) = %v, want %v", added, tt.expected)
 				}
 			})
 
@@ -257,9 +256,8 @@ func TestDuration_Add(t *testing.T) {
 					t.Error("d2.CanAdd(d1) = false, want true")
 				}
 
-				d := tt.d2.Add(tt.d1)
-				if d.Compare(tt.expected) != 0 {
-					t.Errorf("d2.Add(d1) = %v, want %v", d, tt.expected)
+				if added := tt.d2.Add(tt.d1); added.Compare(tt.expected) != 0 {
+					t.Errorf("d2.Add(d1) = %v, want %v", added, tt.expected)
 				}
 			})
 		})

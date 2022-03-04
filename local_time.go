@@ -67,19 +67,33 @@ func (t LocalTime) Sub(u LocalTime) Duration {
 // If the result would be earlier than 00:00:00, the returned time is moved to the previous day,
 // e.g. 01:00:00 - 2 hours = 23:00:00.
 func (t LocalTime) Add(v Extent) LocalTime {
+	out, err := t.add(v)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
+}
+
+// CanAdd returns false if Add would panic if passed the same argument.
+func (t LocalTime) CanAdd(v Extent) bool {
+	_, err := t.add(v)
+	return err == nil
+}
+
+func (t LocalTime) add(v Extent) (LocalTime, error) {
 	if v > maxLocalTime {
-		panic("invalid duration v")
+		return LocalTime{}, fmt.Errorf("invalid duration v")
 	}
 
 	out := t.v + v
 	if out > maxLocalTime {
-		panic("invalid time t+v")
+		return LocalTime{}, fmt.Errorf("invalid time t+v")
 	}
 
 	if out < 0 {
-		return LocalTime{v: 24*Hour + (out % (24 * Hour))}
+		return LocalTime{v: 24*Hour + (out % (24 * Hour))}, nil
 	}
-	return LocalTime{v: out}
+	return LocalTime{v: out}, nil
 }
 
 // Compare compares t with t2. If t is before t2, it returns -1;
