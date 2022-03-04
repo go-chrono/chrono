@@ -34,6 +34,12 @@ func OfLocalDateAndTime(date LocalDate, time LocalTime) LocalDateTime {
 	return LocalDateTime{v: *nanos}
 }
 
+// Compare compares d with d2. If d is before d2, it returns -1;
+// if d is after d2, it returns 1; if they're the same, it returns 0.
+func (d LocalDateTime) Compare(d2 LocalDateTime) int {
+	return d.v.Cmp(&d2.v)
+}
+
 // Split returns separate LocalDate and LocalTime that together represent d.
 func (d LocalDateTime) Split() (LocalDate, LocalTime) {
 	date, time := d.split()

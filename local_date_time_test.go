@@ -51,3 +51,22 @@ func TestOfLocalDateAndTime(t *testing.T) {
 		t.Errorf("datetime.Split() time = %s, want %s", time, expected)
 	}
 }
+
+func TestLocalDateTime_Compare(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		d        chrono.LocalDateTime
+		d2       chrono.LocalDateTime
+		expected int
+	}{
+		{"earlier", chrono.LocalDateTimeOf(2020, chrono.March, 18, 11, 0, 0, 0), chrono.LocalDateTimeOf(2020, chrono.March, 18, 12, 0, 0, 0), -1},
+		{"later", chrono.LocalDateTimeOf(2020, chrono.March, 18, 13, 30, 0, 0), chrono.LocalDateTimeOf(2020, chrono.March, 18, 13, 29, 55, 0), 1},
+		{"equal", chrono.LocalDateTimeOf(2020, chrono.March, 18, 15, 0, 0, 1000), chrono.LocalDateTimeOf(2020, chrono.March, 18, 15, 0, 0, 1000), 0},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if v := tt.d.Compare(tt.d2); v != tt.expected {
+				t.Errorf("t.Compare(t2) = %d, want %d", v, tt.expected)
+			}
+		})
+	}
+}
