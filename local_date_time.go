@@ -52,6 +52,7 @@ func (d LocalDateTime) Split() (LocalDate, LocalTime) {
 }
 
 // AddDate returns the datetime corresponding to adding the given number of years, months, and days to d.
+// This function panic if the resulting datetime would fall outside of the allowed date range.
 func (d LocalDateTime) AddDate(years, months, days int) LocalDateTime {
 	out, err := d.addDate(years, months, days)
 	if err != nil {
