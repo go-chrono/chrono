@@ -33,10 +33,10 @@ func OfLocalDateAndTime(date LocalDate, time LocalTime) LocalDateTime {
 }
 
 func makeLocalDateTime(date, time int64) LocalDateTime {
-	nanos := big.NewInt(date)
-	nanos.Mul(nanos, dayExtent)
-	nanos.Add(nanos, big.NewInt(time))
-	return LocalDateTime{v: *nanos}
+	out := big.NewInt(date)
+	out.Mul(out, dayExtent)
+	out.Add(out, big.NewInt(time))
+	return LocalDateTime{v: *out}
 }
 
 // Compare compares d with d2. If d is before d2, it returns -1;
