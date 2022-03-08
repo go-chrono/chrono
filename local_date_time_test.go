@@ -72,7 +72,7 @@ func TestLocalDateTime_Compare(t *testing.T) {
 	}
 }
 
-func TestLocalDateTime_Add(t *testing.T) {
+func TestLocalDateTime_AddDate(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
 		datetime  chrono.LocalDateTime
