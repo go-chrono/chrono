@@ -72,6 +72,62 @@ func TestLocalDateTime_Compare(t *testing.T) {
 	}
 }
 
+func TestLocalDateTime_Add(t *testing.T) {
+	t.Run("valid add", func(t *testing.T) {
+		datetime := chrono.LocalDateTimeOf(2020, chrono.March, 18, 12, 30, 0, 0)
+		duration := chrono.DurationOf(48*chrono.Hour + 1000*chrono.Nanosecond)
+
+		if !datetime.CanAdd(duration) {
+			t.Errorf("datetime = %s, datetime.CanAdd(%s) = false, want true", datetime, duration)
+		}
+
+		added := datetime.Add(duration)
+		expected := chrono.LocalDateTimeOf(2020, chrono.March, 20, 12, 30, 0, 1000)
+
+		if added.Compare(expected) != 0 {
+			t.Errorf("datetime = %s, datetime.Add(%s) = %s, want %s", datetime, duration, added, expected)
+		}
+	})
+
+	t.Run("invalid add to low", func(t *testing.T) {
+		datetime := chrono.MinLocalDateTime()
+		duration := chrono.DurationOf(-1 * chrono.Nanosecond)
+
+		if datetime.CanAdd(duration) {
+			t.Errorf("datetime = %s, datetime.CanAdd(%s) = true, want false", datetime, duration)
+		}
+
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("expecting panic that didn't occur")
+				}
+			}()
+
+			fmt.Println(datetime.Add(duration))
+		}()
+	})
+
+	t.Run("invalid add to high", func(t *testing.T) {
+		datetime := chrono.MaxLocalDateTime()
+		duration := chrono.DurationOf(1 * chrono.Nanosecond)
+
+		if datetime.CanAdd(duration) {
+			t.Errorf("datetime = %s, datetime.CanAdd(%s) = true, want false", datetime, duration)
+		}
+
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("expecting panic that didn't occur")
+				}
+			}()
+
+			fmt.Println(datetime.Add(duration))
+		}()
+	})
+}
+
 func TestLocalDateTime_AddDate(t *testing.T) {
 	for _, tt := range []struct {
 		name      string

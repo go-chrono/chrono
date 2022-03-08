@@ -51,6 +51,42 @@ func (d LocalDateTime) Split() (LocalDate, LocalTime) {
 	return LocalDate(date), LocalTime{v: Extent(time)}
 }
 
+// Add returns the datetime d+v.
+// This function panics if the resulting datetime would fall outside of the allowed range.
+func (d LocalDateTime) Add(v Duration) LocalDateTime {
+	out, err := d.add(v)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
+}
+
+// CanAdd returns false if Add would panic if passed the same arguments.
+func (d LocalDateTime) CanAdd(v Duration) bool {
+	_, err := d.add(v)
+	return err == nil
+}
+
+func (d LocalDateTime) add(v Duration) (LocalDateTime, error) {
+	nanos := big.NewInt(int64(v.secs))
+	nanos.Mul(nanos, secondExtent)
+	nanos.Add(nanos, big.NewInt(int64(v.nsec)))
+
+	out := new(big.Int)
+	out.Set(&d.v)
+	out.Add(out, nanos)
+
+	fmt.Println(v.secs, v.nsec)
+
+	fmt.Println(d.v.String())
+	fmt.Println(out.String())
+
+	if out.Cmp(&minLocalDateTime.v) == -1 || out.Cmp(&maxLocalDateTime.v) == 1 {
+		return LocalDateTime{}, fmt.Errorf("datetime out of range")
+	}
+	return LocalDateTime{v: *out}, nil
+}
+
 // AddDate returns the datetime corresponding to adding the given number of years, months, and days to d.
 // This function panic if the resulting datetime would fall outside of the allowed date range.
 func (d LocalDateTime) AddDate(years, months, days int) LocalDateTime {
@@ -124,7 +160,8 @@ func MaxLocalDateTime() LocalDateTime {
 }
 
 var (
-	dayExtent = big.NewInt(24 * int64(Hour))
+	dayExtent    = big.NewInt(24 * int64(Hour))
+	secondExtent = big.NewInt(int64(Second))
 
 	minLocalDateTime = OfLocalDateAndTime(MinLocalDate(), LocalTimeOf(0, 0, 0, 0))
 	maxLocalDateTime = OfLocalDateAndTime(MaxLocalDate(), LocalTimeOf(99, 59, 59, 999999999))
