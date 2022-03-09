@@ -69,15 +69,11 @@ func FormatDuration(p Period, d Duration, exclusive ...Designator) string {
 func ParseDuration(s string) (Period, Duration, error) {
 	years, months, weeks, days, secs, nsec, err := parseDuration(s, true, true)
 	return Period{
-			Years:  years,
-			Months: months,
-			Weeks:  weeks,
-			Days:   days,
-		},
-		Duration{
-			secs: secs,
-			nsec: nsec,
-		}, err
+		Years:  years,
+		Months: months,
+		Weeks:  weeks,
+		Days:   days,
+	}, makeDuration(secs, nsec), err
 }
 
 func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks, days float32, secs int64, nsec uint32, err error) {

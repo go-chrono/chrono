@@ -99,33 +99,33 @@ func TestDuration_units(t *testing.T) {
 		},
 		{
 			name:     "positive microseconds",
-			of:       9000000000000 * chrono.Nanosecond,
+			of:       9500 * chrono.Nanosecond,
 			f:        chrono.Duration.Microseconds,
-			expected: 9000000000,
+			expected: 9.5,
 		},
 		{
 			name:     "positive milliseconds",
-			of:       9000000000000 * chrono.Nanosecond,
+			of:       9500 * chrono.Microsecond,
 			f:        chrono.Duration.Milliseconds,
-			expected: 9000000,
+			expected: 9.5,
 		},
 		{
 			name:     "positive seconds",
-			of:       9000000000000 * chrono.Nanosecond,
+			of:       9500 * chrono.Millisecond,
 			f:        chrono.Duration.Seconds,
-			expected: 9000,
+			expected: 9.5,
 		},
 		{
 			name:     "positive minutes",
-			of:       9000000000000 * chrono.Nanosecond,
+			of:       90 * chrono.Second,
 			f:        chrono.Duration.Minutes,
-			expected: 150,
+			expected: 1.5,
 		},
 		{
 			name:     "positive hours",
-			of:       9000000000000 * chrono.Nanosecond,
+			of:       90 * chrono.Minute,
 			f:        chrono.Duration.Hours,
-			expected: 2.5,
+			expected: 1.5,
 		},
 		{
 			name:     "negative nanoseconds",
@@ -135,41 +135,39 @@ func TestDuration_units(t *testing.T) {
 		},
 		{
 			name:     "negative microseconds",
-			of:       -9000000000000 * chrono.Nanosecond,
+			of:       -9500 * chrono.Nanosecond,
 			f:        chrono.Duration.Microseconds,
-			expected: -9000000000,
+			expected: -9.5,
 		},
 		{
 			name:     "negative milliseconds",
-			of:       -9000000000000 * chrono.Nanosecond,
+			of:       -9500 * chrono.Microsecond,
 			f:        chrono.Duration.Milliseconds,
-			expected: -9000000,
+			expected: -9.5,
 		},
 		{
 			name:     "negative seconds",
-			of:       -9000000000000 * chrono.Nanosecond,
+			of:       -9500 * chrono.Millisecond,
 			f:        chrono.Duration.Seconds,
-			expected: -9000,
+			expected: -9.5,
 		},
 		{
 			name:     "negative minutes",
-			of:       -9000000000000 * chrono.Nanosecond,
+			of:       -90 * chrono.Second,
 			f:        chrono.Duration.Minutes,
-			expected: -150,
+			expected: -1.5,
 		},
 		{
 			name:     "negative hours",
-			of:       -9000000000000 * chrono.Nanosecond,
+			of:       -90 * chrono.Minute,
 			f:        chrono.Duration.Hours,
-			expected: -2.5,
+			expected: -1.5,
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			d := chrono.DurationOf(tt.of)
 			if out := tt.f(d); out != tt.expected {
-				t.Errorf("%v() = %f, want %f",
-					runtime.FuncForPC(reflect.ValueOf(tt.f).Pointer()).Name(),
-					out, tt.expected)
+				t.Errorf("%v() = %f, want %f", runtime.FuncForPC(reflect.ValueOf(tt.f).Pointer()).Name(), out, tt.expected)
 			}
 		})
 	}
@@ -269,24 +267,14 @@ func TestDuration_Add(t *testing.T) {
 		d2   chrono.Duration
 	}{
 		{
-			name: "overflow on seconds component",
+			name: "overflow",
 			d1:   chrono.MaxDuration(),
-			d2:   chrono.DurationOf(1 * chrono.Second),
+			d2:   chrono.DurationOf(1 * chrono.Nanosecond),
 		},
 		{
-			name: "overflow on nanoseconds component",
-			d1:   chrono.MaxDuration().Add(chrono.DurationOf(-500 * chrono.Millisecond)),
-			d2:   chrono.DurationOf(501 * chrono.Millisecond),
-		},
-		{
-			name: "underflow on seconds component",
+			name: "underflow",
 			d1:   chrono.MinDuration(),
-			d2:   chrono.DurationOf(-1 * chrono.Second),
-		},
-		{
-			name: "underflow on nanoseconds component",
-			d1:   chrono.MinDuration().Add(chrono.DurationOf(500 * chrono.Millisecond)),
-			d2:   chrono.DurationOf(-501 * chrono.Millisecond),
+			d2:   chrono.DurationOf(-1 * chrono.Nanosecond),
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

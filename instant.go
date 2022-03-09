@@ -56,10 +56,7 @@ func (i Instant) Until(i2 Instant) Duration {
 	}
 
 	d := vv - iv
-	return Duration{
-		secs: d / 1e9,
-		nsec: uint32(d % 1e9),
-	}
+	return DurationOf(Extent(d))
 }
 
 // instant is used by the chronotest package.
