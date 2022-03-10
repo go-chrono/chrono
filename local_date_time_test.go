@@ -1,7 +1,6 @@
 package chrono_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/go-chrono/chrono"
@@ -104,7 +103,7 @@ func TestLocalDateTime_Add(t *testing.T) {
 				}
 			}()
 
-			fmt.Println(datetime.Add(duration))
+			datetime.Add(duration)
 		}()
 	})
 
@@ -123,7 +122,7 @@ func TestLocalDateTime_Add(t *testing.T) {
 				}
 			}()
 
-			fmt.Println(datetime.Add(duration))
+			datetime.Add(duration)
 		}()
 	})
 }
@@ -179,7 +178,7 @@ func TestLocalDateTime_AddDate(t *testing.T) {
 					}
 				}()
 
-				fmt.Println(tt.datetime.AddDate(0, 0, tt.addDays))
+				tt.datetime.AddDate(0, 0, tt.addDays)
 			}()
 		})
 	}

@@ -34,7 +34,7 @@ func OfLocalDateAndTime(date LocalDate, time LocalTime) LocalDateTime {
 
 func makeLocalDateTime(date, time int64) LocalDateTime {
 	out := big.NewInt(date)
-	out.Mul(out, dayExtent)
+	out.Mul(out, bigIntDayExtent)
 	out.Add(out, big.NewInt(time))
 	return LocalDateTime{v: *out}
 }
@@ -71,9 +71,6 @@ func (d LocalDateTime) add(v Duration) (LocalDateTime, error) {
 	out := new(big.Int).Set(&d.v)
 	out.Add(out, &v.v)
 
-	fmt.Println(d.v.String())
-	fmt.Println(out.String())
-
 	if out.Cmp(&minLocalDateTime.v) == -1 || out.Cmp(&maxLocalDateTime.v) == 1 {
 		return LocalDateTime{}, fmt.Errorf("datetime out of range")
 	}
@@ -109,7 +106,7 @@ func (d LocalDateTime) addDate(years, months, days int) (LocalDateTime, error) {
 	}
 
 	diff := big.NewInt(int64(added - date))
-	diff.Mul(diff, dayExtent)
+	diff.Mul(diff, bigIntDayExtent)
 
 	out := new(big.Int).Set(&d.v)
 	out.Add(out, diff)
@@ -136,7 +133,7 @@ func (d LocalDateTime) split() (date, time int64) {
 	v := new(big.Int).Set(&d.v)
 
 	var _time big.Int
-	_date, _ := v.DivMod(v, dayExtent, &_time)
+	_date, _ := v.DivMod(v, bigIntDayExtent, &_time)
 	return _date.Int64(), _time.Int64()
 }
 
@@ -151,8 +148,7 @@ func MaxLocalDateTime() LocalDateTime {
 }
 
 var (
-	dayExtent    = big.NewInt(24 * int64(Hour))
-	secondExtent = big.NewInt(int64(Second))
+	bigIntDayExtent = big.NewInt(24 * int64(Hour))
 
 	minLocalDateTime = OfLocalDateAndTime(MinLocalDate(), LocalTimeOf(0, 0, 0, 0))
 	maxLocalDateTime = OfLocalDateAndTime(MaxLocalDate(), LocalTimeOf(99, 59, 59, 999999999))
