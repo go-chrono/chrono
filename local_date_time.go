@@ -68,15 +68,8 @@ func (d LocalDateTime) CanAdd(v Duration) bool {
 }
 
 func (d LocalDateTime) add(v Duration) (LocalDateTime, error) {
-	nanos := big.NewInt(int64(v.secs))
-	nanos.Mul(nanos, secondExtent)
-	nanos.Add(nanos, big.NewInt(int64(v.nsec)))
-
-	out := new(big.Int)
-	out.Set(&d.v)
-	out.Add(out, nanos)
-
-	fmt.Println(v.secs, v.nsec)
+	out := new(big.Int).Set(&d.v)
+	out.Add(out, &v.v)
 
 	fmt.Println(d.v.String())
 	fmt.Println(out.String())
@@ -118,8 +111,7 @@ func (d LocalDateTime) addDate(years, months, days int) (LocalDateTime, error) {
 	diff := big.NewInt(int64(added - date))
 	diff.Mul(diff, dayExtent)
 
-	out := new(big.Int)
-	out.Set(&d.v)
+	out := new(big.Int).Set(&d.v)
 	out.Add(out, diff)
 
 	return LocalDateTime{v: *out}, nil
@@ -141,8 +133,7 @@ func (d LocalDateTime) String() string {
 }
 
 func (d LocalDateTime) split() (date, time int64) {
-	v := new(big.Int)
-	v.Set(&d.v)
+	v := new(big.Int).Set(&d.v)
 
 	var _time big.Int
 	_date, _ := v.DivMod(v, dayExtent, &_time)
