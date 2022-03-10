@@ -119,10 +119,15 @@ const (
 // Fractional values are automatically applied to the least significant unit, if applicable.
 // In order to format only integers, the round functions should be used before calling this function.
 func (d Duration) Format(exclusive ...Designator) string {
-	return "P" + d.format(exclusive...)
+	out, neg := d.format(exclusive...)
+	out = "P" + out
+	if neg {
+		out = "-" + out
+	}
+	return out
 }
 
-func (d Duration) format(exclusive ...Designator) string {
+func (d Duration) format(exclusive ...Designator) (_ string, neg bool) {
 	values := make(map[Designator]float64, 3)
 	if len(exclusive) >= 1 {
 		for _, d := range exclusive {
@@ -134,7 +139,7 @@ func (d Duration) format(exclusive ...Designator) string {
 	_, m := values[Minutes]
 	_, s := values[Seconds]
 
-	secs, nsec := d.integers()
+	secs, nsec, neg := d.integers()
 
 	switch {
 	case len(exclusive) == 0:
@@ -194,27 +199,24 @@ func (d Duration) format(exclusive ...Designator) string {
 	if v, ok := values[Seconds]; ok {
 		out += strconv.FormatFloat(v, 'f', -1, 64) + "S"
 	}
-	return out
+	return out, neg
 }
 
-func (d Duration) integers() (secs int64, nsec uint32) {
+func (d Duration) integers() (secs int64, nsec uint32, neg bool) {
+	v := new(big.Int).Abs(&d.v)
 	var _nsec big.Int
-	_secs, _ := new(big.Int).DivMod(&d.v, bigIntSecondExtent, &_nsec)
-	return _secs.Int64(), uint32(_nsec.Uint64())
+	_secs, _ := new(big.Int).DivMod(v, bigIntSecondExtent, &_nsec)
+	return _secs.Int64(), uint32(_nsec.Uint64()), d.v.Cmp(bigIntNegOne) == -1
 }
 
 // Parse the time portion of an ISO 8601 duration.
 func (d *Duration) Parse(s string) error {
-	_, _, _, _, secs, nsec, err := parseDuration(s, false, true)
+	_, _, _, _, secs, nsec, neg, err := parseDuration(s, false, true)
 	if err != nil {
 		return err
 	}
 
-	v := big.NewInt(secs)
-	v.Mul(v, bigIntSecondExtent)
-	v.Add(v, big.NewInt(int64(nsec)))
-
-	d.v = *v
+	*d = makeDuration(secs, nsec, neg)
 	return nil
 }
 
@@ -228,13 +230,18 @@ func MaxDuration() Duration {
 	return Duration{v: *bigIntMaxInt64}
 }
 
-func makeDuration(secs int64, nsec uint32) Duration {
+func makeDuration(secs int64, nsec uint32, neg bool) Duration {
 	out := new(big.Int).Mul(big.NewInt(secs), bigIntSecondExtent)
 	out.Add(out, big.NewInt(int64(nsec)))
+	if neg {
+		out.Neg(out)
+	}
 	return Duration{v: *out}
 }
 
 var (
+	bigIntNegOne = big.NewInt(-1)
+
 	bigIntMinInt64 = new(big.Int).Lsh(big.NewInt(int64(-Second)), 63)
 	bigIntMaxInt64 = new(big.Int).Add(new(big.Int).Lsh(big.NewInt(int64(Second)), 63), big.NewInt(-1))
 

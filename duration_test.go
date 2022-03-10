@@ -16,23 +16,23 @@ func TestDurationOf(t *testing.T) {
 	}{
 		{
 			name: "of positive nanoseconds",
-			of:   9000000000000 * chrono.Nanosecond,
-			nsec: 9000000000000,
+			of:   90000000 * chrono.Nanosecond,
+			nsec: 90000000,
 		},
 		{
 			name: "of positive microsecond",
-			of:   9000000000 * chrono.Microsecond,
-			nsec: 9000000000000,
+			of:   90000 * chrono.Microsecond,
+			nsec: 90000000,
 		},
 		{
 			name: "of positive milliseconds",
-			of:   9000000 * chrono.Millisecond,
-			nsec: 9000000000000,
+			of:   90 * chrono.Millisecond,
+			nsec: 90000000,
 		},
 		{
 			name: "of positive seconds",
-			of:   9000 * chrono.Second,
-			nsec: 9000000000000,
+			of:   9 * chrono.Second,
+			nsec: 9000000000,
 		},
 		{
 			name: "of positive minutes",
@@ -46,23 +46,23 @@ func TestDurationOf(t *testing.T) {
 		},
 		{
 			name: "of negative nanoseconds",
-			of:   -9000000000000 * chrono.Nanosecond,
-			nsec: -9000000000000,
+			of:   -90000000 * chrono.Nanosecond,
+			nsec: -90000000,
 		},
 		{
 			name: "of negative microsecond",
-			of:   -9000000000 * chrono.Microsecond,
-			nsec: -9000000000000,
+			of:   -90000 * chrono.Microsecond,
+			nsec: -90000000,
 		},
 		{
 			name: "of negative milliseconds",
-			of:   -9000000 * chrono.Millisecond,
-			nsec: -9000000000000,
+			of:   -90 * chrono.Millisecond,
+			nsec: -90000000,
 		},
 		{
 			name: "of negative seconds",
-			of:   -9000 * chrono.Second,
-			nsec: -9000000000000,
+			of:   -9 * chrono.Second,
+			nsec: -9000000000,
 		},
 		{
 			name: "of negative minutes",
@@ -334,9 +334,9 @@ func TestDuration_Format(t *testing.T) {
 		},
 		{
 			name:      "default S",
-			of:        30*chrono.Second + 500*chrono.Millisecond,
+			of:        500 * chrono.Millisecond,
 			exclusive: []chrono.Designator{},
-			expected:  "PT30.5S",
+			expected:  "PT0.5S",
 		},
 		{
 			name:      "default zero value",
@@ -430,10 +430,24 @@ func TestDuration_Format(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			d := chrono.DurationOf(tt.of)
-			if out := d.Format(tt.exclusive...); out != tt.expected {
-				t.Errorf("formatted duration = %s, want %s", out, tt.expected)
-			}
+			t.Run("positive", func(t *testing.T) {
+				d := chrono.DurationOf(tt.of)
+				if out := d.Format(tt.exclusive...); out != tt.expected {
+					t.Errorf("formatted duration = %s, want %s", out, tt.expected)
+				}
+			})
+
+			t.Run("negative", func(t *testing.T) {
+				expected := tt.expected
+				if tt.of != 0 {
+					expected = "-" + expected
+				}
+
+				d := chrono.DurationOf(tt.of * -1)
+				if out := d.Format(tt.exclusive...); out != expected {
+					t.Errorf("formatted duration = %s, want %s", out, expected)
+				}
+			})
 		})
 	}
 }
@@ -442,85 +456,95 @@ func TestDuration_Parse(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		input    string
-		expected chrono.Duration
+		expected chrono.Extent
 	}{
 		{
 			name:     "valid HMS integers",
 			input:    "PT5H3M1S",
-			expected: chrono.DurationOf(5*chrono.Hour + 3*chrono.Minute + 1*chrono.Second),
+			expected: 5*chrono.Hour + 3*chrono.Minute + 1*chrono.Second,
 		},
 		{
 			name:     "valid HMS floats",
 			input:    "PT4.5H3.25M1.1S",
-			expected: chrono.DurationOf(chrono.Extent(4.5*float64(chrono.Hour) + 3.25*float64(chrono.Minute) + 1.1*float64(chrono.Second))),
+			expected: chrono.Extent(4.5*float64(chrono.Hour) + 3.25*float64(chrono.Minute) + 1.1*float64(chrono.Second)),
 		},
 		{
 			name:     "valid HM integers",
 			input:    "PT5H3M",
-			expected: chrono.DurationOf(5*chrono.Hour + 3*chrono.Minute),
+			expected: 5*chrono.Hour + 3*chrono.Minute,
 		},
 		{
 			name:     "valid HM floats",
 			input:    "PT4.5H3.25M",
-			expected: chrono.DurationOf(chrono.Extent(4.5*float64(chrono.Hour) + 3.25*float64(chrono.Minute))),
+			expected: chrono.Extent(4.5*float64(chrono.Hour) + 3.25*float64(chrono.Minute)),
 		},
 		{
 			name:     "valid HS integers",
 			input:    "PT5H1S",
-			expected: chrono.DurationOf(5*chrono.Hour + 1*chrono.Second),
+			expected: 5*chrono.Hour + 1*chrono.Second,
 		},
 		{
 			name:     "valid HS floats",
 			input:    "PT4.5H1.1S",
-			expected: chrono.DurationOf(chrono.Extent(4.5*float64(chrono.Hour) + 1.1*float64(chrono.Second))),
+			expected: chrono.Extent(4.5*float64(chrono.Hour) + 1.1*float64(chrono.Second)),
 		},
 		{
 			name:     "valid H integer",
 			input:    "PT5H",
-			expected: chrono.DurationOf(5 * chrono.Hour),
+			expected: 5 * chrono.Hour,
 		},
 		{
 			name:     "valid H float",
 			input:    "PT4.5H",
-			expected: chrono.DurationOf(chrono.Extent(4.5 * float64(chrono.Hour))),
+			expected: chrono.Extent(4.5 * float64(chrono.Hour)),
 		},
 		{
 			name:     "valid MS integers",
 			input:    "PT3M1S",
-			expected: chrono.DurationOf(3*chrono.Minute + 1*chrono.Second),
+			expected: 3*chrono.Minute + 1*chrono.Second,
 		},
 		{
 			name:     "valid MS floats",
 			input:    "PT3.25M1.1S",
-			expected: chrono.DurationOf(chrono.Extent(3.25*float64(chrono.Minute) + 1.1*float64(chrono.Second))),
+			expected: chrono.Extent(3.25*float64(chrono.Minute) + 1.1*float64(chrono.Second)),
 		},
 		{
 			name:     "valid M integer",
 			input:    "PT3M",
-			expected: chrono.DurationOf(3 * chrono.Minute),
+			expected: 3 * chrono.Minute,
 		},
 		{
 			name:     "valid M float",
 			input:    "PT3.25M",
-			expected: chrono.DurationOf(chrono.Extent(3.25 * float64(chrono.Minute))),
+			expected: chrono.Extent(3.25 * float64(chrono.Minute)),
 		},
 		{
 			name:     "valid S integer",
 			input:    "PT1S",
-			expected: chrono.DurationOf(1 * chrono.Second),
+			expected: 1 * chrono.Second,
 		},
 		{
 			name:     "valid S float",
 			input:    "PT1.1S",
-			expected: chrono.DurationOf(chrono.Extent(1.1 * float64(chrono.Second))),
+			expected: chrono.Extent(1.1 * float64(chrono.Second)),
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			var d chrono.Duration
-			if err := d.Parse(tt.input); err != nil {
-				t.Errorf("failed to parse duation: %v", err)
-			} else if d.Compare(tt.expected) != 0 {
-				t.Errorf("parsed duration = %v, want %v", d, tt.expected)
+			for _, sign := range []string{"", "+", "-"} {
+				t.Run(sign, func(t *testing.T) {
+					input := sign + tt.input
+					expected := tt.expected
+					if sign == "-" {
+						expected *= -1
+					}
+
+					var d chrono.Duration
+					if err := d.Parse(input); err != nil {
+						t.Errorf("failed to parse duation: %v", err)
+					} else if d.Compare(chrono.DurationOf(expected)) != 0 {
+						t.Errorf("parsed duration = %v, want %v", d, expected)
+					}
+				})
 			}
 		})
 	}
