@@ -50,7 +50,7 @@ func TestLocalTime_Sub(t *testing.T) {
 		{chrono.LocalTimeOf(12, 0, 0, 22), chrono.LocalTimeOf(12, 0, 0, 40), -18 * chrono.Nanosecond},
 	} {
 		t.Run(fmt.Sprintf("%s - %s", tt.t1, tt.t2), func(t *testing.T) {
-			if d := tt.t1.Sub(tt.t2); d != chrono.DurationOf(tt.diff) {
+			if d := tt.t1.Sub(tt.t2); d.Compare(chrono.DurationOf(tt.diff)) != 0 {
 				t.Errorf("t1.Sub(t2) = %v, want %v", d, tt.diff)
 			}
 		})
