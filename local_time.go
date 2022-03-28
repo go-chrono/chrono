@@ -12,13 +12,23 @@ type LocalTime struct {
 	v Extent
 }
 
-// LocalTimeOf returns a LocalTime that represents the specified hour, minute, second and nanosecond offset within the specified second.
+// LocalTimeOf returns a LocalTime that represents the specified hour, minute, second, and nanosecond offset within the specified second.
 // A valid time is between 00:00:00 and 99:59:59.999999999. If an invalid time is specified, this function panics.
 func LocalTimeOf(hour, min, sec, nsec int) LocalTime {
-	if hour < 0 || hour > 99 || min < 0 || min > 59 || sec < 0 || sec > 59 || nsec < 0 || nsec > 999999999 {
-		panic("invalid time")
+	out, err := makeLocalTime(hour, min, sec, nsec)
+	if err != nil {
+		panic(err.Error())
 	}
-	return LocalTime{v: Extent(hour)*Hour + Extent(min)*Minute + Extent(sec)*Second + Extent(nsec)}
+	return LocalTime{v: Extent(out)}
+}
+
+func makeLocalTime(hour, min, sec, nsec int) (int64, error) {
+	if hour < 0 || hour > 99 || min < 0 || min > 59 || sec < 0 || sec > 59 || nsec < 0 || nsec > 999999999 {
+		return 0, fmt.Errorf("invalid time")
+	}
+
+	h, m, s, n := int64(hour), int64(min), int64(sec), int64(nsec)
+	return h*int64(Hour) + m*int64(Minute) + s*int64(Second) + n, nil
 }
 
 // BusinessHour returns the hour specified by t.
@@ -27,26 +37,29 @@ func (t LocalTime) BusinessHour() int {
 	return int(t.v / Hour)
 }
 
-// Hour returns the hour specified by t.
+// Clock returns the hour, minute and second represented by t.
 // If hour is greater than 23, the returned value is normalized so as to fit within
 // the 24-hour clock as specified by ISO 8601, e.g. 25 is returned as 01.
-func (t LocalTime) Hour() int {
-	return int((t.v % (24 * Hour)) / Hour)
-}
-
-// Minute returns the minute specified by t.
-func (t LocalTime) Minute() int {
-	return int(t.v % Hour / Minute)
-}
-
-// Second returns the second specified by t.
-func (t LocalTime) Second() int {
-	return int(t.v % Minute / Second)
+func (t LocalTime) Clock() (hour, min, sec int) {
+	hour, min, sec, _ = fromLocalTime(int64(t.v))
+	return
 }
 
 // Nanosecond returns the nanosecond offset within the second specified by t, in the range [0, 999999999].
 func (t LocalTime) Nanosecond() int {
 	return int(t.v % Second)
+}
+
+func fromLocalTime(v int64) (hour, min, sec, nsec int) {
+	nsec = int(v) % int(Second)
+	sec = int(v) / int(Second)
+
+	hour = (sec / (60 * 60)) % 24
+	sec -= hour * (60 * 60)
+
+	min = sec / 60
+	sec -= min * 60
+	return
 }
 
 // Sub returns the duration t-u.
@@ -101,8 +114,9 @@ func (t LocalTime) Compare(t2 LocalTime) int {
 }
 
 func (t LocalTime) String() string {
-	out := fmt.Sprintf("%02d:%02d:%02d", t.Hour(), t.Minute(), t.Second())
-	if nsec := t.Nanosecond(); nsec != 0 {
+	hour, min, sec, nsec := fromLocalTime(int64(t.v))
+	out := fmt.Sprintf("%02d:%02d:%02d", hour, min, sec)
+	if nsec != 0 {
 		out += fmt.Sprintf(".%09d", nsec)
 	}
 	return out

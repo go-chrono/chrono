@@ -46,26 +46,20 @@ fmt.Println(chrono.FormatDuration(period, duration))
 
 ## Local (or "civil") dates and times
 
-### Dates
+Often it's necessary to represent civil time, or dates and times without a time zone or time offset component. Usually, this is achieved using the standard library's `time.Date` function and setting the time values to `0`. Alternatively, some people use Google's [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package.
 
-Often it's necessary to represent a date with no time component, and no time zone or time offset. For example, you might want to represent a birthday - an event that happens on a particular date, outside of the context of a physical location or time zone.
+`chrono` provides 3 types for dealing with these use cases: [`LocalDate`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDate) (a date without a time), [`LocalTime`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalTime) (a time without a date), and [`LocalDateTime`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDateTime) (a combination of `LocalDate` and `LocalTime`).
 
-Usually, this is achieved using the standard library's `time.Date` function and setting the time values to `0`. Alternatively, some people use the `Date` type of Google's [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package.
+A `LocalDate` and a `LocalTime` are initialized with numeric values. A `LocalDateTime` can either be initialized with numeric values, or by combining a `LocalDate` and `LocalTime` (as below):
 
-`chrono` has a dedicated type to describe a local date. Since the date is represented as a single integer, a [`LocalDate`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDate) is sortable and comparable with built-in operators:
-
-```go
-chrono.LocalDateOf(2007, chrono.May, 20)
+```golang
+date := chrono.LocalDateOf(2007, chrono.May, 20)
+time := chrono.LocalTimeOf(12, 30, 15, 0)
+fmt.Println(chrono.OfLocalDateAndTime(date, time))
 ```
 
-✅ [See more examples](examples/local_date_test.go).
-
-### Times
-
-Where is is necessary to represent a time with no zone or offset, and no date component, `chrono` provides the [`LocalTime`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalTime) type:
-
-```go
-chrono.LocalTimeOf(12, 30, 0, 0)
-```
-
-✅ [See more examples](examples/local_time_test.go).
+✅ [See more `LocalDate` examples](examples/local_date_test.go).
+<br />
+✅ [See more `LocalTime` examples](examples/local_time_test.go).
+<br />
+✅ [See more `LocalDateTime` examples](examples/local_date_time_test.go).

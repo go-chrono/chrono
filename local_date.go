@@ -26,21 +26,41 @@ type LocalDate int32
 // This function panics if the provided date would overflow the internal type,
 // or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func LocalDateOf(year int, month Month, day int) LocalDate {
+	out, err := makeLocalDate(year, month, day)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	if !dateIsValid(year, month, day) {
 		panic("invalid date")
 	}
+	return LocalDate(out)
+}
+
+func makeLocalDate(year int, month Month, day int) (int64, error) {
+	if !dateInBounds(year, month, day) {
+		return 0, fmt.Errorf("date out of bounds")
+	}
 
 	y, m, d := int64(year), int64(month), int64(day)
-	return LocalDate((1461*(y+4800+(m-14)/12))/4+(367*(m-2-12*((m-14)/12)))/12-(3*((y+4900+(m-14)/12)/100))/4+d-32075) - unixEpochJDN
+	return (1461*(y+4800+(m-14)/12))/4 + (367*(m-2-12*((m-14)/12)))/12 - (3*((y+4900+(m-14)/12)/100))/4 + d - 32075 - unixEpochJDN, nil
 }
 
 // Date returns the ISO 8601 year, month and day represented by d.
 func (d LocalDate) Date() (year int, month Month, day int) {
-	if d < minJDN && d > maxJDN {
-		panic("invalid date")
+	var err error
+	if year, month, day, err = fromLocalDate(int64(d)); err != nil {
+		panic(err.Error())
+	}
+	return
+}
+
+func fromLocalDate(v int64) (year int, month Month, day int, err error) {
+	if v < minJDN || v > maxJDN {
+		return 0, 0, 0, fmt.Errorf("invalid date")
 	}
 
-	dd := int64(d + unixEpochJDN)
+	dd := int64(v + unixEpochJDN)
 
 	f := dd + 1401 + ((((4*dd + 274277) / 146097) * 3) / 4) - 38
 	e := 4*f + 3
@@ -91,6 +111,31 @@ func (d LocalDate) ISOWeek() (year int, week int) {
 	return year, week
 }
 
+// Add returns the date corresponding to adding the given number of years, months, and days to d.
+func (d LocalDate) Add(years, months, days int) LocalDate {
+	out, err := d.add(years, months, days)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
+}
+
+// CanAdd returns false if Add would panic if passed the same arguments.
+func (d LocalDate) CanAdd(years, months, days int) bool {
+	_, err := d.add(years, months, days)
+	return err == nil
+}
+
+func (d LocalDate) add(years, months, days int) (LocalDate, error) {
+	year, month, day, err := fromLocalDate(int64(d))
+	if err != nil {
+		return 0, err
+	}
+
+	out, err := makeLocalDate(year+years, month+Month(months), day+days)
+	return LocalDate(out), err
+}
+
 func (d LocalDate) String() string {
 	year, month, day := d.Date()
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
@@ -126,7 +171,7 @@ func ordinalDate(y int, m Month, d int) int {
 	return out
 }
 
-func dateIsValid(y int, m Month, d int) bool {
+func dateInBounds(y int, m Month, d int) bool {
 	if y < minYear {
 		return false
 	} else if y == minYear {
@@ -147,6 +192,10 @@ func dateIsValid(y int, m Month, d int) bool {
 		}
 	}
 
+	return true
+}
+
+func dateIsValid(y int, m Month, d int) bool {
 	if m < January || m > December {
 		return false
 	}
@@ -173,7 +222,7 @@ var daysInMonths = [12]int{
 }
 
 const (
-	// unixEpochJDN is the JDN that corresponds to 1st January 1980 (Gregorian).
+	// unixEpochJDN is the JDN that corresponds to 1st January 1970 (Gregorian).
 	unixEpochJDN = 2440588
 
 	// The minimum representable date is JDN 0.
