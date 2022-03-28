@@ -42,7 +42,7 @@ duration := chrono.DurationOf(1*chrono.Hour + 30*chrono.Minute + 5*chrono.Second
 fmt.Println(chrono.FormatDuration(period, duration))
 ```
 
-✅ [See more examples](examples/duration_period_test.go).
+✅ [See more examples](example_duration_period_test.go).
 
 ## Local (or "civil") dates and times
 
@@ -58,8 +58,8 @@ time := chrono.LocalTimeOf(12, 30, 15, 0)
 fmt.Println(chrono.OfLocalDateAndTime(date, time))
 ```
 
-✅ [See more `LocalDate` examples](examples/local_date_test.go).
+✅ [See more `LocalDate` examples](example_local_date_test.go).
 <br />
-✅ [See more `LocalTime` examples](examples/local_time_test.go).
+✅ [See more `LocalTime` examples](example_local_time_test.go).
 <br />
-✅ [See more `LocalDateTime` examples](examples/local_date_time_test.go).
+✅ [See more `LocalDateTime` examples](example_local_date_time_test.go).

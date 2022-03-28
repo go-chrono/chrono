@@ -1,4 +1,4 @@
-package examples
+package chrono_test
 
 import (
 	"fmt"
