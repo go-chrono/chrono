@@ -16,10 +16,12 @@ import (
 //   %j: The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366.
 //   %m: The month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
 //   %B: The full month name, e.g. January, February, etc.
+//   %b: The abbreviated month name, e.g. Jan, Feb, etc.
 //   %d: The day of the month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 31.
 //
 //   %u: The day of the week as a decimal number, e.g. 1 for Monday, 2 for Tuesday, etc.
 //   %A: The full name of the day of the week, e.g. Monday, Tuesday, etc.
+//   %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc.
 //
 //   %G: The ISO 8601 week-based year, which may differ by ±1 to the actual calendar year.
 //   %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53.
@@ -79,8 +81,12 @@ NextChar:
 			}
 
 			switch {
+			case date != nil && lit[1] == 'a':
+				out = append(out, []rune(date.Weekday().short())...)
 			case date != nil && lit[1] == 'A':
 				out = append(out, []rune(date.Weekday().String())...)
+			case date != nil && lit[1] == 'b':
+				out = append(out, []rune(month.short())...)
 			case date != nil && lit[1] == 'B':
 				out = append(out, []rune(month.String())...)
 			case date != nil && lit[1] == 'E' && lit[2] == 'C':
