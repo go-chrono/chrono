@@ -141,6 +141,12 @@ func (d LocalDate) String() string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
 }
 
+// Format returns a textual representation of the date value formatted according to the layout defined by the argument.
+// See the constants section of the documentation to see how to represent the layout format.
+func (d LocalDate) Format(layout string) string {
+	return format(layout, &d, nil)
+}
+
 // MinLocalDate returns the earliest supported date.
 func MinLocalDate() LocalDate {
 	return LocalDate(minJDN)
