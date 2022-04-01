@@ -41,13 +41,16 @@ import (
 // But note that this reference format is not relevant at all to the functioning of this package.
 //
 const (
+	// ISO 8601.
 	ISO8601Date             = "%Y%m%d"                                  // 20060102
 	ISO8601DateExtended     = "%Y-%m-%d"                                // 2006-01-02
 	ISO8601Time             = "T%H%M%S"                                 // T030405
 	ISO8601TimeExtended     = "T%H:%M:%S"                               // T03:04:05
 	ISO8601DateTime         = ISO8601Date + ISO8601Time                 // 20060102T030405
 	ISO8601DateTimeExtended = ISO8601DateExtended + ISO8601TimeExtended // 2006-01-02T03:04:05
-	Kitchen                 = "%I:%M%p"                                 // 3:04PM
+	// Layouts defined by the time package.
+	ANSIC   = "%a %b %d %H:%M:%S %Y"
+	Kitchen = "%I:%M%p" // 3:04PM
 )
 
 func format(layout string, date *LocalDate, time *LocalTime) string {
