@@ -55,8 +55,8 @@ const (
 	ISO8601DateTime         = ISO8601Date + ISO8601Time                 // 20060102T030405
 	ISO8601DateTimeExtended = ISO8601DateExtended + ISO8601TimeExtended // 2006-01-02T03:04:05
 	// Layouts defined by the time package.
-	ANSIC   = "%a %b %d %H:%M:%S %Y"
-	Kitchen = "%I:%M%p" // 3:04PM
+	ANSIC   = "%a %b %d %H:%M:%S %Y" // Mon Jan 02 15:04:05 2006
+	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
 func format(layout string, date *LocalDate, time *LocalTime) string {
