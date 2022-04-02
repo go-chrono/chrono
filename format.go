@@ -112,7 +112,11 @@ NextChar:
 			case time != nil && lit[1] == 'H':
 				out = append(out, []rune(fmt.Sprintf("%02d", hour))...)
 			case time != nil && lit[1] == 'I':
+				if hour <= 12 {
+					out = append(out, []rune(fmt.Sprintf("%02d", hour))...)
+				} else {
 				out = append(out, []rune(fmt.Sprintf("%02d", hour%12))...)
+				}
 			case date != nil && lit[1] == 'j':
 				d := date.YearDay()
 				out = append(out, []rune(fmt.Sprintf("%03d", d))...)
