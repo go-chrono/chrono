@@ -34,28 +34,28 @@ func TestWeekday_String(t *testing.T) {
 
 func TestMonth_String(t *testing.T) {
 	for _, tt := range []struct {
-		day      chrono.Month
+		month    chrono.Month
 		expected string
 	}{
 		{
-			day:      chrono.Month(0),
+			month:    chrono.Month(0),
 			expected: "%!Month(0)",
 		},
 		{
-			day:      chrono.Month(1),
+			month:    chrono.Month(1),
 			expected: "January",
 		},
 		{
-			day:      chrono.Month(12),
+			month:    chrono.Month(12),
 			expected: "December",
 		},
 		{
-			day:      chrono.Month(13),
+			month:    chrono.Month(13),
 			expected: "%!Month(13)",
 		},
 	} {
 		t.Run(tt.expected, func(t *testing.T) {
-			if out := tt.day.String(); out != tt.expected {
+			if out := tt.month.String(); out != tt.expected {
 				t.Errorf("stringified month = %s, want %s", out, tt.expected)
 			}
 		})
