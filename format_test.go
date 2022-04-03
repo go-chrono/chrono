@@ -1,6 +1,7 @@
 package chrono_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/go-chrono/chrono"
@@ -147,5 +148,21 @@ func TestLocalDateTime_Format_literals(t *testing.T) {
 				t.Errorf("datetime.Format(%s) = %s, want %s", tt.layout, actual, tt.expected)
 			}
 		})
+	}
+}
+
+func TestParse_missing_text(t *testing.T) {
+	if err := chrono.Parse("foo bar", "foo"); err == nil {
+		t.Errorf("expecting error but got nil")
+	} else if !strings.Contains(err.Error(), "cannot parse \"foo\" as \"foo \"") {
+		t.Errorf("expecting 'cannot parse' error but got '%s'", err.Error())
+	}
+}
+
+func TestParse_extra_text(t *testing.T) {
+	if err := chrono.Parse("foo", "foo bar"); err == nil {
+		t.Errorf("expecting error but got nil")
+	} else if !strings.Contains(err.Error(), "extra text: \" bar\"") {
+		t.Errorf("expecting 'extra text' error but got '%s'", err.Error())
 	}
 }

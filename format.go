@@ -59,6 +59,85 @@ const (
 	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
+func Parse(layout, value string) error {
+	return parse(layout, value)
+}
+
+func parse(layout, value string) error {
+	var pos int
+
+	var lbuf []byte
+NextChar:
+	for i := 0; i <= len(layout); i++ {
+		// Some short-hands.
+		var (
+			valid = i < len(layout)
+			last  = i == len(layout)
+		)
+
+		if valid {
+			c := layout[i]
+
+			if len(lbuf) == 0 {
+				goto AppendToBuffer
+			} else if len(lbuf) >= 2 && lbuf[0] == '%' { // Process a specifier.
+				switch c {
+				case 'E':
+					if last {
+						// TODO error
+					} else {
+						goto AppendToBuffer
+					}
+				case '%':
+					goto VerifyText
+				}
+
+				localed := len(lbuf) == 3 && lbuf[1] == 'E'
+				switch {
+				// handle specifiers
+				}
+
+				_ = localed // TODO delete
+
+				lbuf = nil
+				continue NextChar
+			}
+
+		AppendToBuffer:
+			lbuf = append(lbuf, c)
+		}
+
+	VerifyText:
+		if len(lbuf) == 0 {
+			continue NextChar
+		}
+
+		verify := func() error {
+			if string(lbuf) > value[pos:] {
+				return fmt.Errorf("parsing time \"%s\" as \"%s\": cannot parse \"%s\" as \"%s\"", value, layout, value[pos:], lbuf)
+			}
+			return nil
+		}
+
+		if lbuf[len(lbuf)-1] == '%' {
+			if err := verify(); err != nil {
+				return err
+			}
+			lbuf = []byte{'%'}
+		} else {
+			if err := verify(); err != nil {
+				return err
+			}
+		}
+	}
+
+	if pos < len(value) {
+		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[len(lbuf):])
+	}
+
+	return nil
+}
+
 func format(layout string, date *LocalDate, time *LocalTime) string {
 	var out []rune
 
@@ -115,7 +194,7 @@ NextChar:
 				if hour <= 12 {
 					out = append(out, []rune(fmt.Sprintf("%02d", hour))...)
 				} else {
-				out = append(out, []rune(fmt.Sprintf("%02d", hour%12))...)
+					out = append(out, []rune(fmt.Sprintf("%02d", hour%12))...)
 				}
 			case date != nil && lit[1] == 'j':
 				d := date.YearDay()
