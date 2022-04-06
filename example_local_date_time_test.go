@@ -8,6 +8,7 @@ import (
 
 func ExampleLocalDateTimeOf() {
 	dt := chrono.LocalDateTimeOf(2007, chrono.May, 20, 12, 30, 15, 0)
+
 	fmt.Println(dt)
 	// Output: 2007-05-20 12:30:15
 }
@@ -17,6 +18,7 @@ func ExampleOfLocalDateAndTime() {
 	t := chrono.LocalTimeOf(12, 30, 15, 0)
 
 	dt := chrono.OfLocalDateAndTime(d, t)
+
 	fmt.Println(dt)
 	// Output: 2007-05-20 12:30:15
 }
@@ -24,6 +26,7 @@ func ExampleOfLocalDateAndTime() {
 func ExampleLocalDateTime_Split() {
 	dt := chrono.LocalDateTimeOf(2007, chrono.May, 20, 12, 30, 15, 0)
 	d, t := dt.Split()
+
 	fmt.Printf("date = %s, time = %s", d, t)
 	// Output: date = 2007-05-20, time = 12:30:15
 }
@@ -40,12 +43,21 @@ func ExampleLocalDateTime_Compare() {
 
 func ExampleLocalDateTime_Add() {
 	dt := chrono.LocalDateTimeOf(2007, chrono.May, 20, 12, 30, 15, 0)
+
 	fmt.Println(dt.Add(chrono.DurationOf(26 * chrono.Hour)))
 	// Output: 2007-05-21 14:30:15
 }
 
 func ExampleLocalDateTime_AddDate() {
 	dt := chrono.LocalDateTimeOf(2007, chrono.May, 20, 12, 30, 15, 0)
+
 	fmt.Println(dt.AddDate(2, 6, 8))
 	// Output: 2009-11-28 12:30:15
+}
+
+func ExampleLocalDateTime_Format() {
+	dt := chrono.LocalDateTimeOf(2007, chrono.May, 20, 12, 30, 15, 0)
+
+	fmt.Println(dt.Format(chrono.ISO8601DateTimeExtended))
+	// Output: 2007-05-20T12:30:15
 }

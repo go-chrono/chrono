@@ -16,6 +16,37 @@
 
 # Use cases
 
+## Local (or "civil") dates and times
+
+Often it's necessary to represent civil time, or dates and times without a time zone or time offset component. Usually, this is achieved using the standard library's `time.Date` function and setting the time values to `0`. Alternatively, some people use Google's [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package.
+
+`chrono` provides 3 types for dealing with these use cases: [`LocalDate`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDate) (a date without a time), [`LocalTime`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalTime) (a time without a date), and [`LocalDateTime`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDateTime) (a combination of `LocalDate` and `LocalTime`).
+
+A `LocalDate` and a `LocalTime` are initialized with numeric values. A `LocalDateTime` can either be initialized with numeric values, or by combining a `LocalDate` and `LocalTime` (as below):
+
+```golang
+date := chrono.LocalDateOf(2007, chrono.May, 20)
+time := chrono.LocalTimeOf(12, 30, 15, 0)
+fmt.Println(chrono.OfLocalDateAndTime(date, time))
+```
+
+✅ [See more `LocalDate` examples](example_local_date_test.go).
+<br />
+✅ [See more `LocalTime` examples](example_local_time_test.go).
+<br />
+✅ [See more `LocalDateTime` examples](example_local_date_time_test.go).
+
+## Format dates and times
+
+`chrono` differs from the `time` package because it uses format codes instead of a mnemonic device. The format codes are borrowed from `strftime`, and therefore maybe familiar from other languages. The full list is documented [here](https://pkg.go.dev/github.com/go-chrono/chrono#pkg-constants), but here's a simple example:
+
+```golang
+time := chrono.LocalTimeOf(12, 30, 15, 0)
+fmt.Println(time.Format("%H:%M:%S"))
+```
+
+There are also predefined layouts, similar to the `time` package, but with the addition of layouts compatible with ISO 8601.
+
 ## Parse and format ISO 8601 durations
 
 When interfacing with systems where the <code>time</code> package's duration formatting is not understood, ISO 8601 is a commonly-adopted standard.
@@ -43,23 +74,3 @@ fmt.Println(chrono.FormatDuration(period, duration))
 ```
 
 ✅ [See more examples](example_duration_period_test.go).
-
-## Local (or "civil") dates and times
-
-Often it's necessary to represent civil time, or dates and times without a time zone or time offset component. Usually, this is achieved using the standard library's `time.Date` function and setting the time values to `0`. Alternatively, some people use Google's [`civil`](https://pkg.go.dev/cloud.google.com/go/civil) package.
-
-`chrono` provides 3 types for dealing with these use cases: [`LocalDate`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDate) (a date without a time), [`LocalTime`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalTime) (a time without a date), and [`LocalDateTime`](https://pkg.go.dev/github.com/go-chrono/chrono#LocalDateTime) (a combination of `LocalDate` and `LocalTime`).
-
-A `LocalDate` and a `LocalTime` are initialized with numeric values. A `LocalDateTime` can either be initialized with numeric values, or by combining a `LocalDate` and `LocalTime` (as below):
-
-```golang
-date := chrono.LocalDateOf(2007, chrono.May, 20)
-time := chrono.LocalTimeOf(12, 30, 15, 0)
-fmt.Println(chrono.OfLocalDateAndTime(date, time))
-```
-
-✅ [See more `LocalDate` examples](example_local_date_test.go).
-<br />
-✅ [See more `LocalTime` examples](example_local_time_test.go).
-<br />
-✅ [See more `LocalDateTime` examples](example_local_date_time_test.go).

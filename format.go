@@ -34,6 +34,9 @@ import (
 //   %M: The minute as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //   %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //
+// For specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
+// For example, '%m' may represent the string '04' (for March), but '%-m' represents '4'.
+//
 // Depending on the context in which the layout is used, only a subset of specifiers may be supported by a particular function.
 // For example, %H is not supported when parsing or formatting a date.
 //
@@ -164,81 +167,116 @@ NextChar:
 		lit = append(lit, c)
 
 		if len(lit) >= 2 && lit[0] == '%' {
-			if c == 'E' {
+			if c == '-' || c == 'E' {
 				continue NextChar
 			}
 
+			var nopad, localed bool
+			if len(lit) == 3 {
+				switch lit[1] {
+				case '-':
+					nopad = true
+				case 'E':
+					localed = true
+				default:
+					panic(fmt.Sprintf("unsupported modifier '%c'", lit[1]))
+				}
+			} else if len(lit) == 4 {
+				switch lit[1] {
+				case '-':
+					nopad = true
+				default:
+					panic(fmt.Sprintf("unsupported modifier '%c'", lit[1]))
+				}
+
+				switch lit[2] {
+				case 'E':
+					localed = true
+				default:
+					panic(fmt.Sprintf("unsupported modifier '%c'", lit[1]))
+				}
+			}
+
+			decimal := func(v int, len int) string {
+				if nopad {
+					return strconv.Itoa(v)
+				}
+				return fmt.Sprintf("%0*d", len, v)
+			}
+
+			main := lit[len(lit)-1]
+
 			switch {
-			case date != nil && lit[1] == 'a':
+			case date != nil && main == 'a':
 				out = append(out, []rune(date.Weekday().short())...)
-			case date != nil && lit[1] == 'A':
+			case date != nil && main == 'A':
 				out = append(out, []rune(date.Weekday().String())...)
-			case date != nil && lit[1] == 'b':
+			case date != nil && main == 'b':
 				out = append(out, []rune(month.short())...)
-			case date != nil && lit[1] == 'B':
+			case date != nil && main == 'B':
 				out = append(out, []rune(month.String())...)
-			case date != nil && lit[1] == 'E' && lit[2] == 'C':
+			case date != nil && localed && main == 'C':
 				if year > 1 {
 					out = append(out, []rune("CE")...)
 				} else {
 					out = append(out, []rune("BCE")...)
 				}
-			case date != nil && lit[1] == 'd':
-				out = append(out, []rune(fmt.Sprintf("%02d", day))...)
-			case date != nil && lit[1] == 'G':
+			case date != nil && main == 'd':
+				out = append(out, []rune(decimal(day, 2))...)
+			case date != nil && main == 'G':
 				y, _ := date.ISOWeek()
-				out = append(out, []rune(fmt.Sprintf("%04d", y))...)
-			case time != nil && lit[1] == 'H':
-				out = append(out, []rune(fmt.Sprintf("%02d", hour))...)
-			case time != nil && lit[1] == 'I':
+				out = append(out, []rune(decimal(y, 4))...)
+			case time != nil && main == 'H':
+				out = append(out, []rune(decimal(hour, 2))...)
+			case time != nil && main == 'I':
 				if hour <= 12 {
-					out = append(out, []rune(fmt.Sprintf("%02d", hour))...)
+					out = append(out, []rune(decimal(hour, 2))...)
 				} else {
-					out = append(out, []rune(fmt.Sprintf("%02d", hour%12))...)
+					out = append(out, []rune(decimal(hour%12, 2))...)
 				}
-			case date != nil && lit[1] == 'j':
+			case date != nil && main == 'j':
 				d := date.YearDay()
-				out = append(out, []rune(fmt.Sprintf("%03d", d))...)
-			case date != nil && lit[1] == 'm':
-				out = append(out, []rune(fmt.Sprintf("%02d", month))...)
-			case time != nil && lit[1] == 'M':
-				out = append(out, []rune(fmt.Sprintf("%02d", min))...)
-			case time != nil && lit[1] == 'p':
+				out = append(out, []rune(decimal(d, 3))...)
+			case date != nil && main == 'm':
+				out = append(out, []rune(decimal(int(month), 2))...)
+			case time != nil && main == 'M':
+				out = append(out, []rune(decimal(min, 2))...)
+			case time != nil && main == 'p':
 				if hour < 12 {
 					out = append(out, []rune("AM")...)
 				} else {
 					out = append(out, []rune("PM")...)
 				}
-			case time != nil && lit[1] == 'P':
+			case time != nil && main == 'P':
 				if hour < 12 {
 					out = append(out, []rune("am")...)
 				} else {
 					out = append(out, []rune("pm")...)
 				}
-			case time != nil && lit[1] == 'S':
-				out = append(out, []rune(fmt.Sprintf("%02d", sec))...)
-			case date != nil && lit[1] == 'u':
+			case time != nil && main == 'S':
+				out = append(out, []rune(decimal(sec, 2))...)
+			case date != nil && main == 'u':
 				out = append(out, []rune(strconv.Itoa(int(date.Weekday())+1))...)
-			case date != nil && lit[1] == 'V':
-				_, week := date.ISOWeek()
-				out = append(out, []rune(fmt.Sprintf("%02d", week))...)
-			case date != nil && lit[1] == 'y':
-				out = append(out, []rune(fmt.Sprintf("%02d", year%100))...)
-			case date != nil && lit[1] == 'E' && lit[2] == 'y':
+			case date != nil && main == 'V':
+				_, w := date.ISOWeek()
+				out = append(out, []rune(decimal(w, 2))...)
+			case date != nil && main == 'y':
+				out = append(out, []rune(decimal(year%100, 2))...)
+			case date != nil && localed && main == 'y':
 				y := year
 				if y < 0 {
 					y = y*-1 + 1
 				}
 				out = append(out, []rune(fmt.Sprintf("%02d", y%100))...)
-			case date != nil && lit[1] == 'Y':
-				out = append(out, []rune(fmt.Sprintf("%04d", year))...)
-			case date != nil && lit[1] == 'E' && lit[2] == 'Y':
+			case date != nil && main == 'Y':
+				out = append(out, []rune(decimal(year, 4))...)
+			case date != nil && localed && main == 'Y':
 				y := year
 				if y < 0 {
 					y = y*-1 + 1
 				}
-				out = append(out, []rune(fmt.Sprintf("%04d", y))...)
-			case lit[1] == '%':
+				out = append(out, []rune(decimal(y, 4))...)
+			case main == '%':
 				out = append(out, '%')
 			default:
 				panic("unsupported sequence " + string(lit))
