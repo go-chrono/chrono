@@ -53,3 +53,10 @@ func ExampleLocalDate_Add() {
 	fmt.Println(d)
 	// Output: 2007-06-21
 }
+
+func ExampleLocalDate_Format() {
+	d := chrono.LocalDateOf(2007, chrono.May, 20)
+
+	fmt.Println(d.Format(chrono.ISO8601DateExtended))
+	// Output: 2007-05-20
+}
