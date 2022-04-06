@@ -3,6 +3,7 @@ package chrono_test
 import (
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/go-chrono/chrono"
@@ -538,14 +539,26 @@ func TestDuration_Parse(t *testing.T) {
 						expected *= -1
 					}
 
-					var d chrono.Duration
-					if err := d.Parse(input); err != nil {
-						t.Errorf("failed to parse duation: %v", err)
-					} else if d.Compare(chrono.DurationOf(expected)) != 0 {
-						t.Errorf("parsed duration = %v, want %v", d, expected)
+					run := func() {
+						var d chrono.Duration
+						if err := d.Parse(input); err != nil {
+							t.Errorf("failed to parse duation: %v", err)
+						} else if d.Compare(chrono.DurationOf(expected)) != 0 {
+							t.Errorf("parsed duration = %v, want %v", d, expected)
+						}
 					}
+
+					t.Run("dots", func(t *testing.T) {
+						run()
+					})
+
+					t.Run("commas", func(t *testing.T) {
+						tt.input = strings.ReplaceAll(tt.input, ".", ",")
+						run()
+					})
 				})
 			}
+
 		})
 	}
 

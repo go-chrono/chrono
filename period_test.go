@@ -1,6 +1,7 @@
 package chrono_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/go-chrono/chrono"
@@ -200,13 +201,24 @@ func TestParseDuration(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			if p, d, err := chrono.ParseDuration(tt.input); err != nil {
-				t.Errorf("failed to parse period & duration: %v", err)
-			} else if !p.Equal(tt.period) {
-				t.Errorf("parsed period = %v, want %v", p, tt.period)
-			} else if d.Compare(tt.duration) != 0 {
-				t.Errorf("parsed duration = %v, want %v", d, tt.duration)
+			run := func() {
+				if p, d, err := chrono.ParseDuration(tt.input); err != nil {
+					t.Errorf("failed to parse period & duration: %v", err)
+				} else if !p.Equal(tt.period) {
+					t.Errorf("parsed period = %v, want %v", p, tt.period)
+				} else if d.Compare(tt.duration) != 0 {
+					t.Errorf("parsed duration = %v, want %v", d, tt.duration)
+				}
 			}
+
+			t.Run("dots", func(t *testing.T) {
+				run()
+			})
+
+			t.Run("commas", func(t *testing.T) {
+				tt.input = strings.ReplaceAll(tt.input, ".", ",")
+				run()
+			})
 		})
 	}
 

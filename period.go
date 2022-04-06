@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 )
 
 // Period represents an amount of time in years, months, weeks and days.
@@ -105,7 +106,7 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 	var haveWeeks int // 0 = undecided, 1 = W, -1 = YMD
 
 	for i := offset; i < len(s); i++ {
-		digit := (s[i] >= '0' && s[i] <= '9') || s[i] == '.'
+		digit := (s[i] >= '0' && s[i] <= '9') || s[i] == '.' || s[i] == ','
 
 		if value == 0 {
 			if digit {
@@ -127,7 +128,7 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 					continue
 				}
 
-				v, err := strconv.ParseFloat(s[value:i], 32)
+				v, err := parseFloat(s[value:i], 32)
 				if err != nil {
 					return 0, 0, 0, 0, 0, 0, false, err
 				}
@@ -168,7 +169,7 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 					continue
 				}
 
-				v, err := strconv.ParseFloat(s[value:i], 64)
+				v, err := parseFloat(s[value:i], 64)
 				if err != nil {
 					return 0, 0, 0, 0, 0, 0, false, err
 				}
@@ -219,4 +220,9 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 		return 0, 0, 0, 0, 0, 0, false, fmt.Errorf("expecting at least one unit")
 	}
 	return
+}
+
+func parseFloat(s string, bitSize int) (float64, error) {
+	s = strings.ReplaceAll(s, ",", ".")
+	return strconv.ParseFloat(s, bitSize)
 }
