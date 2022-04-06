@@ -129,6 +129,13 @@ func (d LocalDateTime) String() string {
 	return out
 }
 
+// Format returns a textual representation of the date-time value formatted according to the layout defined by the argument.
+// See the constants section of the documentation to see how to represent the layout format.
+func (d LocalDateTime) Format(layout string) string {
+	date, time := d.Split()
+	return format(layout, &date, &time)
+}
+
 func (d LocalDateTime) split() (date, time int64) {
 	v := new(big.Int).Set(&d.v)
 

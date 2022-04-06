@@ -122,6 +122,12 @@ func (t LocalTime) String() string {
 	return out
 }
 
+// Format returns a textual representation of the time value formatted according to the layout defined by the argument.
+// See the constants section of the documentation to see how to represent the layout format.
+func (t LocalTime) Format(layout string) string {
+	return format(layout, nil, &t)
+}
+
 const (
 	maxLocalTime Extent = 359999999999999
 )
