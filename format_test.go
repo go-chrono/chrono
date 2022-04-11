@@ -165,8 +165,9 @@ func TestLocalDateTime_Format_literals(t *testing.T) {
 	}
 }
 
-func TestParse_missing_text(t *testing.T) {
-	if err := chrono.Parse("foo bar", "foo"); err == nil {
+func TestLocalDate_Parse_missing_text(t *testing.T) {
+	var d chrono.LocalDate
+	if err := d.Parse("foo bar", "foo"); err == nil {
 		t.Errorf("expecting error but got nil")
 	} else if !strings.Contains(err.Error(), "cannot parse \"foo\" as \"foo \"") {
 		t.Errorf("expecting 'cannot parse' error but got '%s'", err.Error())
@@ -174,7 +175,8 @@ func TestParse_missing_text(t *testing.T) {
 }
 
 func TestParse_extra_text(t *testing.T) {
-	if err := chrono.Parse("foo", "foo bar"); err == nil {
+	var d chrono.LocalDate
+	if err := d.Parse("foo", "foo bar"); err == nil {
 		t.Errorf("expecting error but got nil")
 	} else if !strings.Contains(err.Error(), "extra text: \" bar\"") {
 		t.Errorf("expecting 'extra text' error but got '%s'", err.Error())

@@ -147,6 +147,11 @@ func (d LocalDate) Format(layout string) string {
 	return format(layout, &d, nil)
 }
 
+// Parse a formatted string and store the value it represents in d.
+func (d *LocalDate) Parse(layout, value string) error {
+	return parse(layout, value, d, nil)
+}
+
 // MinLocalDate returns the earliest supported date.
 func MinLocalDate() LocalDate {
 	return LocalDate(minJDN)

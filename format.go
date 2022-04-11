@@ -62,85 +62,6 @@ const (
 	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
-func Parse(layout, value string) error {
-	return parse(layout, value)
-}
-
-func parse(layout, value string) error {
-	var pos int
-
-	var lbuf []byte
-NextChar:
-	for i := 0; i <= len(layout); i++ {
-		// Some short-hands.
-		var (
-			valid = i < len(layout)
-			last  = i == len(layout)
-		)
-
-		if valid {
-			c := layout[i]
-
-			if len(lbuf) == 0 {
-				goto AppendToBuffer
-			} else if len(lbuf) >= 2 && lbuf[0] == '%' { // Process a specifier.
-				switch c {
-				case 'E':
-					if last {
-						// TODO error
-					} else {
-						goto AppendToBuffer
-					}
-				case '%':
-					goto VerifyText
-				}
-
-				localed := len(lbuf) == 3 && lbuf[1] == 'E'
-				switch {
-				// handle specifiers
-				}
-
-				_ = localed // TODO delete
-
-				lbuf = nil
-				continue NextChar
-			}
-
-		AppendToBuffer:
-			lbuf = append(lbuf, c)
-		}
-
-	VerifyText:
-		if len(lbuf) == 0 {
-			continue NextChar
-		}
-
-		verify := func() error {
-			if string(lbuf) > value[pos:] {
-				return fmt.Errorf("parsing time \"%s\" as \"%s\": cannot parse \"%s\" as \"%s\"", value, layout, value[pos:], lbuf)
-			}
-			return nil
-		}
-
-		if lbuf[len(lbuf)-1] == '%' {
-			if err := verify(); err != nil {
-				return err
-			}
-			lbuf = []byte{'%'}
-		} else {
-			if err := verify(); err != nil {
-				return err
-			}
-		}
-	}
-
-	if pos < len(value) {
-		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[len(lbuf):])
-	}
-
-	return nil
-}
-
 func format(layout string, date *LocalDate, time *LocalTime) string {
 	var out []rune
 
@@ -161,39 +82,39 @@ func format(layout string, date *LocalDate, time *LocalTime) string {
 		hour, min, sec = time.Clock()
 	}
 
-	var lit []rune
+	var buf []rune
 NextChar:
 	for _, c := range layout {
-		lit = append(lit, c)
+		buf = append(buf, c)
 
-		if len(lit) >= 2 && lit[0] == '%' {
+		if len(buf) >= 2 && buf[0] == '%' {
 			if c == '-' || c == 'E' {
 				continue NextChar
 			}
 
 			var nopad, localed bool
-			if len(lit) == 3 {
-				switch lit[1] {
+			if len(buf) == 3 {
+				switch buf[1] {
 				case '-':
 					nopad = true
 				case 'E':
 					localed = true
 				default:
-					panic(fmt.Sprintf("unsupported modifier '%c'", lit[1]))
+					panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
 				}
-			} else if len(lit) == 4 {
-				switch lit[1] {
+			} else if len(buf) == 4 {
+				switch buf[1] {
 				case '-':
 					nopad = true
 				default:
-					panic(fmt.Sprintf("unsupported modifier '%c'", lit[1]))
+					panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
 				}
 
-				switch lit[2] {
+				switch buf[2] {
 				case 'E':
 					localed = true
 				default:
-					panic(fmt.Sprintf("unsupported modifier '%c'", lit[1]))
+					panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
 				}
 			}
 
@@ -204,7 +125,7 @@ NextChar:
 				return fmt.Sprintf("%0*d", len, v)
 			}
 
-			main := lit[len(lit)-1]
+			main := buf[len(buf)-1]
 
 			switch {
 			case date != nil && main == 'a':
@@ -279,17 +200,92 @@ NextChar:
 			case main == '%':
 				out = append(out, '%')
 			default:
-				panic("unsupported sequence " + string(lit))
+				panic("unsupported sequence " + string(buf))
 			}
 
-			lit = nil
-		} else if len(lit) == 1 && lit[0] != '%' {
-			out = append(out, lit...)
-			lit = nil
+			buf = nil
+		} else if len(buf) == 1 && buf[0] != '%' {
+			out = append(out, buf...)
+			buf = nil
 		}
 	}
 
 	return string(out)
+}
+
+func parse(layout, value string, date *LocalDate, time *LocalTime) error {
+	var pos int
+
+	var buf []byte
+NextChar:
+	for i := 0; i <= len(layout); i++ {
+		// Some short-hands.
+		var (
+			valid = i < len(layout)
+			last  = i == len(layout)
+		)
+
+		if valid {
+			c := layout[i]
+
+			if len(buf) == 0 {
+				goto AppendToBuffer
+			} else if len(buf) >= 2 && buf[0] == '%' { // Process a specifier.
+				switch c {
+				case 'E':
+					if last {
+						// TODO error
+					} else {
+						goto AppendToBuffer
+					}
+				case '%':
+					goto VerifyText
+				}
+
+				localed := len(buf) == 3 && buf[1] == 'E'
+				switch {
+				// handle specifiers
+				}
+
+				_ = localed // TODO delete
+
+				buf = nil
+				continue NextChar
+			}
+
+		AppendToBuffer:
+			buf = append(buf, c)
+		}
+
+	VerifyText:
+		if len(buf) == 0 {
+			continue NextChar
+		}
+
+		verify := func() error {
+			if string(buf) > value[pos:] {
+				return fmt.Errorf("parsing time \"%s\" as \"%s\": cannot parse \"%s\" as \"%s\"", value, layout, value[pos:], buf)
+			}
+			return nil
+		}
+
+		if buf[len(buf)-1] == '%' {
+			if err := verify(); err != nil {
+				return err
+			}
+			buf = []byte{'%'}
+		} else {
+			if err := verify(); err != nil {
+				return err
+			}
+		}
+	}
+
+	if pos < len(value) {
+		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[len(buf):])
+	}
+
+	return nil
 }
 
 func (w Weekday) short() string {
