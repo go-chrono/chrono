@@ -1,6 +1,7 @@
 package chrono_test
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -165,20 +166,48 @@ func TestLocalDateTime_Format_literals(t *testing.T) {
 	}
 }
 
-func TestLocalDate_Parse_missing_text(t *testing.T) {
-	var d chrono.LocalDate
-	if err := d.Parse("foo bar", "foo"); err == nil {
-		t.Errorf("expecting error but got nil")
-	} else if !strings.Contains(err.Error(), "cannot parse \"foo\" as \"foo \"") {
-		t.Errorf("expecting 'cannot parse' error but got '%s'", err.Error())
+func TestLocalDate_Parse_missing_text_error(t *testing.T) {
+	var date chrono.LocalDate
+	var time chrono.LocalTime
+	var datetime chrono.LocalDateTime
+
+	for _, v := range []interface {
+		Parse(layout, value string) error
+	}{
+		&date,
+		&time,
+		&datetime,
+	} {
+		t.Run(reflect.TypeOf(v).Elem().Name(), func(t *testing.T) {
+			expected := "parsing time \"foo\" as \"foo bar\": cannot parse \"foo\" as \"foo bar\""
+			if err := v.Parse("foo bar", "foo"); err == nil {
+				t.Errorf("expecting error but got nil")
+			} else if !strings.Contains(err.Error(), expected) {
+				t.Errorf("expecting '%s' error but got '%s'", expected, err.Error())
+			}
+		})
 	}
 }
 
-func TestParse_extra_text(t *testing.T) {
-	var d chrono.LocalDate
-	if err := d.Parse("foo", "foo bar"); err == nil {
-		t.Errorf("expecting error but got nil")
-	} else if !strings.Contains(err.Error(), "extra text: \" bar\"") {
-		t.Errorf("expecting 'extra text' error but got '%s'", err.Error())
+func TestLocalDate_Parse_extra_text_error(t *testing.T) {
+	var date chrono.LocalDate
+	var time chrono.LocalTime
+	var datetime chrono.LocalDateTime
+
+	for _, v := range []interface {
+		Parse(layout, value string) error
+	}{
+		&date,
+		&time,
+		&datetime,
+	} {
+		t.Run(reflect.TypeOf(v).Elem().Name(), func(t *testing.T) {
+			expected := "parsing time \"foo bar\": extra text: \" bar\""
+			if err := v.Parse("foo", "foo bar"); err == nil {
+				t.Errorf("expecting error but got nil")
+			} else if !strings.Contains(err.Error(), expected) {
+				t.Errorf("expecting '%s' error but got '%s'", expected, err.Error())
+			}
+		})
 	}
 }

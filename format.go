@@ -92,40 +92,13 @@ NextChar:
 				continue NextChar
 			}
 
-			var nopad, localed bool
-			if len(buf) == 3 {
-				switch buf[1] {
-				case '-':
-					nopad = true
-				case 'E':
-					localed = true
-				default:
-					panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
-				}
-			} else if len(buf) == 4 {
-				switch buf[1] {
-				case '-':
-					nopad = true
-				default:
-					panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
-				}
-
-				switch buf[2] {
-				case 'E':
-					localed = true
-				default:
-					panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
-				}
-			}
-
+			nopad, localed, main := parseSpecifier(buf)
 			decimal := func(v int, len int) string {
 				if nopad {
 					return strconv.Itoa(v)
 				}
 				return fmt.Sprintf("%0*d", len, v)
 			}
-
-			main := buf[len(buf)-1]
 
 			switch {
 			case date != nil && main == 'a':
@@ -216,13 +189,55 @@ NextChar:
 func parse(layout, value string, date *LocalDate, time *LocalTime) error {
 	var pos int
 
-	var buf []byte
+	var buf []rune
 NextChar:
 	for i := 0; i <= len(layout); i++ {
+		verifyText := func() error {
+			if len(buf) == 0 {
+				return nil
+			}
+
+			verify := func() error {
+				if string(buf) > value[pos:] {
+					return fmt.Errorf("parsing time \"%s\" as \"%s\": cannot parse \"%s\" as \"%s\"", value, layout, value[pos:], string(buf))
+				}
+				return nil
+			}
+
+			if buf[len(buf)-1] == '%' {
+				if err := verify(); err != nil {
+					return err
+				}
+				buf = []rune{'%'}
+			} else {
+				if err := verify(); err != nil {
+					return err
+				}
+			}
+
+			pos += len(buf)
+			buf = nil
+			return nil
+		}
+
+		processSpecifier := func() error {
+			nopad, localed, main := parseSpecifier(buf)
+			switch {
+			}
+
+			_, _, _ = nopad, localed, main
+
+			pos += len(buf)
+			buf = nil
+			return nil
+		}
+
 		// Some short-hands.
 		var (
-			valid = i < len(layout)
-			last  = i == len(layout)
+			valid       = i < len(layout)
+			last        = i == len(layout)
+			isSpecifier = len(buf) >= 2 && buf[0] == '%'
+			isText      = len(buf) >= 1 && buf[0] != '%'
 		)
 
 		if valid {
@@ -230,7 +245,7 @@ NextChar:
 
 			if len(buf) == 0 {
 				goto AppendToBuffer
-			} else if len(buf) >= 2 && buf[0] == '%' { // Process a specifier.
+			} else if isSpecifier {
 				switch c {
 				case 'E':
 					if last {
@@ -239,53 +254,63 @@ NextChar:
 						goto AppendToBuffer
 					}
 				case '%':
-					goto VerifyText
+					if err := verifyText(); err != nil {
+						return err
+					}
+					continue NextChar
+				default:
+					if err := processSpecifier(); err != nil {
+						return err
+					}
+					continue NextChar
 				}
-
-				localed := len(buf) == 3 && buf[1] == 'E'
-				switch {
-				// handle specifiers
-				}
-
-				_ = localed // TODO delete
-
-				buf = nil
-				continue NextChar
 			}
 
 		AppendToBuffer:
-			buf = append(buf, c)
-		}
-
-	VerifyText:
-		if len(buf) == 0 {
-			continue NextChar
-		}
-
-		verify := func() error {
-			if string(buf) > value[pos:] {
-				return fmt.Errorf("parsing time \"%s\" as \"%s\": cannot parse \"%s\" as \"%s\"", value, layout, value[pos:], buf)
-			}
-			return nil
-		}
-
-		if buf[len(buf)-1] == '%' {
-			if err := verify(); err != nil {
+			buf = append(buf, rune(c))
+		} else if isSpecifier {
+			if err := processSpecifier(); err != nil {
 				return err
 			}
-			buf = []byte{'%'}
-		} else {
-			if err := verify(); err != nil {
+		} else if isText {
+			if err := verifyText(); err != nil {
 				return err
 			}
 		}
 	}
 
 	if pos < len(value) {
-		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[len(buf):])
+		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[pos:])
 	}
-
 	return nil
+}
+
+func parseSpecifier(buf []rune) (nopad, localed bool, main rune) {
+	if len(buf) == 3 {
+		switch buf[1] {
+		case '-':
+			nopad = true
+		case 'E':
+			localed = true
+		default:
+			panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
+		}
+	} else if len(buf) == 4 {
+		switch buf[1] {
+		case '-':
+			nopad = true
+		default:
+			panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
+		}
+
+		switch buf[2] {
+		case 'E':
+			localed = true
+		default:
+			panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
+		}
+	}
+	return nopad, localed, buf[len(buf)-1]
 }
 
 func (w Weekday) short() string {
