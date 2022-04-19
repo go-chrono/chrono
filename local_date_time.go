@@ -136,6 +136,20 @@ func (d LocalDateTime) Format(layout string) string {
 	return format(layout, &date, &time)
 }
 
+// Parse a formatted string and store the value it represents in d.
+// See the constants section of the documentation to see how to represent the layout format.
+func (d *LocalDateTime) Parse(layout, value string) error {
+	var date LocalDate
+	var time LocalTime
+
+	if err := parse(layout, value, &date, &time); err != nil {
+		return err
+	}
+
+	*d = makeLocalDateTime(int64(date), int64(time.v))
+	return nil
+}
+
 func (d LocalDateTime) split() (date, time int64) {
 	v := new(big.Int).Set(&d.v)
 
