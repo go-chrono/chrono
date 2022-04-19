@@ -143,11 +143,14 @@ func (d LocalDate) String() string {
 
 // Format returns a textual representation of the date value formatted according to the layout defined by the argument.
 // See the constants section of the documentation to see how to represent the layout format.
+// Time format specifiers encountered in the layout results in a panic.
 func (d LocalDate) Format(layout string) string {
 	return format(layout, &d, nil)
 }
 
 // Parse a formatted string and store the value it represents in d.
+// See the constants section of the documentation to see how to represent the layout format.
+// Time format specifiers encountered in the layout results in a panic.
 func (d *LocalDate) Parse(layout, value string) error {
 	return parse(layout, value, d, nil)
 }
