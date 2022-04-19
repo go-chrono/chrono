@@ -351,3 +351,18 @@ var shortMonthNames = [12]string{
 	November - 1:  "Nov",
 	December - 1:  "Dec",
 }
+
+var shortMonthNameLookup = map[string]Month{
+	"Jan": January,
+	"Feb": February,
+	"Mar": March,
+	"Apr": April,
+	"May": May,
+	"Jun": June,
+	"Jul": July,
+	"Aug": August,
+	"Sep": September,
+	"Oct": October,
+	"Nov": November,
+	"Dec": December,
+}

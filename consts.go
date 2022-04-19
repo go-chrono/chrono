@@ -74,3 +74,18 @@ var longMonthNames = [12]string{
 	November - 1:  "November",
 	December - 1:  "December",
 }
+
+var longMonthNameLookup = map[string]Month{
+	"January":   January,
+	"February":  February,
+	"March":     March,
+	"April":     April,
+	"May":       May,
+	"June":      June,
+	"July":      July,
+	"August":    August,
+	"September": September,
+	"October":   October,
+	"November":  November,
+	"December":  December,
+}
