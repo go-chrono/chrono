@@ -129,6 +129,13 @@ func (t LocalTime) Format(layout string) string {
 	return format(layout, nil, &t)
 }
 
+// Parse a formatted string and store the value it represents in t.
+// See the constants section of the documentation to see how to represent the layout format.
+// Date format specifiers encountered in the layout results in a panic.
+func (t *LocalTime) Parse(layout, value string) error {
+	return parse(layout, value, nil, t)
+}
+
 const (
 	maxLocalTime Extent = 359999999999999
 )
