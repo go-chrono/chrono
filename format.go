@@ -63,26 +63,9 @@ const (
 )
 
 func format(layout string, date *LocalDate, time *LocalTime) string {
-	var out []rune
+	year, month, day, hour, min, sec := values(date, time)
 
-	var (
-		year  int
-		month Month
-		day   int
-		hour  int
-		min   int
-		sec   int
-	)
-
-	if date != nil {
-		year, month, day = date.Date()
-	}
-
-	if time != nil {
-		hour, min, sec = time.Clock()
-	}
-
-	var buf []rune
+	var buf, out []rune
 NextChar:
 	for _, c := range layout {
 		buf = append(buf, c)
@@ -187,8 +170,10 @@ NextChar:
 }
 
 func parse(layout, value string, date *LocalDate, time *LocalTime) error {
-	var pos int
+	year, month, day, hour, min, sec := values(date, time)
+	_, _, _, _, _, _ = year, month, day, hour, min, sec
 
+	var pos int
 	var buf []rune
 NextChar:
 	for i := 0; i <= len(layout); i++ {
@@ -283,6 +268,17 @@ NextChar:
 		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[pos:])
 	}
 	return nil
+}
+
+func values(date *LocalDate, time *LocalTime) (year int, month Month, day, hour, min, sec int) {
+	if date != nil {
+		year, month, day = date.Date()
+	}
+
+	if time != nil {
+		hour, min, sec = time.Clock()
+	}
+	return
 }
 
 func parseSpecifier(buf []rune) (nopad, localed bool, main rune) {
