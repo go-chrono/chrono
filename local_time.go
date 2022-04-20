@@ -133,7 +133,13 @@ func (t LocalTime) Format(layout string) string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Date format specifiers encountered in the layout results in a panic.
 func (t *LocalTime) Parse(layout, value string) error {
-	return parse(layout, value, nil, t)
+	v := int64(t.v)
+	if err := parse(layout, value, nil, &v); err != nil {
+		return err
+	}
+
+	t.v = Extent(v)
+	return nil
 }
 
 const (

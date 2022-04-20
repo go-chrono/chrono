@@ -139,14 +139,12 @@ func (d LocalDateTime) Format(layout string) string {
 // Parse a formatted string and store the value it represents in d.
 // See the constants section of the documentation to see how to represent the layout format.
 func (d *LocalDateTime) Parse(layout, value string) error {
-	var date LocalDate
-	var time LocalTime
-
-	if err := parse(layout, value, &date, &time); err != nil {
+	dv, tv := d.split()
+	if err := parse(layout, value, &dv, &tv); err != nil {
 		return err
 	}
 
-	*d = makeLocalDateTime(int64(date), int64(time.v))
+	*d = makeLocalDateTime(dv, tv)
 	return nil
 }
 

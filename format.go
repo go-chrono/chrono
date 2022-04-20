@@ -3,6 +3,7 @@ package chrono
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // These are predefined layouts used for the parsing and formatting of dates, times and date-times.
@@ -63,7 +64,27 @@ const (
 )
 
 func format(layout string, date *LocalDate, time *LocalTime) string {
-	year, month, day, hour, min, sec := values(date, time)
+	var (
+		year  int
+		month Month
+		day   int
+		hour  int
+		min   int
+		sec   int
+	)
+
+	var err error
+	if date != nil {
+		v := int64(*date)
+		if year, month, day, err = fromLocalDate(v); err != nil {
+			panic(err.Error())
+		}
+	}
+
+	if time != nil {
+		v := int64(time.v)
+		hour, min, sec, _ = fromLocalTime(v)
+	}
 
 	var buf, out []rune
 NextChar:
@@ -169,13 +190,32 @@ NextChar:
 	return string(out)
 }
 
-func parse(layout, value string, date *LocalDate, time *LocalTime) error {
-	year, month, day, hour, min, sec := values(date, time)
-	_, _, _, _, _, _ = year, month, day, hour, min, sec
+func parse(layout, value string, date, time *int64) error {
+	var (
+		year  int
+		month int
+		day   int
+		hour  int
+		min   int
+		sec   int
+		nsec  int
+	)
+
+	var err error
+	if date != nil {
+		var m Month
+		if year, m, day, err = fromLocalDate(*date); err != nil {
+			panic(err.Error())
+		}
+		month = int(m)
+	}
+
+	if time != nil {
+		hour, min, sec, _ = fromLocalTime(*time)
+	}
 
 	var pos int
 	var buf []rune
-NextChar:
 	for i := 0; i <= len(layout); i++ {
 		verifyText := func() error {
 			if len(buf) == 0 {
@@ -183,7 +223,7 @@ NextChar:
 			}
 
 			verify := func() error {
-				if !strings.HasPrefix(value[pos:], string(buf)) && string(buf) != value[pos:] {
+				if !strings.HasPrefix(value[pos:], string(buf)) {
 					return fmt.Errorf("parsing time \"%s\" as \"%s\": cannot parse \"%s\" as \"%s\"", value, layout, value[pos:], string(buf))
 				}
 				return nil
@@ -206,13 +246,78 @@ NextChar:
 		}
 
 		processSpecifier := func() error {
-			nopad, localed, main := parseSpecifier(buf)
-			switch {
+			integer := func(maxLen int) (int, error) {
+				str := value[pos:]
+				if len(str) >= 1 && (str[0] == '+' || str[0] == '-') {
+					maxLen++
+				}
+
+				if l := len(str); l < maxLen {
+					maxLen = l
+				}
+				str = value[pos : pos+maxLen]
+
+				var i int
+				for _, char := range str {
+					if (char < '0' || char > '9') && char != '.' && char != ',' {
+						break
+					}
+					i++
+				}
+				pos += i
+
+				return strconv.Atoi(str[:i])
 			}
 
-			_, _, _ = nopad, localed, main
+			nopad, localed, main := parseSpecifier(buf)
+			var err error
+			switch {
+			//case date != nil && main == 'a':
+			//case date != nil && main == 'A':
+			//case date != nil && main == 'b':
+			//case date != nil && main == 'B':
+			//case date != nil && localed && main == 'C':
+			case date != nil && main == 'd':
+				if day, err = integer(2); err != nil {
+					return err
+				}
+			//case date != nil && main == 'G':
+			case time != nil && main == 'H':
+				if hour, err = integer(2); err != nil {
+					return err
+				}
+			//case time != nil && main == 'I':
+			//case date != nil && main == 'j':
+			case date != nil && main == 'm':
+				if month, err = integer(2); err != nil {
+					return err
+				}
+			case time != nil && main == 'M':
+				if min, err = integer(2); err != nil {
+					return err
+				}
+			//case time != nil && main == 'p':
+			//case time != nil && main == 'P':
+			case time != nil && main == 'S':
+				if sec, err = integer(2); err != nil {
+					return err
+				}
+			//case date != nil && main == 'u':
+			//case date != nil && main == 'V':
+			//case date != nil && main == 'y':
+			//case date != nil && localed && main == 'y':
+			case date != nil && main == 'Y':
+				if year, err = integer(4); err != nil {
+					return err
+				}
+			//case date != nil && localed && main == 'Y':
+			case main == '%':
+			default:
+				panic("unsupported sequence " + string(buf))
+			}
 
-			pos += len(buf)
+			_, _ = nopad, localed // TODO remove me
+
 			buf = nil
 			return nil
 		}
@@ -227,7 +332,6 @@ NextChar:
 
 		if valid {
 			c := layout[i]
-
 			if len(buf) == 0 {
 				goto AppendToBuffer
 			} else if isSpecifier {
@@ -238,17 +342,17 @@ NextChar:
 					} else {
 						goto AppendToBuffer
 					}
-				case '%':
-					if err := verifyText(); err != nil {
-						return err
-					}
-					continue NextChar
 				default:
 					if err := processSpecifier(); err != nil {
 						return err
 					}
-					continue NextChar
+					goto AppendToBuffer
 				}
+			} else if isText && c == '%' {
+				if err := verifyText(); err != nil {
+					return err
+				}
+				goto AppendToBuffer
 			}
 
 		AppendToBuffer:
@@ -267,18 +371,28 @@ NextChar:
 	if pos < len(value) {
 		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[pos:])
 	}
-	return nil
-}
 
-func values(date *LocalDate, time *LocalTime) (year int, month Month, day, hour, min, sec int) {
 	if date != nil {
-		year, month, day = date.Date()
+		if !dateIsValid(year, Month(month), day) {
+			return fmt.Errorf("invalid date '%s'", dateSimpleStr(year, Month(month), day))
+		}
+
+		v, err := makeLocalDate(year, Month(month), day)
+		if err != nil {
+			return err
+		}
+		*date = v
 	}
 
 	if time != nil {
-		hour, min, sec = time.Clock()
+		v, err := makeLocalTime(hour, min, sec, nsec)
+		if err != nil {
+			return err
+		}
+		*time = v
 	}
-	return
+
+	return nil
 }
 
 func parseSpecifier(buf []rune) (nopad, localed bool, main rune) {

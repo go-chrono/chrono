@@ -137,7 +137,10 @@ func (d LocalDate) add(years, months, days int) (LocalDate, error) {
 }
 
 func (d LocalDate) String() string {
-	year, month, day := d.Date()
+	return dateSimpleStr(d.Date())
+}
+
+func dateSimpleStr(year int, month Month, day int) string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
 }
 
@@ -152,7 +155,13 @@ func (d LocalDate) Format(layout string) string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Time format specifiers encountered in the layout results in a panic.
 func (d *LocalDate) Parse(layout, value string) error {
-	return parse(layout, value, d, nil)
+	v := int64(*d)
+	if err := parse(layout, value, &v, nil); err != nil {
+		return err
+	}
+
+	*d = LocalDate(v)
+	return nil
 }
 
 // MinLocalDate returns the earliest supported date.

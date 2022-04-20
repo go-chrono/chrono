@@ -132,7 +132,7 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	}
 }
 
-func TestLocalDateTime_Format_literals(t *testing.T) {
+func Test_format_literals(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		value    interface{ Format(string) string }
@@ -166,7 +166,7 @@ func TestLocalDateTime_Format_literals(t *testing.T) {
 	}
 }
 
-func TestLocalDate_Parse_cannot_parse_error(t *testing.T) {
+func Test_parse_cannot_parse_error(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
 		layout   string
@@ -200,7 +200,7 @@ func TestLocalDate_Parse_cannot_parse_error(t *testing.T) {
 	}
 }
 
-func TestLocalDate_Parse_extra_text_error(t *testing.T) {
+func Test_parse_extra_text_error(t *testing.T) {
 	var date chrono.LocalDate
 	var time chrono.LocalTime
 	var datetime chrono.LocalDateTime
@@ -218,6 +218,56 @@ func TestLocalDate_Parse_extra_text_error(t *testing.T) {
 				t.Errorf("expecting error but got nil")
 			} else if !strings.Contains(err.Error(), expected) {
 				t.Errorf("expecting '%s' error but got '%s'", expected, err.Error())
+			}
+		})
+	}
+}
+
+func TestLocalDate_Parse_predefined_layouts(t *testing.T) {
+	date := chrono.LocalDateOf(2022, chrono.June, 18)
+	time := chrono.LocalTimeOf(21, 05, 30, 0)
+
+	for _, tt := range []struct {
+		layout   string
+		value    string
+		expected chrono.LocalDateTime
+	}{
+		{chrono.ISO8601Date, "20220618", chrono.OfLocalDateAndTime(date, chrono.LocalTime{})},
+		{chrono.ISO8601DateExtended, "2022-06-18", chrono.OfLocalDateAndTime(date, chrono.LocalTime{})},
+		{chrono.ISO8601Time, "T210530", chrono.OfLocalDateAndTime(chrono.LocalDate(0), time)},
+		{chrono.ISO8601TimeExtended, "T21:05:30", chrono.OfLocalDateAndTime(chrono.LocalDate(0), time)},
+		{chrono.ISO8601DateTime, "20220618T210530", chrono.OfLocalDateAndTime(date, time)},
+		{chrono.ISO8601DateTimeExtended, "2022-06-18T21:05:30", chrono.OfLocalDateAndTime(date, time)},
+	} {
+		t.Run(tt.layout, func(t *testing.T) {
+			var datetime chrono.LocalDateTime
+			if err := datetime.Parse(tt.layout, tt.value); err != nil {
+				t.Errorf("datetime.Parse(%s, %s) = %v, want nil", tt.layout, tt.value, err)
+			} else if datetime.Compare(tt.expected) != 0 {
+				t.Errorf("expecting %v, but got %v", tt.expected, datetime)
+			}
+		})
+	}
+}
+
+func TestLocalDate_Format_predefined_layouts(t *testing.T) {
+	date := chrono.LocalDateOf(2022, chrono.June, 18)
+	time := chrono.LocalTimeOf(21, 05, 30, 0)
+
+	for _, tt := range []struct {
+		layout   string
+		expected string
+	}{
+		{chrono.ISO8601Date, "20220618"},
+		{chrono.ISO8601DateExtended, "2022-06-18"},
+		{chrono.ISO8601Time, "T210530"},
+		{chrono.ISO8601TimeExtended, "T21:05:30"},
+		{chrono.ISO8601DateTime, "20220618T210530"},
+		{chrono.ISO8601DateTimeExtended, "2022-06-18T21:05:30"},
+	} {
+		t.Run(tt.layout, func(t *testing.T) {
+			if formatted := chrono.OfLocalDateAndTime(date, time).Format(tt.layout); formatted != tt.expected {
+				t.Errorf("datetime.Format(%s) = %s, want %s", tt.layout, formatted, tt.expected)
 			}
 		})
 	}
