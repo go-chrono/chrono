@@ -166,24 +166,35 @@ func TestLocalDateTime_Format_literals(t *testing.T) {
 	}
 }
 
-func TestLocalDate_Parse_missing_text_error(t *testing.T) {
-	var date chrono.LocalDate
-	var time chrono.LocalTime
-	var datetime chrono.LocalDateTime
-
-	for _, v := range []interface {
-		Parse(layout, value string) error
+func TestLocalDate_Parse_cannot_parse_error(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		layout   string
+		value    string
+		expected string
 	}{
-		&date,
-		&time,
-		&datetime,
+		{"none", "foo bar", "foo", "parsing time \"foo\" as \"foo bar\": cannot parse \"foo\" as \"foo bar\""},
+		{"partial", "bar", "foo", "parsing time \"foo\" as \"bar\": cannot parse \"foo\" as \"bar\""},
 	} {
-		t.Run(reflect.TypeOf(v).Elem().Name(), func(t *testing.T) {
-			expected := "parsing time \"foo\" as \"foo bar\": cannot parse \"foo\" as \"foo bar\""
-			if err := v.Parse("foo bar", "foo"); err == nil {
-				t.Errorf("expecting error but got nil")
-			} else if !strings.Contains(err.Error(), expected) {
-				t.Errorf("expecting '%s' error but got '%s'", expected, err.Error())
+		t.Run(tt.name, func(t *testing.T) {
+			var date chrono.LocalDate
+			var time chrono.LocalTime
+			var datetime chrono.LocalDateTime
+
+			for _, v := range []interface {
+				Parse(layout, value string) error
+			}{
+				&date,
+				&time,
+				&datetime,
+			} {
+				t.Run(reflect.TypeOf(v).Elem().Name(), func(t *testing.T) {
+					if err := v.Parse(tt.layout, tt.value); err == nil {
+						t.Errorf("expecting error but got nil")
+					} else if !strings.Contains(err.Error(), tt.expected) {
+						t.Errorf("expecting '%s' error but got '%s'", tt.expected, err.Error())
+					}
+				})
 			}
 		})
 	}

@@ -183,7 +183,7 @@ NextChar:
 			}
 
 			verify := func() error {
-				if string(buf) > value[pos:] {
+				if !strings.HasPrefix(value[pos:], string(buf)) && string(buf) != value[pos:] {
 					return fmt.Errorf("parsing time \"%s\" as \"%s\": cannot parse \"%s\" as \"%s\"", value, layout, value[pos:], string(buf))
 				}
 				return nil
