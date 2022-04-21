@@ -47,6 +47,27 @@ func TestOfDayOfYear(t *testing.T) {
 	}
 }
 
+func TestOfFirstWeekday(t *testing.T) {
+	for _, tt := range []struct {
+		year     int
+		month    chrono.Month
+		weekday  chrono.Weekday
+		expected chrono.LocalDate
+	}{
+		{2020, chrono.January, chrono.Wednesday, chrono.LocalDateOf(2020, chrono.January, 1)},
+		{2020, chrono.January, chrono.Monday, chrono.LocalDateOf(2020, chrono.January, 6)},
+		{2020, chrono.March, chrono.Sunday, chrono.LocalDateOf(2020, chrono.March, 1)},
+	} {
+		t.Run(fmt.Sprintf("%04d-%s %s", tt.year, tt.month, tt.weekday), func(t *testing.T) {
+			if date := chrono.OfFirstWeekday(tt.year, tt.month, tt.weekday); date != tt.expected {
+				t.Errorf("OfFirstWeekday(%d, %s, %s) = %s, want %s", tt.year, tt.month, tt.weekday, date, tt.expected)
+			} else if weekday := date.Weekday(); weekday != tt.weekday {
+				t.Errorf("weekday = %s, want %s", weekday, tt.weekday)
+			}
+		})
+	}
+}
+
 func TestLocalTime_BusinessHour(t *testing.T) {
 	time := chrono.LocalTimeOf(25, 0, 0, 0)
 
