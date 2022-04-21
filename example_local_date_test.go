@@ -8,12 +8,14 @@ import (
 
 func ExampleLocalDateOf() {
 	d := chrono.LocalDateOf(2007, chrono.May, 20)
+
 	fmt.Println(d)
 	// Output: 2007-05-20
 }
 
 func ExampleLocalDate_Weekday() {
 	d := chrono.LocalDateOf(2007, chrono.May, 20)
+
 	fmt.Println(d.Weekday())
 	// Output: Sunday
 }
