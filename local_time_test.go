@@ -28,6 +28,25 @@ func TestLocalTime(t *testing.T) {
 	}
 }
 
+func TestOfDayOfYear(t *testing.T) {
+	for _, tt := range []struct {
+		year     int
+		day      int
+		expected chrono.LocalDate
+	}{
+		{2020, 60, chrono.LocalDateOf(2020, chrono.February, 29)},
+		{2021, 60, chrono.LocalDateOf(2021, chrono.March, 1)},
+		{2020, 120, chrono.LocalDateOf(2020, chrono.April, 29)},
+		{2021, 120, chrono.LocalDateOf(2021, chrono.April, 30)},
+	} {
+		t.Run(fmt.Sprintf("%04d-%03d", tt.year, tt.day), func(t *testing.T) {
+			if date := chrono.OfDayOfYear(tt.year, tt.day); date != tt.expected {
+				t.Errorf("OfDayOfYear(%d, %d) = %s, want %s", tt.year, tt.day, date, tt.expected)
+			}
+		})
+	}
+}
+
 func TestLocalTime_BusinessHour(t *testing.T) {
 	time := chrono.LocalTimeOf(25, 0, 0, 0)
 

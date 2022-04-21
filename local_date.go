@@ -22,17 +22,49 @@ import (
 // Thus, when using LocalDate, year 0 is intepreted to mean 1 BCE, and year -1 is 2 BCE, and so on.
 type LocalDate int32
 
-// LocalDateOf returns a LocalDate that stores the specified year, month and day.
+// LocalDateOf returns the LocalDate that represents the specified year, month and day.
 // This function panics if the provided date would overflow the internal type,
 // or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func LocalDateOf(year int, month Month, day int) LocalDate {
+	if !dateIsValid(year, month, day) {
+		panic("invalid date")
+	}
+
 	out, err := makeLocalDate(year, month, day)
 	if err != nil {
 		panic(err.Error())
 	}
+	return LocalDate(out)
+}
 
-	if !dateIsValid(year, month, day) {
+// OfDayOfYear returns the LocalDate that represents the specified day of the year.
+// This function panics if the provided date would overflow the internal type,
+// or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
+func OfDayOfYear(year, day int) LocalDate {
+	isLeap := isLeapYear(year)
+	if (!isLeap && day > 365) || day > 366 {
 		panic("invalid date")
+	}
+
+	var month Month
+
+	var total int
+	for m, n := range daysInMonths {
+		if isLeap && m == 1 {
+			n = 29
+		}
+
+		if total+n >= day {
+			day = day - total
+			month = Month(m + 1)
+			break
+		}
+		total += n
+	}
+
+	out, err := makeLocalDate(year, month, day)
+	if err != nil {
+		panic(err.Error())
 	}
 	return LocalDate(out)
 }
