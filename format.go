@@ -272,22 +272,22 @@ func parse(layout, value string, date, time *int64) error {
 			nopad, localed, main := parseSpecifier(buf)
 			var err error
 			switch {
-			//case date != nil && main == 'a':
-			//case date != nil && main == 'A':
-			//case date != nil && main == 'b':
-			//case date != nil && main == 'B':
-			//case date != nil && localed && main == 'C':
+			case date != nil && main == 'a':
+			case date != nil && main == 'A':
+			case date != nil && main == 'b':
+			case date != nil && main == 'B':
+			case date != nil && localed && main == 'C':
 			case date != nil && main == 'd':
 				if day, err = integer(2); err != nil {
 					return err
 				}
-			//case date != nil && main == 'G':
+			case date != nil && main == 'G':
 			case time != nil && main == 'H':
 				if hour, err = integer(2); err != nil {
 					return err
 				}
-			//case time != nil && main == 'I':
-			//case date != nil && main == 'j':
+			case time != nil && main == 'I':
+			case date != nil && main == 'j':
 			case date != nil && main == 'm':
 				if month, err = integer(2); err != nil {
 					return err
@@ -296,21 +296,21 @@ func parse(layout, value string, date, time *int64) error {
 				if min, err = integer(2); err != nil {
 					return err
 				}
-			//case time != nil && main == 'p':
-			//case time != nil && main == 'P':
+			case time != nil && main == 'p':
+			case time != nil && main == 'P':
 			case time != nil && main == 'S':
 				if sec, err = integer(2); err != nil {
 					return err
 				}
-			//case date != nil && main == 'u':
-			//case date != nil && main == 'V':
-			//case date != nil && main == 'y':
-			//case date != nil && localed && main == 'y':
+			case date != nil && main == 'u':
+			case date != nil && main == 'V':
+			case date != nil && main == 'y':
+			case date != nil && localed && main == 'y':
 			case date != nil && main == 'Y':
 				if year, err = integer(4); err != nil {
 					return err
 				}
-			//case date != nil && localed && main == 'Y':
+			case date != nil && localed && main == 'Y':
 			case main == '%':
 			default:
 				panic("unsupported sequence " + string(buf))
