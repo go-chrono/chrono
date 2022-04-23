@@ -578,22 +578,22 @@ func TestDuration_Parse(t *testing.T) {
 }
 
 func TestDuration_Units(t *testing.T) {
-	d := chrono.DurationOf(1*chrono.Hour + 2*chrono.Minute + 3*chrono.Second + 4*chrono.Nanosecond)
+	d := chrono.DurationOf(12*chrono.Hour + 34*chrono.Minute + 56*chrono.Second + 7*chrono.Nanosecond)
 
 	hours, mins, secs, nsec := d.Units()
-	if hours != 1 {
-		t.Errorf("expecting 1 hour, got %d", hours)
+	if hours != 12 {
+		t.Errorf("expecting 12 hours, got %d", hours)
 	}
 
-	if mins != 2 {
-		t.Errorf("expecting 2 mins, got %d", mins)
+	if mins != 34 {
+		t.Errorf("expecting 34 mins, got %d", mins)
 	}
 
-	if secs != 3 {
-		t.Errorf("expecting 3 secs, got %d", secs)
+	if secs != 56 {
+		t.Errorf("expecting 56 secs, got %d", secs)
 	}
 
-	if nsec != 4 {
-		t.Errorf("expecting 4 nsecs, got %d", nsec)
+	if nsec != 7 {
+		t.Errorf("expecting 7 nsecs, got %d", nsec)
 	}
 }

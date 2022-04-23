@@ -54,6 +54,15 @@ func (e Extent) Hours() float64 {
 	return float64(hours) + float64(nsec)/(60*60*1e9)
 }
 
+// Units returns the whole numbers of hours, minutes, seconds, and nanosecond offset represented by e.
+func (e Extent) Units() (hours, mins, secs, nsec int) {
+	hours = int(e / Hour)
+	mins = int(e/Minute) % 60
+	secs = int(e/Second) % 60
+	nsec = int(e % Second)
+	return
+}
+
 // Truncate returns the result of rounding e toward zero to a multiple of m.
 func (e Extent) Truncate(m Extent) Extent {
 	if m <= 0 {
