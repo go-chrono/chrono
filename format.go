@@ -23,7 +23,7 @@ import (
 //   %A: The full name of the day of the week, e.g. Monday, Tuesday, etc.
 //   %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc.
 //
-//   %G: The ISO 8601 week-based year, which may differ by ±1 to the actual calendar year.
+//   %G: The ISO 8601 week-based year, padded to 4 digits with leading 0s. This may differ by ±1 to the actual calendar year.
 //   %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53.
 //
 //   %P: Either "am" or "pm", where noon is "pm" and midnight is "am".
