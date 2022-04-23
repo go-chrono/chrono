@@ -94,6 +94,16 @@ func (d Duration) String() string {
 	return d.Format()
 }
 
+// Units returns the whole numbers of hours, minutes, seconds, and nanosecond offset represented by d.
+func (d Duration) Units() (hours, mins, secs, nsec int) {
+	_secs, _nsec, _ := d.integers()
+	hours = int(_secs / 3600)
+	mins = int((_secs / 60) % 60)
+	secs = int(_secs % 60)
+	nsec = int(_nsec)
+	return
+}
+
 // Designator of date and time elements present in ISO 8601.
 type Designator rune
 

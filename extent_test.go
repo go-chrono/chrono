@@ -23,3 +23,24 @@ func TestExtent_Truncate(t *testing.T) {
 		}
 	})
 }
+
+func TestExtent_Units(t *testing.T) {
+	e := (12 * chrono.Hour) + (34 * chrono.Minute) + (56 * chrono.Second) + (7 * chrono.Nanosecond)
+
+	hours, mins, secs, nsec := e.Units()
+	if hours != 12 {
+		t.Errorf("expecting 12 hours, got %d", hours)
+	}
+
+	if mins != 34 {
+		t.Errorf("expecting 34 mins, got %d", mins)
+	}
+
+	if secs != 56 {
+		t.Errorf("expecting 56 secs, got %d", secs)
+	}
+
+	if nsec != 7 {
+		t.Errorf("expecting 7 nsecs, got %d", nsec)
+	}
+}
