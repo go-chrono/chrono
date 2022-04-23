@@ -51,12 +51,18 @@ import (
 //
 const (
 	// ISO 8601.
-	ISO8601Date             = "%Y%m%d"                                  // 20060102
-	ISO8601DateExtended     = "%Y-%m-%d"                                // 2006-01-02
-	ISO8601Time             = "T%H%M%S"                                 // T030405
-	ISO8601TimeExtended     = "T%H:%M:%S"                               // T03:04:05
-	ISO8601DateTime         = ISO8601Date + ISO8601Time                 // 20060102T030405
-	ISO8601DateTimeExtended = ISO8601DateExtended + ISO8601TimeExtended // 2006-01-02T03:04:05
+	ISO8601Date                = "%Y%m%d"                                  // 20060102
+	ISO8601DateExtended        = "%Y-%m-%d"                                // 2006-01-02
+	ISO8601Time                = "T%H%M%S"                                 // T030405
+	ISO8601TimeExtended        = "T%H:%M:%S"                               // T03:04:05
+	ISO8601DateTime            = ISO8601Date + ISO8601Time                 // 20060102T030405
+	ISO8601DateTimeExtended    = ISO8601DateExtended + ISO8601TimeExtended // 2006-01-02T03:04:05
+	ISO8601Week                = "%GW%V"                                   // 2006W01
+	ISO8601WeekExtended        = "%G-W%V"                                  // 2006-W01
+	ISO8601WeekDay             = "%GW%V%u"                                 // 2006W011
+	ISO8601WeekDayExtended     = "%G-W%V-%u"                               // 2006-W01-1
+	ISO8601OrdinalDate         = "%Y%j"                                    // 2006002
+	ISO8601OrdinalDateExtended = "%Y-%j"                                   // 2006-002
 	// Layouts defined by the time package.
 	ANSIC   = "%a %b %d %H:%M:%S %Y" // Mon Jan 02 15:04:05 2006
 	Kitchen = "%I:%M%p"              // 3:04PM
