@@ -11,8 +11,8 @@ import (
 //
 //   %Y: The ISO 8601 year as a decimal number, padded to 4 digits with leading 0s.
 //  %EY: The year in the era as a decimal number, padded to 4 digits with leading 0s.
-//   %y: The ISO 8601 year without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99.
-//  %Ey: The year in the era without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99.
+//   %y: The ISO 8601 year without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
+//  %Ey: The year in the era without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
 //  %EC: The name of the era, either "CE" (for Common Era) "BCE" (for Before the Common Era).
 //   %j: The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366.
 //   %m: The month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
@@ -49,6 +49,10 @@ import (
 //
 // For familiarity, the examples below use the time package's reference time of "2nd Jan 2006 15:04:05 -0700" (Unix time 1136239445).
 // But note that this reference format is not relevant at all to the functioning of this package.
+//
+// Notes:
+//   (1) When 2-digit years are parsed, they are converted according to the POSIX and ISO C standards:
+//       values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
 const (
 	// ISO 8601.
 	ISO8601Date             = "%Y%m%d"                                  // 20060102
@@ -189,6 +193,8 @@ NextChar:
 	return string(out)
 }
 
+var overrideCentury *int
+
 func parse(layout, value string, date, time *int64) error {
 	var (
 		year  int
@@ -304,6 +310,18 @@ func parse(layout, value string, date, time *int64) error {
 			case date != nil && main == 'u':
 			case date != nil && main == 'V':
 			case date != nil && main == 'y':
+				if year, err = integer(2); err != nil {
+					return err
+				}
+
+				switch {
+				case overrideCentury != nil:
+					year += *overrideCentury
+				case year >= 69 && year <= 99:
+					year += 1900
+				default:
+					year += 2000
+				}
 			case date != nil && localed && main == 'y':
 			case date != nil && main == 'Y':
 				if year, err = integer(4); err != nil {
