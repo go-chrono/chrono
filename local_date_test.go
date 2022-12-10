@@ -106,6 +106,46 @@ func TestLocalDateOf(t *testing.T) {
 	}
 }
 
+func TestOfDayOfYear(t *testing.T) {
+	for _, tt := range []struct {
+		year     int
+		day      int
+		expected chrono.LocalDate
+	}{
+		{2020, 60, chrono.LocalDateOf(2020, chrono.February, 29)},
+		{2021, 60, chrono.LocalDateOf(2021, chrono.March, 1)},
+		{2020, 120, chrono.LocalDateOf(2020, chrono.April, 29)},
+		{2021, 120, chrono.LocalDateOf(2021, chrono.April, 30)},
+	} {
+		t.Run(fmt.Sprintf("%04d-%03d", tt.year, tt.day), func(t *testing.T) {
+			if date := chrono.OfDayOfYear(tt.year, tt.day); date != tt.expected {
+				t.Errorf("OfDayOfYear(%d, %d) = %s, want %s", tt.year, tt.day, date, tt.expected)
+			}
+		})
+	}
+}
+
+func TestOfFirstWeekday(t *testing.T) {
+	for _, tt := range []struct {
+		year     int
+		month    chrono.Month
+		weekday  chrono.Weekday
+		expected chrono.LocalDate
+	}{
+		{2020, chrono.January, chrono.Wednesday, chrono.LocalDateOf(2020, chrono.January, 1)},
+		{2020, chrono.January, chrono.Monday, chrono.LocalDateOf(2020, chrono.January, 6)},
+		{2020, chrono.March, chrono.Sunday, chrono.LocalDateOf(2020, chrono.March, 1)},
+	} {
+		t.Run(fmt.Sprintf("%04d-%s %s", tt.year, tt.month, tt.weekday), func(t *testing.T) {
+			if date := chrono.OfFirstWeekday(tt.year, tt.month, tt.weekday); date != tt.expected {
+				t.Errorf("OfFirstWeekday(%d, %s, %s) = %s, want %s", tt.year, tt.month, tt.weekday, date, tt.expected)
+			} else if weekday := date.Weekday(); weekday != tt.weekday {
+				t.Errorf("weekday = %s, want %s", weekday, tt.weekday)
+			}
+		})
+	}
+}
+
 func TestLocalDate_Date(t *testing.T) {
 	for _, tt := range []struct {
 		name  string
