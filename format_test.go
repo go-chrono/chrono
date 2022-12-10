@@ -1,7 +1,6 @@
 package chrono_test
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
