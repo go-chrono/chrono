@@ -39,7 +39,7 @@ func LocalDateOf(year int, month Month, day int) LocalDate {
 
 // OfDayOfYear returns the LocalDate that represents the specified day of the year.
 // This function panics if the provided date would overflow the internal type,
-// or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
+// or if it is earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func OfDayOfYear(year, day int) LocalDate {
 	isLeap := isLeapYear(year)
 	if (!isLeap && day > 365) || day > 366 {
