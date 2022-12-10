@@ -6,6 +6,41 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
+func TestPeriodFormat(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		input    chrono.Period
+		expected string
+	}{
+		{
+			name:     "positive values",
+			input:    chrono.Period{Years: 1, Months: 2, Weeks: 3, Days: 4},
+			expected: "P1Y2M3W4D",
+		},
+		{
+			name:     "negative values",
+			input:    chrono.Period{Years: -1, Months: -2, Weeks: -3, Days: -4},
+			expected: "P1Y2M3W4D",
+		},
+		{
+			name:     "zero value",
+			input:    chrono.Period{},
+			expected: "P0D",
+		},
+		{
+			name:     "single component",
+			input:    chrono.Period{Weeks: 3},
+			expected: "P3W",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if out := tt.input.Format(); out != tt.expected {
+				t.Fatalf("formatted period = %s, want %s", out, tt.expected)
+			}
+		})
+	}
+}
+
 func TestPeriodParse(t *testing.T) {
 	for _, tt := range []struct {
 		name     string

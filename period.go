@@ -20,6 +20,32 @@ func (p Period) Equal(p2 Period) bool {
 	return p2.Years == p.Years && p2.Months == p.Months && p2.Weeks == p.Weeks && p2.Days == p.Days
 }
 
+// Format the duration according to ISO 8601.
+// The output consists of only the period component - the time component is never included.
+func (p Period) Format() string {
+	if p.Years == 0 && p.Months == 0 && p.Weeks == 0 && p.Days == 0 {
+		return "P0D"
+	}
+
+	out := "P"
+	if p.Years != 0 {
+		out += strconv.FormatFloat(math.Abs(float64(p.Years)), 'f', -1, 32) + "Y"
+	}
+
+	if p.Months != 0 {
+		out += strconv.FormatFloat(math.Abs(float64(p.Months)), 'f', -1, 32) + "M"
+	}
+
+	if p.Weeks != 0 {
+		out += strconv.FormatFloat(math.Abs(float64(p.Weeks)), 'f', -1, 32) + "W"
+	}
+
+	if p.Days != 0 {
+		out += strconv.FormatFloat(math.Abs(float64(p.Days)), 'f', -1, 32) + "D"
+	}
+	return out
+}
+
 // Parse the period portion of an ISO 8601 duration.
 func (p *Period) Parse(s string) error {
 	years, months, weeks, days, _, _, err := parseDuration(s, true, false)
