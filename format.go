@@ -323,10 +323,11 @@ func parse(layout, value string, date, time *int64) error {
 
 		// Some short-hands.
 		var (
-			valid       = i < len(layout)
-			last        = i == len(layout)
-			isSpecifier = len(buf) >= 2 && buf[0] == '%'
-			isText      = len(buf) >= 1 && buf[0] != '%'
+			valid             = i < len(layout)
+			last              = i == len(layout)
+			isSpecifier       = len(buf) >= 2 && buf[0] == '%'
+			specifierComplete = isSpecifier && (buf[len(buf)-1] != '-' && buf[len(buf)-1] != 'E')
+			isText            = len(buf) >= 1 && buf[0] != '%'
 		)
 
 		if valid {
@@ -335,13 +336,19 @@ func parse(layout, value string, date, time *int64) error {
 				goto AppendToBuffer
 			} else if isSpecifier {
 				switch c {
+				case '-':
+					if last {
+						// TODO error
+					}
 				case 'E':
 					if last {
 						// TODO error
-					} else {
-						goto AppendToBuffer
 					}
 				default:
+					if !specifierComplete {
+						goto AppendToBuffer
+					}
+
 					if err := processSpecifier(); err != nil {
 						return err
 					}
