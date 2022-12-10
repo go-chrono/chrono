@@ -35,8 +35,9 @@ import (
 //   %M: The minute as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //   %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //
-// For specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
-// For example, '%m' may represent the string '04' (for March), but '%-m' represents '4'.
+// When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
+// For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
+// However, when parsing using these specifiers, it is not required that the input string contains any leading zeros.
 //
 // Depending on the context in which the layout is used, only a subset of specifiers may be supported by a particular function.
 // For example, %H is not supported when parsing or formatting a date.
