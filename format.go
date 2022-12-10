@@ -41,15 +41,14 @@ import (
 // Depending on the context in which the layout is used, only a subset of specifiers may be supported by a particular function.
 // For example, %H is not supported when parsing or formatting a date.
 //
-// If a specifier is encountered which is not recognized (defined in the list above), or no supported by a particular function,
+// If a specifier is encountered which is not recognized (defined in the list above), or not supported by a particular function,
 // the function will panic with a message that includes the unrecognized sequence.
 //
 // Any other text is enchoed verbatim when formatting, and is expected to appear verbatim in the parsed text.
-// In order to print the '%' verbatim character (which normally signifies a specifier), the sequence '%%' can be used.
+// In order to print the '%' character verbatim (which normally signifies a specifier), the sequence '%%' can be used.
 //
 // For familiarity, the examples below use the time package's reference time of "2nd Jan 2006 15:04:05 -0700" (Unix time 1136239445).
 // But note that this reference format is not relevant at all to the functioning of this package.
-//
 const (
 	// ISO 8601.
 	ISO8601Date             = "%Y%m%d"                                  // 20060102
