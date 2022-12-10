@@ -24,7 +24,7 @@ type LocalDate int32
 
 // LocalDateOf returns a LocalDate that stores the specified year, month and day.
 // This function panics if the provided date would overflow the internal type,
-// or if it earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
+// or if it is earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func LocalDateOf(year int, month Month, day int) LocalDate {
 	out, err := makeLocalDate(year, month, day)
 	if err != nil {
