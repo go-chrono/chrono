@@ -281,7 +281,10 @@ func parse(layout, value string, date, time *int64) error {
 			case date != nil && main == 'A':
 			case date != nil && main == 'b':
 			case date != nil && main == 'B':
-			case date != nil && localed && main == 'C':
+			case date != nil && main == 'C':
+				if localed {
+					// TODO
+				}
 			case date != nil && main == 'd':
 				if day, err = integer(2); err != nil {
 					return err
@@ -310,6 +313,10 @@ func parse(layout, value string, date, time *int64) error {
 			case date != nil && main == 'u':
 			case date != nil && main == 'V':
 			case date != nil && main == 'y':
+				if localed {
+					// TODO
+				}
+
 				if year, err = integer(2); err != nil {
 					return err
 				}
@@ -322,12 +329,14 @@ func parse(layout, value string, date, time *int64) error {
 				default:
 					year += 2000
 				}
-			case date != nil && localed && main == 'y':
 			case date != nil && main == 'Y':
+				if localed {
+					// TODO
+				}
+
 				if year, err = integer(4); err != nil {
 					return err
 				}
-			case date != nil && localed && main == 'Y':
 			case main == '%':
 			default:
 				panic("unsupported sequence " + string(buf))
