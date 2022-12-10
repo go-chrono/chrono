@@ -149,7 +149,7 @@ func (d LocalDate) YearDay() int {
 // ISOWeek returns the ISO 8601 year and week number in which d occurs.
 // Week ranges from 1 to 53 (even for years that are not themselves leap years).
 // Jan 01 to Jan 03 of year n might belong to week 52 or 53 of year n-1, and Dec 29 to Dec 31 might belong to week 1 of year n+1.
-func (d LocalDate) ISOWeek() (year int, week int) {
+func (d LocalDate) ISOWeek() (year, week int) {
 	year, month, day := d.Date()
 	week = int((10 + ordinalDate(year, month, day) - int(d.Weekday()) - 1) / 7)
 
