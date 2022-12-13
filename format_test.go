@@ -9,13 +9,13 @@ import (
 )
 
 const (
-	year  = 807
-	month = chrono.February
-	day   = 9
-	hour  = 1
-	min   = 5
-	sec   = 0
-	nsec  = 0
+	formatYear  = 807
+	formatMonth = chrono.February
+	formatDay   = 9
+	formatHour  = 1
+	formatMin   = 5
+	formatSec   = 0
+	formatNsec  = 0
 )
 
 func setupCenturyParsing() {
@@ -23,8 +23,8 @@ func setupCenturyParsing() {
 }
 
 func checkYear(t *testing.T, date chrono.LocalDate) {
-	if y, _, _ := date.Date(); y != year {
-		t.Errorf("date.Date() year = %d, want %d", y, year)
+	if y, _, _ := date.Date(); y != formatYear {
+		t.Errorf("date.Date() year = %d, want %d", y, formatYear)
 	}
 }
 
@@ -35,14 +35,14 @@ func checkYearDay(t *testing.T, date chrono.LocalDate) {
 }
 
 func checkMonth(t *testing.T, date chrono.LocalDate) {
-	if _, m, _ := date.Date(); m != month {
-		t.Errorf("date.Date() month = %d, want %d", m, month)
+	if _, m, _ := date.Date(); m != formatMonth {
+		t.Errorf("date.Date() month = %d, want %d", m, formatMonth)
 	}
 }
 
 func checkDay(t *testing.T, date chrono.LocalDate) {
-	if _, _, d := date.Date(); d != day {
-		t.Errorf("date.Date() day = %d, want %d", d, day)
+	if _, _, d := date.Date(); d != formatDay {
+		t.Errorf("date.Date() day = %d, want %d", d, formatDay)
 	}
 }
 
@@ -131,7 +131,7 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalDateOf(year, month, day).Format(tt.specifier); formatted != tt.text {
+			if formatted := chrono.LocalDateOf(formatYear, formatMonth, formatDay).Format(tt.specifier); formatted != tt.text {
 				t.Errorf("date.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
 			}
 		})
@@ -146,7 +146,7 @@ func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 					}
 				}()
 
-				chrono.LocalDateOf(year, month, day).Format(tt.specifier)
+				chrono.LocalDateOf(formatYear, formatMonth, formatDay).Format(tt.specifier)
 			}()
 		})
 	}
@@ -162,14 +162,14 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 					}
 				}()
 
-				chrono.LocalTimeOf(hour, min, sec, nsec).Format(tt.specifier)
+				chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier)
 			}()
 		})
 	}
 
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalTimeOf(hour, min, sec, nsec).Format(tt.specifier); formatted != tt.expected {
+			if formatted := chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.expected {
 				t.Errorf("time.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expected)
 			}
 		})
@@ -179,7 +179,7 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalDateTimeOf(year, month, day, hour, min, sec, nsec).Format(tt.specifier); formatted != tt.text {
+			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
 				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
 			}
 		})
@@ -187,7 +187,7 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalDateTimeOf(year, month, day, hour, min, sec, nsec).Format(tt.specifier); formatted != tt.expected {
+			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.expected {
 				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expected)
 			}
 		})

@@ -8,12 +8,28 @@ import (
 
 func ExampleLocalDateOf() {
 	d := chrono.LocalDateOf(2007, chrono.May, 20)
+
 	fmt.Println(d)
 	// Output: 2007-05-20
 }
 
+func ExampleOfDayOfYear() {
+	d := chrono.OfDayOfYear(2020, 80)
+
+	fmt.Println("The 80th day of 2020 is", d)
+	// Output: The 80th day of 2020 is 2020-03-20
+}
+
+func ExampleOfFirstWeekday() {
+	d := chrono.OfFirstWeekday(2020, chrono.July, chrono.Friday)
+
+	fmt.Println("The first Friday of July 2020 is", d)
+	// Output: The first Friday of July 2020 is 2020-07-03
+}
+
 func ExampleLocalDate_Weekday() {
 	d := chrono.LocalDateOf(2007, chrono.May, 20)
+
 	fmt.Println(d.Weekday())
 	// Output: Sunday
 }

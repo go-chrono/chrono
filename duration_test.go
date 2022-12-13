@@ -3,6 +3,7 @@ package chrono_test
 import (
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/go-chrono/chrono"
@@ -538,14 +539,26 @@ func TestDuration_Parse(t *testing.T) {
 						expected *= -1
 					}
 
-					var d chrono.Duration
-					if err := d.Parse(input); err != nil {
-						t.Errorf("failed to parse duation: %v", err)
-					} else if d.Compare(chrono.DurationOf(expected)) != 0 {
-						t.Errorf("parsed duration = %v, want %v", d, expected)
+					run := func() {
+						var d chrono.Duration
+						if err := d.Parse(input); err != nil {
+							t.Errorf("failed to parse duation: %v", err)
+						} else if d.Compare(chrono.DurationOf(expected)) != 0 {
+							t.Errorf("parsed duration = %v, want %v", d, expected)
+						}
 					}
+
+					t.Run("dots", func(t *testing.T) {
+						run()
+					})
+
+					t.Run("commas", func(t *testing.T) {
+						tt.input = strings.ReplaceAll(tt.input, ".", ",")
+						run()
+					})
 				})
 			}
+
 		})
 	}
 
@@ -562,4 +575,25 @@ func TestDuration_Parse(t *testing.T) {
 			t.Error("expecting error but got nil")
 		}
 	})
+}
+
+func TestDuration_Units(t *testing.T) {
+	d := chrono.DurationOf(12*chrono.Hour + 34*chrono.Minute + 56*chrono.Second + 7*chrono.Nanosecond)
+
+	hours, mins, secs, nsec := d.Units()
+	if hours != 12 {
+		t.Errorf("expecting 12 hours, got %d", hours)
+	}
+
+	if mins != 34 {
+		t.Errorf("expecting 34 mins, got %d", mins)
+	}
+
+	if secs != 56 {
+		t.Errorf("expecting 56 secs, got %d", secs)
+	}
+
+	if nsec != 7 {
+		t.Errorf("expecting 7 nsecs, got %d", nsec)
+	}
 }
