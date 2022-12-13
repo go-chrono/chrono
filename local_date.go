@@ -91,6 +91,38 @@ func OfFirstWeekday(year int, month Month, weekday Weekday) LocalDate {
 	return LocalDate(v)
 }
 
+// OfISOWeek returns the LocalDate that represents the supplied ISO 8601 year, week number, and weekday.
+// See LocalDate.ISOWeek for further explanation of ISO week numbers.
+func OfISOWeek(year, week int, day Weekday) (LocalDate, error) {
+	if week < 1 || week > 53 {
+		return 0, fmt.Errorf("invalid week number")
+	}
+
+	jan4th, err := makeLocalDate(year, January, 4)
+	if err != nil {
+		return 0, err
+	}
+
+	v := week*7 + int(day) - int(weekday(int32(jan4th))+3)
+
+	daysThisYear := daysInYear(year)
+	switch {
+	case v <= 0: // Date is in previous year.
+		return OfDayOfYear(year-1, v+daysInYear(year-1)), nil
+	case v > daysThisYear: // Date is in next year.
+		return OfDayOfYear(year+1, v-daysThisYear), nil
+	default: // Date is in this year.
+		return OfDayOfYear(year, v), nil
+	}
+}
+
+func daysInYear(year int) int {
+	if isLeapYear(year) {
+		return 366
+	}
+	return 365
+}
+
 func makeLocalDate(year int, month Month, day int) (int64, error) {
 	if !dateInBounds(year, month, day) {
 		return 0, fmt.Errorf("date out of bounds")
@@ -137,7 +169,11 @@ func (d LocalDate) IsLeapYear() bool {
 
 // Weekday returns the day of the week specified by d.
 func (d LocalDate) Weekday() Weekday {
-	return Weekday((d + unixEpochJDN) % 7)
+	return weekday(int32(d))
+}
+
+func weekday(ordinal int32) Weekday {
+	return Weekday((ordinal + int32(unixEpochJDN)) % 7)
 }
 
 // YearDay returns the day of the year specified by d, in the range [1,365] for non-leap years, and [1,366] in leap years.

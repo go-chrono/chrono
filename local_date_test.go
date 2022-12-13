@@ -146,6 +146,27 @@ func TestOfFirstWeekday(t *testing.T) {
 	}
 }
 
+func TestOfISOWeek(t *testing.T) {
+	for _, tt := range []struct {
+		isoYear  int
+		isoWeek  int
+		weekday  chrono.Weekday
+		expected chrono.LocalDate
+	}{
+		{1936, 51, chrono.Monday, chrono.LocalDateOf(1936, chrono.December, 14)},
+		{1949, 52, chrono.Sunday, chrono.LocalDateOf(1950, chrono.January, 1)},
+		{2020, 53, chrono.Friday, chrono.LocalDateOf(2021, chrono.January, 1)},
+	} {
+		t.Run(fmt.Sprintf("%04d-W%02d-%d", tt.isoYear, tt.isoWeek, tt.weekday), func(t *testing.T) {
+			if date, err := chrono.OfISOWeek(tt.isoYear, tt.isoWeek, tt.weekday); err != nil {
+				t.Errorf("failed to calculate date from ISO week: %v", err)
+			} else if date != tt.expected {
+				t.Errorf("OfISOWeek(%d, %d, %s) = %s, want %s", tt.isoYear, tt.isoWeek, tt.weekday, date, tt.expected)
+			}
+		})
+	}
+}
+
 func TestLocalDate_Date(t *testing.T) {
 	for _, tt := range []struct {
 		name  string
