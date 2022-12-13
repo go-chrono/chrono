@@ -1,7 +1,6 @@
 [linters]
   disable-all = true
   enable = [
-    "goimports",
     "govet",
     "staticcheck",
     "revive"
