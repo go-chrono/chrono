@@ -42,6 +42,9 @@ import (
 // Depending on the context in which the layout is used, only a subset of specifiers may be supported by a particular function.
 // For example, %H is not supported when parsing or formatting a date.
 //
+// When parsing, if multiple instances of the same specifier, or multiple instances of a specifier that represent the same value,
+// are encountered, only the instance will be considered. See note (2).
+//
 // If a specifier is encountered which is not recognized (defined in the list above), or not supported by a particular function,
 // the function will panic with a message that includes the unrecognized sequence.
 //
@@ -54,6 +57,8 @@ import (
 // Notes:
 //   (1) When 2-digit years are parsed, they are converted according to the POSIX and ISO C standards:
 //       values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
+//   (2) When a date is parsed in combination with an ISO week-based date (%G and/or %V),
+//       an error will be returned if the represented dates to not match.
 const (
 	// ISO 8601.
 	ISO8601Date             = "%Y%m%d"                                  // 20060102
@@ -198,13 +203,19 @@ var overrideCentury *int
 
 func parse(layout, value string, date, time *int64) error {
 	var (
-		year  int
-		month int
-		day   int
-		hour  int
-		min   int
-		sec   int
-		nsec  int
+		haveDate bool
+		year     int
+		month    int
+		day      int
+
+		haveISODate bool
+		isoYear     int
+		isoWeek     int
+
+		hour int
+		min  int
+		sec  int
+		nsec int
 	)
 
 	var err error
@@ -287,6 +298,7 @@ func parse(layout, value string, date, time *int64) error {
 					// TODO
 				}
 			case date != nil && main == 'd':
+				haveDate = true
 				if day, err = integer(2); err != nil {
 					return err
 				}
@@ -298,6 +310,7 @@ func parse(layout, value string, date, time *int64) error {
 			case time != nil && main == 'I':
 			case date != nil && main == 'j':
 			case date != nil && main == 'm':
+				haveDate = true
 				if month, err = integer(2); err != nil {
 					return err
 				}
@@ -314,6 +327,8 @@ func parse(layout, value string, date, time *int64) error {
 			case date != nil && main == 'u':
 			case date != nil && main == 'V':
 			case date != nil && main == 'y':
+				haveDate = true
+
 				if localed {
 					// TODO
 				}
@@ -331,6 +346,8 @@ func parse(layout, value string, date, time *int64) error {
 					year += 2000
 				}
 			case date != nil && main == 'Y':
+				haveDate = true
+
 				if localed {
 					// TODO
 				}
@@ -408,14 +425,31 @@ func parse(layout, value string, date, time *int64) error {
 
 	if date != nil {
 		if !dateIsValid(year, Month(month), day) {
-			return fmt.Errorf("invalid date '%s'", dateSimpleStr(year, Month(month), day))
+			return fmt.Errorf("invalid date %q", dateSimpleStr(year, Month(month), day))
 		}
 
-		v, err := makeLocalDate(year, Month(month), day)
+		_date, err := makeLocalDate(year, Month(month), day)
 		if err != nil {
 			return err
 		}
-		*date = v
+
+		*date = _date
+
+		if haveISODate {
+			_isoDate, err := ofISOWeek(isoYear, isoWeek, day)
+			if err != nil {
+				return fmt.Errorf("invalid ISO week-year date %q", isoDateSimpleStr(isoYear, isoWeek, day))
+			}
+
+			if haveDate && (_isoDate != _date) {
+				return fmt.Errorf("date %q does not agree with ISO week-year date %q",
+					dateSimpleStr(year, Month(month), day),
+					isoDateSimpleStr(isoYear, isoWeek, day),
+				)
+			}
+
+			*date = _isoDate
+		}
 	}
 
 	if time != nil {

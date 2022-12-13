@@ -41,6 +41,10 @@ func LocalDateOf(year int, month Month, day int) LocalDate {
 // This function panics if the provided date would overflow the internal type,
 // or if it is earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func OfDayOfYear(year, day int) LocalDate {
+	return LocalDate(ofDayOfYear(year, day))
+}
+
+func ofDayOfYear(year, day int) int64 {
 	isLeap := isLeapYear(year)
 	if (!isLeap && day > 365) || day > 366 {
 		panic("invalid date")
@@ -66,7 +70,7 @@ func OfDayOfYear(year, day int) LocalDate {
 	if err != nil {
 		panic(err.Error())
 	}
-	return LocalDate(out)
+	return out
 }
 
 // OfFirstWeekday returns the LocalDate that represents the first of the specified weekday of the supplied month and year.
@@ -94,6 +98,11 @@ func OfFirstWeekday(year int, month Month, weekday Weekday) LocalDate {
 // OfISOWeek returns the LocalDate that represents the supplied ISO 8601 year, week number, and weekday.
 // See LocalDate.ISOWeek for further explanation of ISO week numbers.
 func OfISOWeek(year, week int, day Weekday) (LocalDate, error) {
+	out, err := ofISOWeek(year, week, int(day))
+	return LocalDate(out), err
+}
+
+func ofISOWeek(year, week, day int) (int64, error) {
 	if week < 1 || week > 53 {
 		return 0, fmt.Errorf("invalid week number")
 	}
@@ -108,11 +117,11 @@ func OfISOWeek(year, week int, day Weekday) (LocalDate, error) {
 	daysThisYear := daysInYear(year)
 	switch {
 	case v <= 0: // Date is in previous year.
-		return OfDayOfYear(year-1, v+daysInYear(year-1)), nil
+		return ofDayOfYear(year-1, v+daysInYear(year-1)), nil
 	case v > daysThisYear: // Date is in next year.
-		return OfDayOfYear(year+1, v-daysThisYear), nil
+		return ofDayOfYear(year+1, v-daysThisYear), nil
 	default: // Date is in this year.
-		return OfDayOfYear(year, v), nil
+		return ofDayOfYear(year, v), nil
 	}
 }
 
@@ -234,6 +243,10 @@ func (d LocalDate) String() string {
 
 func dateSimpleStr(year int, month Month, day int) string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
+}
+
+func isoDateSimpleStr(year, week, day int) string {
+	return fmt.Sprintf("%04d-W%02d-%d", year, week, day)
 }
 
 // Format returns a textual representation of the date value formatted according to the layout defined by the argument.
