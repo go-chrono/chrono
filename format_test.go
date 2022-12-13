@@ -312,6 +312,29 @@ func TestLocalDateTime_Parse_predefined_layouts(t *testing.T) {
 	}
 }
 
+func TestLocalDate_Parse_default_values(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		layout   string
+		value    string
+		expected chrono.LocalDate
+	}{
+		{"nothing", "", "", chrono.LocalDateOf(1970, chrono.January, 1)},
+		{"only year", "%Y", "2020", chrono.LocalDateOf(2020, chrono.January, 1)},
+		{"only month", "%m", "04", chrono.LocalDateOf(1970, chrono.April, 1)},
+		{"only day", "%d", "22", chrono.LocalDateOf(1970, chrono.January, 22)},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var date chrono.LocalDate
+			if err := date.Parse(tt.layout, tt.value); err != nil {
+				t.Errorf("date.Parse(%s, %s) = %v, want nil", tt.layout, tt.value, err)
+			} else if date != tt.expected {
+				t.Errorf("expecting %v, but got %v", tt.expected, date)
+			}
+		})
+	}
+}
+
 func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 	date := chrono.LocalDateOf(2022, chrono.June, 18)
 	time := chrono.LocalTimeOf(21, 05, 30, 0)
