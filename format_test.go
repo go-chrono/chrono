@@ -285,7 +285,7 @@ func Test_parse_extra_text_error(t *testing.T) {
 	}
 }
 
-func TestLocalDate_Parse_predefined_layouts(t *testing.T) {
+func TestLocalDateTime_Parse_predefined_layouts(t *testing.T) {
 	date := chrono.LocalDateOf(2022, chrono.June, 18)
 	time := chrono.LocalTimeOf(21, 05, 30, 0)
 
@@ -312,7 +312,7 @@ func TestLocalDate_Parse_predefined_layouts(t *testing.T) {
 	}
 }
 
-func TestLocalDate_Format_predefined_layouts(t *testing.T) {
+func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 	date := chrono.LocalDateOf(2022, chrono.June, 18)
 	time := chrono.LocalTimeOf(21, 05, 30, 0)
 
