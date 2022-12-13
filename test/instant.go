@@ -1,3 +1,6 @@
+// Package chronotest provides functionality useful for testing chrono.
+// It should not be imported for normal usage of chrono.
+//
 package chronotest
 
 import (
