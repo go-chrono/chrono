@@ -254,7 +254,7 @@ func Test_parse_cannot_parse_error(t *testing.T) {
 					if err := v.Parse(tt.layout, tt.value); err == nil {
 						t.Errorf("expecting error but got nil")
 					} else if !strings.Contains(err.Error(), tt.expected) {
-						t.Errorf("expecting '%s' error but got '%s'", tt.expected, err.Error())
+						t.Errorf("expecting %q error but got %q", tt.expected, err.Error())
 					}
 				})
 			}
@@ -279,7 +279,7 @@ func Test_parse_extra_text_error(t *testing.T) {
 			if err := v.Parse("foo", "foo bar"); err == nil {
 				t.Errorf("expecting error but got nil")
 			} else if !strings.Contains(err.Error(), expected) {
-				t.Errorf("expecting '%s' error but got '%s'", expected, err.Error())
+				t.Errorf("expecting %q error but got %q", expected, err.Error())
 			}
 		})
 	}
