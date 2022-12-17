@@ -380,12 +380,12 @@ func parse(layout, value string, date, time *int64) error {
 			if len(buf) == 0 {
 				goto AppendToBuffer
 			} else if isSpecifier {
-				switch c {
-				case '-':
+				switch {
+				case c == '-' && !specifierComplete:
 					if last {
 						// TODO error
 					}
-				case 'E':
+				case c == 'E' && !specifierComplete:
 					if last {
 						// TODO error
 					}
