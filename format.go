@@ -39,6 +39,8 @@ import (
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
 // However, when parsing using these specifiers, it is not required that the input string contains any leading zeros.
 //
+// When parsing using specifier that represent textual values (month names, etc.), the input text is treated case insensitively.
+//
 // Depending on the context in which the layout is used, only a subset of specifiers may be supported by a particular function.
 // For example, %H is not supported when parsing or formatting a date.
 //
@@ -288,13 +290,55 @@ func parse(layout, value string, date, time *int64) error {
 				return strconv.Atoi(str[:i])
 			}
 
+			alphas := func(maxLen int) (lower, original string) {
+				str := value[pos:]
+
+				if l := len(str); l < maxLen {
+					maxLen = l
+				}
+				str = value[pos : pos+maxLen]
+
+				_lower := make([]rune, maxLen)
+				_original := make([]rune, maxLen)
+
+				var i int
+				for _, char := range str {
+					if char >= 'a' && char <= 'z' {
+						_lower[i] = char
+						_original[i] = char
+						i++
+					} else if char >= 'A' && char <= 'Z' {
+						_lower[i] = char + 32
+						_original[i] = char
+						i++
+					} else {
+						break
+					}
+				}
+				pos += i
+
+				return string(_lower[:i]), string(_original[:i])
+			}
+
 			nopad, localed, main := parseSpecifier(buf)
 			var err error
 			switch {
 			case date != nil && main == 'a':
 			case date != nil && main == 'A':
 			case date != nil && main == 'b':
+				lower, original := alphas(3)
+
+				var ok bool
+				if month, ok = shortMonthNameLookup[lower]; !ok {
+					return fmt.Errorf("unrecognized short month name %q", original)
+				}
 			case date != nil && main == 'B':
+				lower, original := alphas(9)
+
+				var ok bool
+				if month, ok = longMonthNameLookup[lower]; !ok {
+					return fmt.Errorf("unrecognized month name %q", original)
+				}
 			case date != nil && main == 'C':
 				if localed {
 					// TODO
@@ -532,6 +576,21 @@ func (m Month) short() string {
 	return shortMonthNames[m-1]
 }
 
+var longMonthNameLookup = map[string]int{
+	"january":   int(January),
+	"february":  int(February),
+	"march":     int(March),
+	"april":     int(April),
+	"may":       int(May),
+	"june":      int(June),
+	"july":      int(July),
+	"august":    int(August),
+	"september": int(September),
+	"october":   int(October),
+	"november":  int(November),
+	"december":  int(December),
+}
+
 var shortMonthNames = [12]string{
 	January - 1:   "Jan",
 	February - 1:  "Feb",
@@ -547,17 +606,17 @@ var shortMonthNames = [12]string{
 	December - 1:  "Dec",
 }
 
-var shortMonthNameLookup = map[string]Month{
-	"Jan": January,
-	"Feb": February,
-	"Mar": March,
-	"Apr": April,
-	"May": May,
-	"Jun": June,
-	"Jul": July,
-	"Aug": August,
-	"Sep": September,
-	"Oct": October,
-	"Nov": November,
-	"Dec": December,
+var shortMonthNameLookup = map[string]int{
+	"jan": int(January),
+	"feb": int(February),
+	"mar": int(March),
+	"apr": int(April),
+	"may": int(May),
+	"jun": int(June),
+	"jul": int(July),
+	"aug": int(August),
+	"sep": int(September),
+	"oct": int(October),
+	"nov": int(November),
+	"dec": int(December),
 }

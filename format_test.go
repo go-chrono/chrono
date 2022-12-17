@@ -1,6 +1,7 @@
 package chrono_test
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -83,13 +84,17 @@ var (
 		{"%m", "02", checkMonth},
 		{"%-m", "2", checkMonth},
 		{"%B", "February", checkMonth},
+		{"%B", "february", checkMonth},
 		{"%b", "Feb", checkMonth},
+		{"%b", "feb", checkMonth},
 		{"%d", "09", checkDay},
 		{"%-d", "9", checkDay},
 		{"%u", "5", checkWeekday},
 		{"%-u", "5", checkWeekday},
 		{"%A", "Friday", checkWeekday},
+		{"%A", "friday", checkWeekday},
 		{"%a", "Fri", checkWeekday},
+		{"%a", "fri", checkWeekday},
 		{"%G", "0807", checkISOYear},
 		{"%-G", "807", checkISOYear},
 		{"%V", "06", checkISOWeek},
@@ -117,7 +122,7 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 	setupCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
-		t.Run(tt.specifier, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
 			var d chrono.LocalDate
 			if err := d.Parse(tt.specifier, tt.text); err != nil {
 				t.Errorf("failed to parse date: %v", err)
@@ -130,7 +135,7 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 
 func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(tt.specifier, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
 			if formatted := chrono.LocalDateOf(formatYear, formatMonth, formatDay).Format(tt.specifier); formatted != tt.text {
 				t.Errorf("date.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
 			}
@@ -154,7 +159,7 @@ func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 
 func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(tt.specifier, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r == nil {
@@ -178,7 +183,7 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 
 func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(tt.specifier, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
 			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
 				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
 			}
