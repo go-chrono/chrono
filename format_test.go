@@ -9,6 +9,8 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
+// TODO test notes (2) and (3).
+
 const (
 	formatYear  = 807
 	formatMonth = chrono.February
@@ -48,9 +50,8 @@ func checkDay(t *testing.T, date chrono.LocalDate) {
 }
 
 func checkWeekday(t *testing.T, date chrono.LocalDate) {
-	if d := date.Weekday(); d != chrono.Friday {
-		t.Errorf("date.Weekday() = %s, want %s", d, chrono.Friday)
-	}
+	// A parsed weekday is only checked for correctness - it does not affect the resulting LocalDate.
+	// See note (3).
 }
 
 func checkISOYear(t *testing.T, date chrono.LocalDate) {
@@ -67,9 +68,9 @@ func checkISOWeek(t *testing.T, date chrono.LocalDate) {
 
 var (
 	dateSpecifiers = []struct {
-		specifier string
-		text      string
-		check     func(*testing.T, chrono.LocalDate)
+		specifier  string
+		text       string
+		checkParse func(*testing.T, chrono.LocalDate)
 	}{
 		{"%Y", "0807", checkYear},
 		{"%-Y", "807", checkYear},
@@ -128,7 +129,7 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 				t.Errorf("failed to parse date: %v", err)
 			}
 
-			tt.check(t, d)
+			tt.checkParse(t, d)
 		})
 	}
 }

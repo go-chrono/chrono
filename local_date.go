@@ -178,11 +178,11 @@ func (d LocalDate) IsLeapYear() bool {
 
 // Weekday returns the day of the week specified by d.
 func (d LocalDate) Weekday() Weekday {
-	return weekday(int32(d))
+	return Weekday(weekday(int32(d)))
 }
 
-func weekday(ordinal int32) Weekday {
-	return Weekday((ordinal + int32(unixEpochJDN)) % 7)
+func weekday(ordinal int32) int {
+	return int((ordinal + int32(unixEpochJDN)) % 7)
 }
 
 // YearDay returns the day of the year specified by d, in the range [1,365] for non-leap years, and [1,366] in leap years.

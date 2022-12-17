@@ -20,9 +20,9 @@ import (
 //   %b: The abbreviated month name, e.g. Jan, Feb, etc.
 //   %d: The day of the month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 31.
 //
-//   %u: The day of the week as a decimal number, e.g. 1 for Monday, 2 for Tuesday, etc.
-//   %A: The full name of the day of the week, e.g. Monday, Tuesday, etc.
-//   %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc.
+//   %u: The day of the week as a decimal number, e.g. 1 for Monday, 2 for Tuesday, etc. See note (3).
+//   %A: The full name of the day of the week, e.g. Monday, Tuesday, etc. See note (3).
+//   %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc. See note (3).
 //
 //   %G: The ISO 8601 week-based year, which may differ by ±1 to the actual calendar year. See note (2).
 //   %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53. See note (2).
@@ -61,6 +61,9 @@ import (
 //       values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
 //   (2) When a date is parsed in combination with a day of year (%j), and/or an ISO week-based date (%G and/or %V),
 //       an error will be returned if the represented dates to not match.
+//   (3) When a date is parsed in combination with a day of the week (%a, %A and/or %u),
+//       an error will be returned if it does not match the day represented by the parsed date.
+//       The day of the week is otherwise ignored - it does not have any effect on the result.
 const (
 	// ISO 8601.
 	ISO8601Date             = "%Y%m%d"                                  // 20060102
@@ -210,6 +213,8 @@ func parse(layout, value string, date, time *int64) error {
 		month    int
 		day      int
 
+		dayOfWeek int
+
 		dayOfYear int
 
 		haveISODate bool
@@ -324,8 +329,22 @@ func parse(layout, value string, date, time *int64) error {
 			var err error
 			switch {
 			case date != nil && main == 'a':
+				lower, original := alphas(3)
+
+				var ok bool
+				if dayOfWeek, ok = shortDayNameLookup[lower]; !ok {
+					return fmt.Errorf("unrecognized short day name %q", original)
+				}
 			case date != nil && main == 'A':
+				lower, original := alphas(9)
+
+				var ok bool
+				if dayOfWeek, ok = longDayNameLookup[lower]; !ok {
+					return fmt.Errorf("unrecognized day name %q", original)
+				}
 			case date != nil && main == 'b':
+				haveDate = true
+
 				lower, original := alphas(3)
 
 				var ok bool
@@ -333,6 +352,8 @@ func parse(layout, value string, date, time *int64) error {
 					return fmt.Errorf("unrecognized short month name %q", original)
 				}
 			case date != nil && main == 'B':
+				haveDate = true
+
 				lower, original := alphas(9)
 
 				var ok bool
@@ -484,6 +505,7 @@ func parse(layout, value string, date, time *int64) error {
 
 		*date = _date
 
+		// Check day of year according to note (2).
 		if dayOfYear != 0 {
 			doyDate := ofDayOfYear(year, dayOfYear)
 			if haveDate && (doyDate != _date) {
@@ -496,6 +518,7 @@ func parse(layout, value string, date, time *int64) error {
 			*date = doyDate
 		}
 
+		// Check ISO week-year according to note (2).
 		if haveISODate {
 			isoDate, err := ofISOWeek(isoYear, isoWeek, day)
 			if err != nil {
@@ -510,6 +533,17 @@ func parse(layout, value string, date, time *int64) error {
 			}
 
 			*date = isoDate
+		}
+
+		// Check day of week according to note (3).
+		haveDate = haveDate || dayOfYear != 0 || haveISODate
+		if dayOfWeek != 0 && haveDate {
+			if actual := weekday(int32(*date)); dayOfWeek != actual {
+				return fmt.Errorf("day of week %q does not agree with actual day of week %q",
+					longDayName(dayOfWeek),
+					longDayName(actual),
+				)
+			}
 		}
 	}
 
@@ -559,6 +593,16 @@ func (w Weekday) short() string {
 	return shortDayNames[w]
 }
 
+var longDayNameLookup = map[string]int{
+	"monday":    int(Monday),
+	"tuesday":   int(Tuesday),
+	"wednesday": int(Wednesday),
+	"thursday":  int(Thursday),
+	"friday":    int(Friday),
+	"saturday":  int(Saturday),
+	"sunday":    int(Sunday),
+}
+
 var shortDayNames = [7]string{
 	Monday:    "Mon",
 	Tuesday:   "Tue",
@@ -567,6 +611,16 @@ var shortDayNames = [7]string{
 	Friday:    "Fri",
 	Saturday:  "Sat",
 	Sunday:    "Sun",
+}
+
+var shortDayNameLookup = map[string]int{
+	"mon": int(Monday),
+	"tue": int(Tuesday),
+	"wed": int(Wednesday),
+	"thu": int(Thursday),
+	"fri": int(Friday),
+	"sat": int(Saturday),
+	"sun": int(Sunday),
 }
 
 func (m Month) short() string {

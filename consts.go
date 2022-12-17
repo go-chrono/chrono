@@ -17,11 +17,15 @@ const (
 	Sunday
 )
 
-func (w Weekday) String() string {
-	if w > Sunday {
-		return fmt.Sprintf("%%!Weekday(%d)", w)
+func (d Weekday) String() string {
+	return longDayName(int(d))
+}
+
+func longDayName(d int) string {
+	if d > int(Sunday) {
+		return fmt.Sprintf("%%!Weekday(%d)", d)
 	}
-	return longDayNames[w]
+	return longDayNames[d]
 }
 
 var longDayNames = [7]string{
