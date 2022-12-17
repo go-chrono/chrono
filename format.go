@@ -14,7 +14,7 @@ import (
 //   %y: The ISO 8601 year without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
 //  %Ey: The year in the era without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
 //  %EC: The name of the era, either "CE" (for Common Era) "BCE" (for Before the Common Era).
-//   %j: The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366.
+//   %j: The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366. See note (2).
 //   %m: The month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
 //   %B: The full month name, e.g. January, February, etc.
 //   %b: The abbreviated month name, e.g. Jan, Feb, etc.
@@ -24,8 +24,8 @@ import (
 //   %A: The full name of the day of the week, e.g. Monday, Tuesday, etc.
 //   %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc.
 //
-//   %G: The ISO 8601 week-based year, which may differ by ±1 to the actual calendar year.
-//   %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53.
+//   %G: The ISO 8601 week-based year, which may differ by ±1 to the actual calendar year. See note (2).
+//   %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53. See note (2).
 //
 //   %P: Either "am" or "pm", where noon is "pm" and midnight is "am".
 //   %p: Either "AM" or "PM", where noon is "PM" and midnight is "AM".
@@ -57,7 +57,7 @@ import (
 // Notes:
 //   (1) When 2-digit years are parsed, they are converted according to the POSIX and ISO C standards:
 //       values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
-//   (2) When a date is parsed in combination with an ISO week-based date (%G and/or %V),
+//   (2) When a date is parsed in combination with a day of year (%j), and/or an ISO week-based date (%G and/or %V),
 //       an error will be returned if the represented dates to not match.
 const (
 	// ISO 8601.
@@ -208,6 +208,8 @@ func parse(layout, value string, date, time *int64) error {
 		month    int
 		day      int
 
+		dayOfYear int
+
 		haveISODate bool
 		isoYear     int
 		isoWeek     int
@@ -309,6 +311,9 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case time != nil && main == 'I':
 			case date != nil && main == 'j':
+				if dayOfYear, err = integer(3); err != nil {
+					return err
+				}
 			case date != nil && main == 'm':
 				haveDate = true
 				if month, err = integer(2); err != nil {
@@ -434,6 +439,18 @@ func parse(layout, value string, date, time *int64) error {
 		}
 
 		*date = _date
+
+		if dayOfYear != 0 {
+			_doyDate := ofDayOfYear(year, dayOfYear)
+			if haveDate && (_doyDate != _date) {
+				return fmt.Errorf("date %q does not agree with day-of-year date %q",
+					dateSimpleStr(year, Month(month), day),
+					isoDateSimpleStr(isoYear, isoWeek, day),
+				)
+			}
+
+			*date = _doyDate
+		}
 
 		if haveISODate {
 			_isoDate, err := ofISOWeek(isoYear, isoWeek, day)
