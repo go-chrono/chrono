@@ -485,31 +485,31 @@ func parse(layout, value string, date, time *int64) error {
 		*date = _date
 
 		if dayOfYear != 0 {
-			_doyDate := ofDayOfYear(year, dayOfYear)
-			if haveDate && (_doyDate != _date) {
-				return fmt.Errorf("date %q does not agree with day-of-year date %q",
+			doyDate := ofDayOfYear(year, dayOfYear)
+			if haveDate && (doyDate != _date) {
+				return fmt.Errorf("day-of-year date %q does not agree with date %q",
+					LocalDate(doyDate).String(),
 					dateSimpleStr(year, Month(month), day),
-					isoDateSimpleStr(isoYear, isoWeek, day),
 				)
 			}
 
-			*date = _doyDate
+			*date = doyDate
 		}
 
 		if haveISODate {
-			_isoDate, err := ofISOWeek(isoYear, isoWeek, day)
+			isoDate, err := ofISOWeek(isoYear, isoWeek, day)
 			if err != nil {
 				return fmt.Errorf("invalid ISO week-year date %q", isoDateSimpleStr(isoYear, isoWeek, day))
 			}
 
-			if haveDate && (_isoDate != _date) {
-				return fmt.Errorf("date %q does not agree with ISO week-year date %q",
-					dateSimpleStr(year, Month(month), day),
+			if haveDate && (isoDate != _date) {
+				return fmt.Errorf("ISO week-year date %q does not agree with date %q",
 					isoDateSimpleStr(isoYear, isoWeek, day),
+					dateSimpleStr(year, Month(month), day),
 				)
 			}
 
-			*date = _isoDate
+			*date = isoDate
 		}
 	}
 
