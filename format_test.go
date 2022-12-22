@@ -9,7 +9,7 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-// TODO test notes (2) and (3).
+// TODO test notes 2-5.
 
 const (
 	formatYear  = 807
@@ -17,7 +17,7 @@ const (
 	formatDay   = 9
 	formatHour  = 1
 	formatMin   = 5
-	formatSec   = 0
+	formatSec   = 2
 	formatNsec  = 0
 )
 
@@ -66,6 +66,34 @@ func checkISOWeek(t *testing.T, date chrono.LocalDate) {
 	}
 }
 
+func checkTimeOfDay(t *testing.T, time chrono.LocalTime) {
+	// Time of day is checked implicitly by checking the hour.
+}
+
+func checkHour12HourClock(t *testing.T, time chrono.LocalTime) {
+	if h, _, _ := time.Clock(); h != formatHour {
+		t.Errorf("time.Clock() hour = %d, want %d", h, formatHour)
+	}
+}
+
+func checkHour(t *testing.T, time chrono.LocalTime) {
+	if h, _, _ := time.Clock(); h != formatHour {
+		t.Errorf("time.Clock() hour = %d, want %d", h, formatHour)
+	}
+}
+
+func checkMinute(t *testing.T, time chrono.LocalTime) {
+	if _, m, _ := time.Clock(); m != formatMin {
+		t.Errorf("time.Clock() min = %d, want %d", m, formatMin)
+	}
+}
+
+func checkSecond(t *testing.T, time chrono.LocalTime) {
+	if _, _, s := time.Clock(); s != formatSec {
+		t.Errorf("time.Clock() sec = %d, want %d", s, formatSec)
+	}
+}
+
 var (
 	dateSpecifiers = []struct {
 		specifier         string
@@ -104,19 +132,20 @@ var (
 	}
 
 	timeSpecifiers = []struct {
-		specifier string
-		expected  string
+		specifier  string
+		text       string
+		checkParse func(*testing.T, chrono.LocalTime)
 	}{
-		{"%P", "am"},
-		{"%p", "AM"},
-		{"%I", "01"},
-		{"%-I", "1"},
-		{"%H", "01"},
-		{"%-H", "1"},
-		{"%M", "05"},
-		{"%-M", "5"},
-		{"%S", "00"},
-		{"%-S", "0"},
+		{"%P", "am", checkTimeOfDay},
+		{"%p", "AM", checkTimeOfDay},
+		{"%I", "01", checkHour12HourClock},
+		{"%-I", "1", checkHour12HourClock},
+		{"%H", "01", checkHour},
+		{"%-H", "1", checkHour},
+		{"%M", "05", checkMinute},
+		{"%-M", "5", checkMinute},
+		{"%S", "02", checkSecond},
+		{"%-S", "2", checkSecond},
 	}
 )
 
@@ -125,12 +154,85 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
-			var d chrono.LocalDate
-			if err := d.Parse(tt.specifier, tt.textToParse); err != nil {
+			var date chrono.LocalDate
+			if err := date.Parse(tt.specifier, tt.textToParse); err != nil {
 				t.Errorf("failed to parse date: %v", err)
 			}
 
-			tt.checkParse(t, d)
+			tt.checkParse(t, date)
+		})
+	}
+
+	for _, tt := range timeSpecifiers {
+		t.Run(tt.specifier, func(t *testing.T) {
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				var date chrono.LocalDate
+				date.Format(tt.specifier)
+			}()
+		})
+	}
+}
+
+func TestLocalTime_Parse_supported_specifiers(t *testing.T) {
+	setupCenturyParsing()
+
+	for _, tt := range dateSpecifiers {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				var time chrono.LocalTime
+				time.Format(tt.specifier)
+			}()
+		})
+	}
+
+	for _, tt := range timeSpecifiers {
+		t.Run(tt.specifier, func(t *testing.T) {
+			var time chrono.LocalTime
+			if err := time.Parse(tt.specifier, tt.text); err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			}
+
+			tt.checkParse(t, time)
+		})
+	}
+}
+
+func TestLocalDateTime_Parse_supported_specifiers(t *testing.T) {
+	setupCenturyParsing()
+
+	for _, tt := range dateSpecifiers {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			var dt chrono.LocalDateTime
+			if err := dt.Parse(tt.specifier, tt.textToParse); err != nil {
+				t.Errorf("failed to parse date: %v", err)
+			}
+
+			date, _ := dt.Split()
+			tt.checkParse(t, date)
+		})
+	}
+
+	for _, tt := range timeSpecifiers {
+		t.Run(tt.specifier, func(t *testing.T) {
+			var dt chrono.LocalDateTime
+			if err := dt.Parse(tt.specifier, tt.text); err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			}
+
+			_, time := dt.Split()
+			tt.checkParse(t, time)
 		})
 	}
 }
@@ -176,8 +278,8 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.expected {
-				t.Errorf("time.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expected)
+			if formatted := chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
+				t.Errorf("time.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
 			}
 		})
 	}
@@ -194,8 +296,8 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.expected {
-				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expected)
+			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
+				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
 			}
 		})
 	}

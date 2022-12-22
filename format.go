@@ -29,9 +29,9 @@ import (
 //
 //   %P: Either "am" or "pm", where noon is "pm" and midnight is "am".
 //   %p: Either "AM" or "PM", where noon is "PM" and midnight is "AM".
-//   %I: The hour of the day using the 12-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
+//   %I: The hour of the day using the 12-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12. See note (4).
 //
-//   %H: The hour of the day using the 24-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 23.
+//   %H: The hour of the day using the 24-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 23. See note (5).
 //   %M: The minute as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //   %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //
@@ -64,6 +64,10 @@ import (
 //   (3) When a date is parsed in combination with a day of the week (%a, %A and/or %u),
 //       an error will be returned if it does not match the day represented by the parsed date.
 //       The day of the week is otherwise ignored - it does not have any effect on the result.
+//   (4) When a time represented in the 12-hour clock format (%I) is parsed, and no time of day (%P or %p) is present,
+//       the time of day is assumed to be before noon, i.e. am or AM.
+//   (5) When a time is parsed that contains the time of day (%P or %p), any hour (%H) that is present must be valid
+//       on the 12-hour clock.
 const (
 	// ISO 8601.
 	ISO8601Date             = "%Y%m%d"                                  // 20060102
@@ -225,10 +229,12 @@ func parse(layout, value string, date, time *int64) error {
 		isoYear     int
 		isoWeek     int
 
-		hour int
-		min  int
-		sec  int
-		nsec int
+		have12HourClock bool
+		isAfternoon     bool
+		hour            int
+		min             int
+		sec             int
+		nsec            int
 	)
 
 	var err error
@@ -389,6 +395,11 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case time != nil && main == 'I':
+				have12HourClock = true
+
+				if hour, err = integer(2); err != nil {
+					return err
+				}
 			case date != nil && main == 'j':
 				if dayOfYear, err = integer(3); err != nil {
 					return err
@@ -403,7 +414,25 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case time != nil && main == 'p':
+				lower, original := alphas(2)
+
+				switch strings.ToUpper(lower) {
+				case "AM":
+				case "PM":
+					isAfternoon = true
+				default:
+					return fmt.Errorf("failed to parse time of day %q", original)
+				}
 			case time != nil && main == 'P':
+				lower, original := alphas(2)
+
+				switch lower {
+				case "am":
+				case "pm":
+					isAfternoon = true
+				default:
+					return fmt.Errorf("failed to parse time of day %q", original)
+				}
 			case time != nil && main == 'S':
 				if sec, err = integer(2); err != nil {
 					return err
@@ -574,6 +603,13 @@ func parse(layout, value string, date, time *int64) error {
 	}
 
 	if time != nil {
+		if have12HourClock {
+			if hour < 1 || hour > 12 {
+				return fmt.Errorf("hour %d is not valid on the 12-hour clock", hour)
+			}
+			hour = convert12To24HourClock(hour, isAfternoon)
+		}
+
 		v, err := makeLocalTime(hour, min, sec, nsec)
 		if err != nil {
 			return err
@@ -610,6 +646,17 @@ func parseSpecifier(buf []rune) (nopad, localed bool, main rune, err error) {
 		}
 	}
 	return nopad, localed, buf[len(buf)-1], nil
+}
+
+func convert12To24HourClock(hour int, isAfternoon bool) int {
+	if isAfternoon && hour == 12 {
+		return 12
+	} else if isAfternoon {
+		return hour + 12
+	} else if hour == 12 {
+		return 0
+	}
+	return hour
 }
 
 func (d Weekday) short() string {
