@@ -68,38 +68,39 @@ func checkISOWeek(t *testing.T, date chrono.LocalDate) {
 
 var (
 	dateSpecifiers = []struct {
-		specifier  string
-		text       string
-		checkParse func(*testing.T, chrono.LocalDate)
+		specifier         string
+		textToParse       string
+		checkParse        func(*testing.T, chrono.LocalDate)
+		expectedFormatted string
 	}{
-		{"%Y", "0807", checkYear},
-		{"%-Y", "807", checkYear},
-		{"%EY", "0807", checkYear},
-		{"%-EY", "807", checkYear},
-		{"%y", "07", checkYear},
-		{"%-y", "7", checkYear},
-		{"%Ey", "07", checkYear},
-		{"%-Ey", "7", checkYear},
-		{"%j", "040", checkYearDay},
-		{"%-j", "40", checkYearDay},
-		{"%m", "02", checkMonth},
-		{"%-m", "2", checkMonth},
-		{"%B", "February", checkMonth},
-		{"%B", "february", checkMonth},
-		{"%b", "Feb", checkMonth},
-		{"%b", "feb", checkMonth},
-		{"%d", "09", checkDay},
-		{"%-d", "9", checkDay},
-		{"%u", "5", checkWeekday},
-		{"%-u", "5", checkWeekday},
-		{"%A", "Friday", checkWeekday},
-		{"%A", "friday", checkWeekday},
-		{"%a", "Fri", checkWeekday},
-		{"%a", "fri", checkWeekday},
-		{"%G", "0807", checkISOYear},
-		{"%-G", "807", checkISOYear},
-		{"%V", "06", checkISOWeek},
-		{"%-V", "6", checkISOWeek},
+		{"%Y", "0807", checkYear, "0807"},
+		{"%-Y", "807", checkYear, "807"},
+		{"%EY", "0807", checkYear, "0807"},
+		{"%-EY", "807", checkYear, "807"},
+		{"%y", "07", checkYear, "07"},
+		{"%-y", "7", checkYear, "7"},
+		{"%Ey", "07", checkYear, "07"},
+		{"%-Ey", "7", checkYear, "7"},
+		{"%j", "040", checkYearDay, "040"},
+		{"%-j", "40", checkYearDay, "40"},
+		{"%m", "02", checkMonth, "02"},
+		{"%-m", "2", checkMonth, "2"},
+		{"%B", "February", checkMonth, "February"},
+		{"%B", "february", checkMonth, "February"},
+		{"%b", "Feb", checkMonth, "Feb"},
+		{"%b", "feb", checkMonth, "Feb"},
+		{"%d", "09", checkDay, "09"},
+		{"%-d", "9", checkDay, "9"},
+		{"%u", "5", checkWeekday, "5"},
+		{"%-u", "5", checkWeekday, "5"},
+		{"%A", "Friday", checkWeekday, "Friday"},
+		{"%A", "friday", checkWeekday, "Friday"},
+		{"%a", "Fri", checkWeekday, "Fri"},
+		{"%a", "fri", checkWeekday, "Fri"},
+		{"%G", "0807", checkISOYear, "0807"},
+		{"%-G", "807", checkISOYear, "807"},
+		{"%V", "06", checkISOWeek, "06"},
+		{"%-V", "6", checkISOWeek, "6"},
 	}
 
 	timeSpecifiers = []struct {
@@ -123,9 +124,9 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 	setupCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			var d chrono.LocalDate
-			if err := d.Parse(tt.specifier, tt.text); err != nil {
+			if err := d.Parse(tt.specifier, tt.textToParse); err != nil {
 				t.Errorf("failed to parse date: %v", err)
 			}
 
@@ -136,9 +137,9 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 
 func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
-			if formatted := chrono.LocalDateOf(formatYear, formatMonth, formatDay).Format(tt.specifier); formatted != tt.text {
-				t.Errorf("date.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			if formatted := chrono.LocalDateOf(formatYear, formatMonth, formatDay).Format(tt.specifier); formatted != tt.expectedFormatted {
+				t.Errorf("date.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expectedFormatted)
 			}
 		})
 	}
@@ -160,7 +161,7 @@ func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 
 func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r == nil {
@@ -184,9 +185,9 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 
 func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.text), func(t *testing.T) {
-			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
-				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.expectedFormatted {
+				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expectedFormatted)
 			}
 		})
 	}
