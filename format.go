@@ -384,7 +384,6 @@ func parse(layout, value string, date, time *int64) error {
 				if isoYear, err = integer(4); err != nil {
 					return err
 				}
-				fmt.Println(isoYear)
 			case time != nil && main == 'H':
 				if hour, err = integer(2); err != nil {
 					return err
@@ -547,12 +546,10 @@ func parse(layout, value string, date, time *int64) error {
 
 		// Check ISO week-year according to note (2).
 		if haveISODate {
-			fmt.Println(isoYear, isoWeek, day)
 			isoDate, err := ofISOWeek(isoYear, isoWeek, day)
 			if err != nil {
 				return fmt.Errorf("invalid ISO week-year date %q", getISODateSimpleStr(isoYear, isoWeek, day))
 			}
-			fmt.Println(isoDate)
 
 			if haveDate && (isoDate != _date) {
 				return fmt.Errorf("ISO week-year date %q does not agree with date %q",
