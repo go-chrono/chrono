@@ -410,6 +410,9 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case date != nil && main == 'u':
+				if dayOfWeek, err = integer(1); err != nil {
+					return err
+				}
 			case date != nil && main == 'V':
 				haveISODate = true
 
