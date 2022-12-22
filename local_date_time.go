@@ -15,7 +15,7 @@ type LocalDateTime struct {
 // hour, minute, second, and nanosecond offset within the specified second.
 // The same range of values as supported by OfLocalDate and OfLocalTime are allowed here.
 func LocalDateTimeOf(year int, month Month, day, hour, min, sec, nsec int) LocalDateTime {
-	date, err := makeLocalDate(year, month, day)
+	date, err := makeLocalDate(year, int(month), day)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -133,7 +133,11 @@ func (d LocalDateTime) String() string {
 // See the constants section of the documentation to see how to represent the layout format.
 func (d LocalDateTime) Format(layout string) string {
 	date, time := d.Split()
-	return format(layout, &date, &time)
+	out, err := format(layout, &date, &time)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
 }
 
 // Parse a formatted string and store the value it represents in d.

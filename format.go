@@ -77,10 +77,10 @@ const (
 	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
-func format(layout string, date *LocalDate, time *LocalTime) string {
+func format(layout string, date *LocalDate, time *LocalTime) (string, error) {
 	var (
 		year  int
-		month Month
+		month int
 		day   int
 		hour  int
 		min   int
@@ -91,7 +91,7 @@ func format(layout string, date *LocalDate, time *LocalTime) string {
 	if date != nil {
 		v := int64(*date)
 		if year, month, day, err = fromLocalDate(v); err != nil {
-			panic(err.Error())
+			return "", err
 		}
 	}
 
@@ -110,7 +110,11 @@ NextChar:
 				continue NextChar
 			}
 
-			nopad, localed, main := parseSpecifier(buf)
+			nopad, localed, main, err := parseSpecifier(buf)
+			if err != nil {
+				return "", err
+			}
+
 			decimal := func(v int, len int) string {
 				if nopad {
 					return strconv.Itoa(v)
@@ -124,9 +128,9 @@ NextChar:
 			case date != nil && main == 'A':
 				out = append(out, []rune(date.Weekday().String())...)
 			case date != nil && main == 'b':
-				out = append(out, []rune(month.short())...)
+				out = append(out, []rune(shortMonthName(month))...)
 			case date != nil && main == 'B':
-				out = append(out, []rune(month.String())...)
+				out = append(out, []rune(longMonthName(month))...)
 			case date != nil && localed && main == 'C':
 				if year > 1 {
 					out = append(out, []rune("CE")...)
@@ -191,7 +195,7 @@ NextChar:
 			case main == '%':
 				out = append(out, '%')
 			default:
-				panic("unsupported sequence " + string(buf))
+				return "", fmt.Errorf("unsupported sequence %q", string(buf))
 			}
 
 			buf = nil
@@ -201,7 +205,7 @@ NextChar:
 		}
 	}
 
-	return string(out)
+	return string(out), nil
 }
 
 var overrideCentury *int
@@ -229,11 +233,13 @@ func parse(layout, value string, date, time *int64) error {
 
 	var err error
 	if date != nil {
-		var m Month
-		if year, m, day, err = fromLocalDate(*date); err != nil {
-			panic(err.Error())
+		if year, month, day, err = fromLocalDate(*date); err != nil {
+			return err
 		}
-		month = int(m)
+
+		if isoYear, isoWeek, err = getISOWeek(*date); err != nil {
+			return err
+		}
 	}
 
 	if time != nil {
@@ -325,8 +331,11 @@ func parse(layout, value string, date, time *int64) error {
 				return string(_lower[:i]), string(_original[:i])
 			}
 
-			nopad, localed, main := parseSpecifier(buf)
-			var err error
+			nopad, localed, main, err := parseSpecifier(buf)
+			if err != nil {
+				return err
+			}
+
 			switch {
 			case date != nil && main == 'a':
 				lower, original := alphas(3)
@@ -370,6 +379,12 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case date != nil && main == 'G':
+				haveISODate = true
+
+				if isoYear, err = integer(4); err != nil {
+					return err
+				}
+				fmt.Println(isoYear)
 			case time != nil && main == 'H':
 				if hour, err = integer(2); err != nil {
 					return err
@@ -396,6 +411,11 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case date != nil && main == 'u':
 			case date != nil && main == 'V':
+				haveISODate = true
+
+				if isoWeek, err = integer(2); err != nil {
+					return err
+				}
 			case date != nil && main == 'y':
 				haveDate = true
 
@@ -427,7 +447,7 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case main == '%':
 			default:
-				panic("unsupported sequence " + string(buf))
+				return fmt.Errorf("unsupported sequence %q", string(buf))
 			}
 
 			_, _ = nopad, localed // TODO remove me
@@ -494,11 +514,11 @@ func parse(layout, value string, date, time *int64) error {
 	}
 
 	if date != nil {
-		if !dateIsValid(year, Month(month), day) {
-			return fmt.Errorf("invalid date %q", dateSimpleStr(year, Month(month), day))
+		if !isDateValid(year, month, day) {
+			return fmt.Errorf("invalid date %q", getDateSimpleStr(year, month, day))
 		}
 
-		_date, err := makeLocalDate(year, Month(month), day)
+		_date, err := makeLocalDate(year, month, day)
 		if err != nil {
 			return err
 		}
@@ -507,11 +527,15 @@ func parse(layout, value string, date, time *int64) error {
 
 		// Check day of year according to note (2).
 		if dayOfYear != 0 {
-			doyDate := ofDayOfYear(year, dayOfYear)
+			doyDate, err := ofDayOfYear(year, dayOfYear)
+			if err != nil {
+				return err
+			}
+
 			if haveDate && (doyDate != _date) {
 				return fmt.Errorf("day-of-year date %q does not agree with date %q",
 					LocalDate(doyDate).String(),
-					dateSimpleStr(year, Month(month), day),
+					getDateSimpleStr(year, month, day),
 				)
 			}
 
@@ -520,15 +544,17 @@ func parse(layout, value string, date, time *int64) error {
 
 		// Check ISO week-year according to note (2).
 		if haveISODate {
+			fmt.Println(isoYear, isoWeek, day)
 			isoDate, err := ofISOWeek(isoYear, isoWeek, day)
 			if err != nil {
-				return fmt.Errorf("invalid ISO week-year date %q", isoDateSimpleStr(isoYear, isoWeek, day))
+				return fmt.Errorf("invalid ISO week-year date %q", getISODateSimpleStr(isoYear, isoWeek, day))
 			}
+			fmt.Println(isoDate)
 
 			if haveDate && (isoDate != _date) {
 				return fmt.Errorf("ISO week-year date %q does not agree with date %q",
-					isoDateSimpleStr(isoYear, isoWeek, day),
-					dateSimpleStr(year, Month(month), day),
+					getISODateSimpleStr(isoYear, isoWeek, day),
+					getDateSimpleStr(year, month, day),
 				)
 			}
 
@@ -538,10 +564,10 @@ func parse(layout, value string, date, time *int64) error {
 		// Check day of week according to note (3).
 		haveDate = haveDate || dayOfYear != 0 || haveISODate
 		if dayOfWeek != 0 && haveDate {
-			if actual := weekday(int32(*date)); dayOfWeek != actual {
+			if actual := getWeekday(int32(*date)); dayOfWeek != actual {
 				return fmt.Errorf("day of week %q does not agree with actual day of week %q",
-					longDayName(dayOfWeek),
-					longDayName(actual),
+					longWeekdayName(dayOfWeek),
+					longWeekdayName(actual),
 				)
 			}
 		}
@@ -558,7 +584,7 @@ func parse(layout, value string, date, time *int64) error {
 	return nil
 }
 
-func parseSpecifier(buf []rune) (nopad, localed bool, main rune) {
+func parseSpecifier(buf []rune) (nopad, localed bool, main rune, err error) {
 	if len(buf) == 3 {
 		switch buf[1] {
 		case '-':
@@ -566,31 +592,35 @@ func parseSpecifier(buf []rune) (nopad, localed bool, main rune) {
 		case 'E':
 			localed = true
 		default:
-			panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
+			return false, false, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
 		}
 	} else if len(buf) == 4 {
 		switch buf[1] {
 		case '-':
 			nopad = true
 		default:
-			panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
+			return false, false, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
 		}
 
 		switch buf[2] {
 		case 'E':
 			localed = true
 		default:
-			panic(fmt.Sprintf("unsupported modifier '%c'", buf[1]))
+			return false, false, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
 		}
 	}
-	return nopad, localed, buf[len(buf)-1]
+	return nopad, localed, buf[len(buf)-1], nil
 }
 
-func (w Weekday) short() string {
-	if w > Sunday {
-		return fmt.Sprintf("%%!Weekday(%d)", w)
+func (d Weekday) short() string {
+	return shortWeekdayName(int(d))
+}
+
+func shortWeekdayName(d int) string {
+	if d > int(Sunday) {
+		return fmt.Sprintf("%%!Weekday(%d)", d)
 	}
-	return shortDayNames[w]
+	return shortDayNames[d]
 }
 
 var longDayNameLookup = map[string]int{
@@ -624,7 +654,11 @@ var shortDayNameLookup = map[string]int{
 }
 
 func (m Month) short() string {
-	if m < January || m > December {
+	return shortMonthName(int(m))
+}
+
+func shortMonthName(m int) string {
+	if m < int(January) || m > int(December) {
 		return fmt.Sprintf("%%!Month(%d)", m)
 	}
 	return shortMonthNames[m-1]

@@ -18,10 +18,10 @@ const (
 )
 
 func (d Weekday) String() string {
-	return longDayName(int(d))
+	return longWeekdayName(int(d))
 }
 
-func longDayName(d int) string {
+func longWeekdayName(d int) string {
 	if d > int(Sunday) {
 		return fmt.Sprintf("%%!Weekday(%d)", d)
 	}
@@ -58,7 +58,11 @@ const (
 )
 
 func (m Month) String() string {
-	if m < January || m > December {
+	return longMonthName(int(m))
+}
+
+func longMonthName(m int) string {
+	if m < int(January) || m > int(December) {
 		return fmt.Sprintf("%%!Month(%d)", m)
 	}
 	return longMonthNames[m-1]

@@ -26,11 +26,11 @@ type LocalDate int32
 // This function panics if the provided date would overflow the internal type,
 // or if it is earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func LocalDateOf(year int, month Month, day int) LocalDate {
-	if !dateIsValid(year, month, day) {
+	if !isDateValid(year, int(month), day) {
 		panic("invalid date")
 	}
 
-	out, err := makeLocalDate(year, month, day)
+	out, err := makeLocalDate(year, int(month), day)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -41,13 +41,17 @@ func LocalDateOf(year int, month Month, day int) LocalDate {
 // This function panics if the provided date would overflow the internal type,
 // or if it is earlier than the first date that can be represented by this type - 24th November -4713 (4714 BCE).
 func OfDayOfYear(year, day int) LocalDate {
-	return LocalDate(ofDayOfYear(year, day))
+	d, err := ofDayOfYear(year, day)
+	if err != nil {
+		panic(err.Error())
+	}
+	return LocalDate(d)
 }
 
-func ofDayOfYear(year, day int) int64 {
+func ofDayOfYear(year, day int) (int64, error) {
 	isLeap := isLeapYear(year)
 	if (!isLeap && day > 365) || day > 366 {
-		panic("invalid date")
+		return 0, fmt.Errorf("invalid date")
 	}
 
 	var month Month
@@ -66,11 +70,7 @@ func ofDayOfYear(year, day int) int64 {
 		total += n
 	}
 
-	out, err := makeLocalDate(year, month, day)
-	if err != nil {
-		panic(err.Error())
-	}
-	return out
+	return makeLocalDate(year, int(month), day)
 }
 
 // OfFirstWeekday returns the LocalDate that represents the first of the specified weekday of the supplied month and year.
@@ -107,33 +107,33 @@ func ofISOWeek(year, week, day int) (int64, error) {
 		return 0, fmt.Errorf("invalid week number")
 	}
 
-	jan4th, err := makeLocalDate(year, January, 4)
+	jan4th, err := makeLocalDate(year, int(January), 4)
 	if err != nil {
 		return 0, err
 	}
 
-	v := week*7 + int(day) - int(weekday(int32(jan4th))+3)
+	v := week*7 + int(day) - int(getWeekday(int32(jan4th))+3)
 
-	daysThisYear := daysInYear(year)
+	daysThisYear := getDaysInYear(year)
 	switch {
 	case v <= 0: // Date is in previous year.
-		return ofDayOfYear(year-1, v+daysInYear(year-1)), nil
+		return ofDayOfYear(year-1, v+getDaysInYear(year-1))
 	case v > daysThisYear: // Date is in next year.
-		return ofDayOfYear(year+1, v-daysThisYear), nil
+		return ofDayOfYear(year+1, v-daysThisYear)
 	default: // Date is in this year.
-		return ofDayOfYear(year, v), nil
+		return ofDayOfYear(year, v)
 	}
 }
 
-func daysInYear(year int) int {
+func getDaysInYear(year int) int {
 	if isLeapYear(year) {
 		return 366
 	}
 	return 365
 }
 
-func makeLocalDate(year int, month Month, day int) (int64, error) {
-	if !dateInBounds(year, month, day) {
+func makeLocalDate(year, month, day int) (int64, error) {
+	if !isDateInBounds(year, month, day) {
 		return 0, fmt.Errorf("date out of bounds")
 	}
 	return makeJDN(int64(year), int64(month), int64(day)), nil
@@ -145,14 +145,14 @@ func makeJDN(y, m, d int64) int64 {
 
 // Date returns the ISO 8601 year, month and day represented by d.
 func (d LocalDate) Date() (year int, month Month, day int) {
-	var err error
-	if year, month, day, err = fromLocalDate(int64(d)); err != nil {
+	year, _month, day, err := fromLocalDate(int64(d))
+	if err != nil {
 		panic(err.Error())
 	}
-	return
+	return year, Month(_month), day
 }
 
-func fromLocalDate(v int64) (year int, month Month, day int, err error) {
+func fromLocalDate(v int64) (year, month, day int, err error) {
 	if v < minJDN || v > maxJDN {
 		return 0, 0, 0, fmt.Errorf("invalid date")
 	}
@@ -165,7 +165,7 @@ func fromLocalDate(v int64) (year int, month Month, day int, err error) {
 	h := 5*g + 2
 
 	day = int((h%153)/5) + 1
-	month = Month((h/153+2)%12) + 1
+	month = int((h/153+2)%12) + 1
 	year = int(e/1461 - 4716 + (14-int64(month))/12)
 	return
 }
@@ -178,38 +178,50 @@ func (d LocalDate) IsLeapYear() bool {
 
 // Weekday returns the day of the week specified by d.
 func (d LocalDate) Weekday() Weekday {
-	return Weekday(weekday(int32(d)))
+	return Weekday(getWeekday(int32(d)))
 }
 
-func weekday(ordinal int32) int {
+func getWeekday(ordinal int32) int {
 	return int((ordinal + int32(unixEpochJDN)) % 7)
 }
 
 // YearDay returns the day of the year specified by d, in the range [1,365] for non-leap years, and [1,366] in leap years.
 func (d LocalDate) YearDay() int {
 	year, month, day := d.Date()
-	return ordinalDate(year, month, day)
+	return getOrdinalDate(year, int(month), day)
 }
 
 // ISOWeek returns the ISO 8601 year and week number in which d occurs.
 // Week ranges from 1 to 53 (even for years that are not themselves leap years).
 // Jan 01 to Jan 03 of year n might belong to week 52 or 53 of year n-1, and Dec 29 to Dec 31 might belong to week 1 of year n+1.
-func (d LocalDate) ISOWeek() (year, week int) {
-	year, month, day := d.Date()
-	week = int((10 + ordinalDate(year, month, day) - int(d.Weekday()) - 1) / 7)
+func (d LocalDate) ISOWeek() (isoYear, isoWeek int) {
+	var err error
+	if isoYear, isoWeek, err = getISOWeek(int64(d)); err != nil {
+		panic(err.Error())
+	}
+	return
+}
 
-	if week == 0 {
-		if isLeapYear(year - 1) {
-			return year - 1, 53
+func getISOWeek(v int64) (isoYear, isoWeek int, err error) {
+	year, month, day, err := fromLocalDate(v)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	isoYear = year
+	isoWeek = int((10 + getOrdinalDate(isoYear, int(month), day) - getWeekday(int32(v)) - 1) / 7)
+	if isoWeek == 0 {
+		if isLeapYear(isoYear - 1) {
+			return isoYear - 1, 53, nil
 		}
-		return year - 1, 52
+		return isoYear - 1, 52, nil
 	}
 
-	if week == 53 && !d.IsLeapYear() {
-		return year + 1, 1
+	if isoWeek == 53 && !isLeapYear(year) {
+		return isoYear + 1, 1, nil
 	}
 
-	return year, week
+	return isoYear, isoWeek, nil
 }
 
 // Add returns the date corresponding to adding the given number of years, months, and days to d.
@@ -233,19 +245,20 @@ func (d LocalDate) add(years, months, days int) (LocalDate, error) {
 		return 0, err
 	}
 
-	out, err := makeLocalDate(year+years, month+Month(months), day+days)
+	out, err := makeLocalDate(year+years, int(month)+months, day+days)
 	return LocalDate(out), err
 }
 
 func (d LocalDate) String() string {
-	return dateSimpleStr(d.Date())
+	year, month, day := d.Date()
+	return getDateSimpleStr(year, int(month), day)
 }
 
-func dateSimpleStr(year int, month Month, day int) string {
+func getDateSimpleStr(year, month, day int) string {
 	return fmt.Sprintf("%04d-%02d-%02d", year, month, day)
 }
 
-func isoDateSimpleStr(year, week, day int) string {
+func getISODateSimpleStr(year, week, day int) string {
 	return fmt.Sprintf("%04d-W%02d-%d", year, week, day)
 }
 
@@ -253,7 +266,11 @@ func isoDateSimpleStr(year, week, day int) string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Time format specifiers encountered in the layout results in a panic.
 func (d LocalDate) Format(layout string) string {
-	return format(layout, &d, nil)
+	out, err := format(layout, &d, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
 }
 
 // Parse a formatted string and store the value it represents in d.
@@ -279,43 +296,43 @@ func MaxLocalDate() LocalDate {
 	return LocalDate(maxJDN)
 }
 
-func isLeapYear(y int) bool {
-	return (y%4 == 0 && y%100 != 0) || y%400 == 0
+func isLeapYear(year int) bool {
+	return (year%4 == 0 && year%100 != 0) || year%400 == 0
 }
 
-func ordinalDate(y int, m Month, d int) int {
+func getOrdinalDate(year, month, day int) int {
 	var out int
-	for i := January; i <= m; i++ {
-		if i == m {
-			out += int(d)
+	for i := int(January); i <= month; i++ {
+		if i == month {
+			out += int(day)
 		} else {
 			out += int(daysInMonths[i-1])
 		}
 	}
 
-	if isLeapYear(y) && m > February {
+	if isLeapYear(year) && month > int(February) {
 		out++
 	}
 	return out
 }
 
-func dateInBounds(y int, m Month, d int) bool {
-	if y < minYear {
+func isDateInBounds(year, month, day int) bool {
+	if year < minYear {
 		return false
-	} else if y == minYear {
-		if m < minMonth {
+	} else if year == minYear {
+		if month < minMonth {
 			return false
-		} else if m == minMonth && d < minDay {
+		} else if month == minMonth && day < minDay {
 			return false
 		}
 	}
 
-	if y > maxYear {
+	if year > maxYear {
 		return false
-	} else if y == maxYear {
-		if m > maxMonth {
+	} else if year == maxYear {
+		if month > maxMonth {
 			return false
-		} else if m == maxMonth && d > maxDay {
+		} else if month == maxMonth && day > maxDay {
 			return false
 		}
 	}
@@ -323,15 +340,15 @@ func dateInBounds(y int, m Month, d int) bool {
 	return true
 }
 
-func dateIsValid(y int, m Month, d int) bool {
-	if m < January || m > December {
+func isDateValid(year, month, date int) bool {
+	if month < int(January) || month > int(December) {
 		return false
 	}
 
-	if isLeapYear(y) && m == February {
-		return d > 0 && d <= 29
+	if isLeapYear(year) && month == int(February) {
+		return date > 0 && date <= 29
 	}
-	return d > 0 && d <= daysInMonths[m-1]
+	return date > 0 && date <= daysInMonths[month-1]
 }
 
 var daysInMonths = [12]int{
@@ -355,13 +372,13 @@ const (
 
 	// The minimum representable date is JDN 0.
 	minYear  = -4713
-	minMonth = November
+	minMonth = int(November)
 	minDay   = 24
 	minJDN   = -unixEpochJDN
 
 	// The maximum representable date must fit into an int32.
 	maxYear  = 5874898
-	maxMonth = June
+	maxMonth = int(June)
 	maxDay   = 3
 	maxJDN   = math.MaxInt32 - unixEpochJDN
 )
