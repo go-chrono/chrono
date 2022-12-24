@@ -358,32 +358,26 @@ func parse(layout, value string, date, time *int64) error {
 			switch {
 			case date != nil && main == 'a':
 				lower, original := alphas(3)
-
 				var ok bool
 				if dayOfWeek, ok = shortDayNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short day name %q", original)
 				}
 			case date != nil && main == 'A':
 				lower, original := alphas(9)
-
 				var ok bool
 				if dayOfWeek, ok = longDayNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized day name %q", original)
 				}
 			case date != nil && main == 'b':
 				haveDate = true
-
 				lower, original := alphas(3)
-
 				var ok bool
 				if month, ok = shortMonthNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short month name %q", original)
 				}
 			case date != nil && main == 'B':
 				haveDate = true
-
 				lower, original := alphas(9)
-
 				var ok bool
 				if month, ok = longMonthNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized month name %q", original)
@@ -391,9 +385,7 @@ func parse(layout, value string, date, time *int64) error {
 			case date != nil && main == 'C':
 				if localed { // 'EC'
 					haveGregorianYear = true
-
 					lower, original := alphas(3)
-
 					switch lower {
 					case "ce":
 					case "bce":
@@ -411,7 +403,6 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case date != nil && main == 'G':
 				haveISODate = true
-
 				if isoYear, err = integer(4); err != nil {
 					return err
 				}
@@ -421,7 +412,6 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case time != nil && main == 'I':
 				have12HourClock = true
-
 				if hour, err = integer(2); err != nil {
 					return err
 				}
@@ -440,7 +430,6 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case time != nil && main == 'p':
 				lower, original := alphas(2)
-
 				switch strings.ToUpper(lower) {
 				case "AM":
 				case "PM":
@@ -450,7 +439,6 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case time != nil && main == 'P':
 				lower, original := alphas(2)
-
 				switch lower {
 				case "am":
 				case "pm":
@@ -468,13 +456,11 @@ func parse(layout, value string, date, time *int64) error {
 				}
 			case date != nil && main == 'V':
 				haveISODate = true
-
 				if isoWeek, err = integer(2); err != nil {
 					return err
 				}
 			case date != nil && main == 'y':
 				haveDate = true
-
 				if localed { // 'Ey'
 					haveGregorianYear = true
 				}
@@ -485,7 +471,6 @@ func parse(layout, value string, date, time *int64) error {
 				year += getCentury(year)
 			case date != nil && main == 'Y':
 				haveDate = true
-
 				if localed { // 'EY'
 					haveGregorianYear = true
 				}
