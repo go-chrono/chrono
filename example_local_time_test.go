@@ -51,3 +51,11 @@ func ExampleLocalTime_Format() {
 	fmt.Println(t.Format(chrono.ISO8601TimeExtended))
 	// Output: T12:30:15
 }
+
+func ExampleLocalTime_Parse() {
+	var t chrono.LocalTime
+	t.Parse(chrono.ISO8601TimeExtended, "T12:30:15")
+
+	fmt.Println(t)
+	// Output: 12:30:15
+}
