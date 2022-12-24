@@ -136,10 +136,11 @@ NextChar:
 			case date != nil && main == 'B':
 				out = append(out, []rune(longMonthName(month))...)
 			case date != nil && localed && main == 'C':
-				if year > 1 {
-					out = append(out, []rune("CE")...)
-				} else {
+				_, isBCE := convertISOToGregorianYear(year)
+				if isBCE {
 					out = append(out, []rune("BCE")...)
+				} else {
+					out = append(out, []rune("CE")...)
 				}
 			case date != nil && main == 'd':
 				out = append(out, []rune(decimal(day, 2))...)
@@ -183,18 +184,12 @@ NextChar:
 			case date != nil && main == 'y':
 				out = append(out, []rune(decimal(year%100, 2))...)
 			case date != nil && localed && main == 'y':
-				y := year
-				if y < 0 {
-					y = y*-1 + 1
-				}
+				y, _ := convertISOToGregorianYear(year)
 				out = append(out, []rune(fmt.Sprintf("%02d", y%100))...)
 			case date != nil && main == 'Y':
 				out = append(out, []rune(decimal(year, 4))...)
 			case date != nil && localed && main == 'Y':
-				y := year
-				if y < 0 {
-					y = y*-1 + 1
-				}
+				y, _ := convertISOToGregorianYear(year)
 				out = append(out, []rune(decimal(y, 4))...)
 			case main == '%':
 				out = append(out, '%')
@@ -216,10 +211,12 @@ var overrideCentury *int
 
 func parse(layout, value string, date, time *int64) error {
 	var (
-		haveDate bool
-		year     int
-		month    int
-		day      int
+		haveDate          bool
+		haveGregorianYear bool
+		isBCE             bool
+		year              int
+		month             int
+		day               int
 
 		dayOfWeek int
 
@@ -376,8 +373,18 @@ func parse(layout, value string, date, time *int64) error {
 					return fmt.Errorf("unrecognized month name %q", original)
 				}
 			case date != nil && main == 'C':
-				if localed {
-					// TODO
+				if localed { // 'EC'
+					haveGregorianYear = true
+
+					lower, original := alphas(2)
+
+					switch lower {
+					case "CE":
+					case "BCE":
+						isBCE = true
+					default:
+						return fmt.Errorf("unrecognized era %q", original)
+					}
 				}
 			case date != nil && main == 'd':
 				haveDate = true
@@ -545,6 +552,12 @@ func parse(layout, value string, date, time *int64) error {
 	}
 
 	if date != nil {
+		if haveGregorianYear {
+			if year, err = convertGregorianToISOYear(year, isBCE); err != nil {
+				return err
+			}
+		}
+
 		if !isDateValid(year, month, day) {
 			return fmt.Errorf("invalid date %q", getDateSimpleStr(year, month, day))
 		}
@@ -657,6 +670,24 @@ func convert12To24HourClock(hour int, isAfternoon bool) int {
 		return 0
 	}
 	return hour
+}
+
+func convertGregorianToISOYear(gregorianYear int, isBCE bool) (isoYear int, err error) {
+	if gregorianYear == 0 {
+		return 0, fmt.Errorf("invalid Gregorian year %04d", gregorianYear)
+	}
+
+	if isBCE {
+		return (gregorianYear * -1) - 1, nil
+	}
+	return gregorianYear, nil
+}
+
+func convertISOToGregorianYear(isoYear int) (gregorianYear int, isBCE bool) {
+	if isoYear <= 0 {
+		return (isoYear * -1) + 1, true
+	}
+	return isoYear, false
 }
 
 func (d Weekday) short() string {
