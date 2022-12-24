@@ -20,6 +20,7 @@ import (
 // According to ISO 8601, 0000 is a valid year, whereas in the Gregorian calendar, year 0 does not exist.
 // The user must be aware of this difference when interfacing between LocalDate and the BCE/CE notation.
 // Thus, when using LocalDate, year 0 is intepreted to mean 1 BCE, and year -1 is 2 BCE, and so on.
+// In order to format a string according to the Gregorian calendar, use Format("%EY %EC").
 type LocalDate int32
 
 // LocalDateOf returns the LocalDate that represents the specified year, month and day.
