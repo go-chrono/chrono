@@ -468,10 +468,8 @@ func parse(layout, value string, date, time *int64) error {
 			case date != nil && main == 'y':
 				haveDate = true
 
-				if localed {
+				if localed { // 'Ey'
 					haveGregorianYear = true
-
-					// TODO
 				}
 
 				if year, err = integer(2); err != nil {
@@ -481,10 +479,8 @@ func parse(layout, value string, date, time *int64) error {
 			case date != nil && main == 'Y':
 				haveDate = true
 
-				if localed {
+				if localed { // 'EY'
 					haveGregorianYear = true
-
-					// TODO
 				}
 
 				if year, err = integer(4); err != nil {
