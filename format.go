@@ -135,12 +135,15 @@ NextChar:
 				out = append(out, []rune(shortMonthName(month))...)
 			case date != nil && main == 'B':
 				out = append(out, []rune(longMonthName(month))...)
-			case date != nil && localed && main == 'C':
-				_, isBCE := convertISOToGregorianYear(year)
-				if isBCE {
-					out = append(out, []rune("BCE")...)
+			case date != nil && main == 'C':
+				if localed { // 'EC'
+					if _, isBCE := convertISOToGregorianYear(year); isBCE {
+						out = append(out, []rune("BCE")...)
+					} else {
+						out = append(out, []rune("CE")...)
+					}
 				} else {
-					out = append(out, []rune("CE")...)
+					panic("unsupported specifier 'C'")
 				}
 			case date != nil && main == 'd':
 				out = append(out, []rune(decimal(day, 2))...)
@@ -182,13 +185,14 @@ NextChar:
 				_, w := date.ISOWeek()
 				out = append(out, []rune(decimal(w, 2))...)
 			case date != nil && main == 'y':
-				out = append(out, []rune(decimal(year%100, 2))...)
-			case date != nil && localed && main == 'y':
-				y, _ := convertISOToGregorianYear(year)
-				out = append(out, []rune(fmt.Sprintf("%02d", y%100))...)
+				y := year
+				if localed { // 'Ey'
+					y, _ = convertISOToGregorianYear(y)
+				}
+				out = append(out, []rune(decimal(y%100, 2))...)
 			case date != nil && main == 'Y':
 				y := year
-				if localed {
+				if localed { // 'EY'
 					y, _ = convertISOToGregorianYear(y)
 				}
 				out = append(out, []rune(decimal(y, 4))...)
@@ -397,6 +401,8 @@ func parse(layout, value string, date, time *int64) error {
 					default:
 						return fmt.Errorf("unrecognized era %q", original)
 					}
+				} else {
+					return fmt.Errorf("unsupported specifier 'C'")
 				}
 			case date != nil && main == 'd':
 				haveDate = true
