@@ -209,6 +209,17 @@ NextChar:
 
 var overrideCentury *int
 
+func getCentury(year int) int {
+	switch {
+	case overrideCentury != nil:
+		return *overrideCentury
+	case year >= 69 && year <= 99:
+		return 1900
+	default:
+		return 2000
+	}
+}
+
 func parse(layout, value string, date, time *int64) error {
 	var (
 		haveDate          bool
@@ -334,7 +345,7 @@ func parse(layout, value string, date, time *int64) error {
 				return string(_lower[:i]), string(_original[:i])
 			}
 
-			nopad, localed, main, err := parseSpecifier(buf)
+			_, localed, main, err := parseSpecifier(buf)
 			if err != nil {
 				return err
 			}
@@ -458,25 +469,21 @@ func parse(layout, value string, date, time *int64) error {
 				haveDate = true
 
 				if localed {
+					haveGregorianYear = true
+
 					// TODO
 				}
 
 				if year, err = integer(2); err != nil {
 					return err
 				}
-
-				switch {
-				case overrideCentury != nil:
-					year += *overrideCentury
-				case year >= 69 && year <= 99:
-					year += 1900
-				default:
-					year += 2000
-				}
+				year += getCentury(year)
 			case date != nil && main == 'Y':
 				haveDate = true
 
 				if localed {
+					haveGregorianYear = true
+
 					// TODO
 				}
 
@@ -488,8 +495,6 @@ func parse(layout, value string, date, time *int64) error {
 				return fmt.Errorf("unsupported sequence %q", string(buf))
 			}
 
-			_, _ = nopad, localed // TODO remove me
-
 			buf = nil
 			return nil
 		}
@@ -497,7 +502,6 @@ func parse(layout, value string, date, time *int64) error {
 		// Some short-hands.
 		var (
 			valid             = i < len(layout)
-			last              = i == len(layout)
 			isSpecifier       = len(buf) >= 2 && buf[0] == '%'
 			specifierComplete = isSpecifier && (buf[len(buf)-1] != '-' && buf[len(buf)-1] != 'E')
 			isText            = len(buf) >= 1 && buf[0] != '%'
@@ -508,25 +512,14 @@ func parse(layout, value string, date, time *int64) error {
 			if len(buf) == 0 {
 				goto AppendToBuffer
 			} else if isSpecifier {
-				switch {
-				case c == '-' && !specifierComplete:
-					if last {
-						// TODO error
-					}
-				case c == 'E' && !specifierComplete:
-					if last {
-						// TODO error
-					}
-				default:
-					if !specifierComplete {
-						goto AppendToBuffer
-					}
-
-					if err := processSpecifier(); err != nil {
-						return err
-					}
+				if !specifierComplete {
 					goto AppendToBuffer
 				}
+
+				if err := processSpecifier(); err != nil {
+					return err
+				}
+				goto AppendToBuffer
 			} else if isText && c == '%' {
 				if err := verifyText(); err != nil {
 					return err
