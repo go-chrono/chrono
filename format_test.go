@@ -524,3 +524,35 @@ func TestLocalDate_Parse_eras(t *testing.T) {
 		}
 	})
 }
+
+func TestLocalDate_Format_invalid_specifier(t *testing.T) {
+	for _, specifier := range []string{
+		"%C",
+		"%Z",
+	} {
+		t.Run(specifier, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("expecting panic that didn't occur")
+				}
+			}()
+
+			var date chrono.LocalDate
+			_ = date.Format(specifier)
+		})
+	}
+}
+
+func TestLocalDate_Parse_invalid_specifier(t *testing.T) {
+	for _, specifier := range []string{
+		"%C",
+		"%Z",
+	} {
+		t.Run(specifier, func(t *testing.T) {
+			var date chrono.LocalDate
+			if err := date.Parse(specifier, ""); err == nil {
+				t.Errorf("expecting error but got nil")
+			}
+		})
+	}
+}
