@@ -466,3 +466,26 @@ func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 		})
 	}
 }
+
+func TestLocalDate_Format_eras(t *testing.T) {
+	t.Run("CE", func(t *testing.T) {
+		date := chrono.LocalDateOf(2022, chrono.June, 18)
+		if formatted := date.Format("%EY %EC"); formatted != "2022 CE" {
+			t.Errorf("got %q, want '2022 CE'", formatted)
+		}
+	})
+
+	t.Run("BCE", func(t *testing.T) {
+		date := chrono.LocalDateOf(-2021, chrono.June, 18)
+		if formatted := date.Format("%EY %EC"); formatted != "2022 BCE" {
+			t.Errorf("got %q, want '2022 BCE'", formatted)
+		}
+	})
+
+	t.Run("zero", func(t *testing.T) {
+		date := chrono.LocalDateOf(0, chrono.June, 18)
+		if formatted := date.Format("%EY %EC"); formatted != "0001 BCE" {
+			t.Errorf("got %q, want '1 BCE'", formatted)
+		}
+	})
+}

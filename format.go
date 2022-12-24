@@ -187,9 +187,10 @@ NextChar:
 				y, _ := convertISOToGregorianYear(year)
 				out = append(out, []rune(fmt.Sprintf("%02d", y%100))...)
 			case date != nil && main == 'Y':
-				out = append(out, []rune(decimal(year, 4))...)
-			case date != nil && localed && main == 'Y':
-				y, _ := convertISOToGregorianYear(year)
+				y := year
+				if localed {
+					y, _ = convertISOToGregorianYear(y)
+				}
 				out = append(out, []rune(decimal(y, 4))...)
 			case main == '%':
 				out = append(out, '%')
