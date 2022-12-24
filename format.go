@@ -388,11 +388,11 @@ func parse(layout, value string, date, time *int64) error {
 				if localed { // 'EC'
 					haveGregorianYear = true
 
-					lower, original := alphas(2)
+					lower, original := alphas(3)
 
 					switch lower {
-					case "CE":
-					case "BCE":
+					case "ce":
+					case "bce":
 						isBCE = true
 					default:
 						return fmt.Errorf("unrecognized era %q", original)
@@ -668,7 +668,7 @@ func convertGregorianToISOYear(gregorianYear int, isBCE bool) (isoYear int, err 
 	}
 
 	if isBCE {
-		return (gregorianYear * -1) - 1, nil
+		return (gregorianYear * -1) + 1, nil
 	}
 	return gregorianYear, nil
 }
