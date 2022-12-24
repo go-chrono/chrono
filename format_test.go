@@ -241,7 +241,7 @@ func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			if formatted := chrono.LocalDateOf(formatYear, formatMonth, formatDay).Format(tt.specifier); formatted != tt.expectedFormatted {
-				t.Errorf("date.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expectedFormatted)
+				t.Errorf("date.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
 			}
 		})
 	}
@@ -279,7 +279,7 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
 			if formatted := chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
-				t.Errorf("time.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
+				t.Errorf("time.Format(%s) = %s, want %q", tt.specifier, formatted, tt.text)
 			}
 		})
 	}
@@ -289,7 +289,7 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.expectedFormatted {
-				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.expectedFormatted)
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
 			}
 		})
 	}
@@ -297,7 +297,7 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
 			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
-				t.Errorf("datetime.Format(%s) = %s, want %s", tt.specifier, formatted, tt.text)
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.text)
 			}
 		})
 	}
@@ -331,7 +331,7 @@ func Test_format_literals(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if actual := tt.value.Format(tt.layout); actual != tt.expected {
-				t.Errorf("datetime.Format(%s) = %s, want %s", tt.layout, actual, tt.expected)
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.layout, actual, tt.expected)
 			}
 		})
 	}
@@ -461,7 +461,7 @@ func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 	} {
 		t.Run(tt.layout, func(t *testing.T) {
 			if formatted := chrono.OfLocalDateAndTime(date, time).Format(tt.layout); formatted != tt.expected {
-				t.Errorf("datetime.Format(%s) = %s, want %s", tt.layout, formatted, tt.expected)
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.layout, formatted, tt.expected)
 			}
 		})
 	}
