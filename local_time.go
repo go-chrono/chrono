@@ -124,8 +124,26 @@ func (t LocalTime) String() string {
 
 // Format returns a textual representation of the time value formatted according to the layout defined by the argument.
 // See the constants section of the documentation to see how to represent the layout format.
+// Date format specifiers encountered in the layout results in a panic.
 func (t LocalTime) Format(layout string) string {
-	return format(layout, nil, &t)
+	out, err := format(layout, nil, &t)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
+}
+
+// Parse a formatted string and store the value it represents in t.
+// See the constants section of the documentation to see how to represent the layout format.
+// Date format specifiers encountered in the layout results in a panic.
+func (t *LocalTime) Parse(layout, value string) error {
+	v := int64(t.v)
+	if err := parse(layout, value, nil, &v); err != nil {
+		return err
+	}
+
+	t.v = Extent(v)
+	return nil
 }
 
 const (
