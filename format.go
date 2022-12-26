@@ -292,7 +292,8 @@ func parse(layout, value string, date, time *int64) error {
 	}
 
 	if time != nil {
-		hour, min, sec, _ = fromLocalTime(*time)
+		hour, min, sec, nsec = fromLocalTime(*time)
+		_, isAfternoon = convert24To12HourClock(hour)
 	}
 
 	var pos int
@@ -399,14 +400,12 @@ func parse(layout, value string, date, time *int64) error {
 					return fmt.Errorf("unrecognized day name %q", original)
 				}
 			case date != nil && main == 'b': // %b
-				haveDate = true
 				lower, original := alphas(3)
 				var ok bool
 				if month, ok = shortMonthNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short month name %q", original)
 				}
 			case date != nil && main == 'B': // %B
-				haveDate = true
 				lower, original := alphas(9)
 				var ok bool
 				if month, ok = longMonthNameLookup[lower]; !ok {
@@ -474,7 +473,6 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case date != nil && main == 'm': // %m
-				haveDate = true
 				if month, err = integer(2); err != nil {
 					return err
 				}
@@ -514,7 +512,6 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case date != nil && main == 'y': // %y
-				haveDate = true
 				if localed { // %Ey
 					haveGregorianYear = true
 				}
@@ -524,7 +521,6 @@ func parse(layout, value string, date, time *int64) error {
 				}
 				year += getCentury(year)
 			case date != nil && main == 'Y': // %Y
-				haveDate = true
 				if localed { // %EY
 					haveGregorianYear = true
 				}
@@ -623,7 +619,12 @@ func parse(layout, value string, date, time *int64) error {
 
 		// Check ISO week-year according to note (2).
 		if haveISODate {
-			isoDate, err := ofISOWeek(isoYear, isoWeek, day)
+			weekday := dayOfWeek
+			if dayOfWeek == 0 {
+				weekday = int(Monday)
+			}
+
+			isoDate, err := ofISOWeek(isoYear, isoWeek, weekday)
 			if err != nil {
 				return fmt.Errorf("invalid ISO week-year date %q", getISODateSimpleStr(isoYear, isoWeek, day))
 			}
@@ -639,7 +640,7 @@ func parse(layout, value string, date, time *int64) error {
 		}
 
 		// Check day of week according to note (3).
-		haveDate = haveDate || dayOfYear != 0 || haveISODate
+		haveDate = haveDate || dayOfYear != 0
 		if dayOfWeek != 0 && haveDate {
 			if actual := getWeekday(int32(*date)); dayOfWeek != actual {
 				return fmt.Errorf("day of week %q does not agree with actual day of week %q",
