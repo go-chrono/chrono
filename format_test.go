@@ -408,11 +408,11 @@ func TestLocalDateTime_Parse_predefined_layouts(t *testing.T) {
 		value    string
 		expected chrono.LocalDateTime
 	}{
-		{chrono.ISO8601Date, "20220618", chrono.OfLocalDateAndTime(date, chrono.LocalTime{})},
+		{chrono.ISO8601DateSimple, "20220618", chrono.OfLocalDateAndTime(date, chrono.LocalTime{})},
 		{chrono.ISO8601DateExtended, "2022-06-18", chrono.OfLocalDateAndTime(date, chrono.LocalTime{})},
-		{chrono.ISO8601Time, "T210530", chrono.OfLocalDateAndTime(chrono.LocalDate(0), time)},
+		{chrono.ISO8601TimeSimple, "T210530", chrono.OfLocalDateAndTime(chrono.LocalDate(0), time)},
 		{chrono.ISO8601TimeExtended, "T21:05:30", chrono.OfLocalDateAndTime(chrono.LocalDate(0), time)},
-		{chrono.ISO8601DateTime, "20220618T210530", chrono.OfLocalDateAndTime(date, time)},
+		{chrono.ISO8601DateTimeSimple, "20220618T210530", chrono.OfLocalDateAndTime(date, time)},
 		{chrono.ISO8601DateTimeExtended, "2022-06-18T21:05:30", chrono.OfLocalDateAndTime(date, time)},
 	} {
 		t.Run(tt.layout, func(t *testing.T) {
@@ -457,11 +457,11 @@ func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 		layout   string
 		expected string
 	}{
-		{chrono.ISO8601Date, "20220618"},
+		{chrono.ISO8601DateSimple, "20220618"},
 		{chrono.ISO8601DateExtended, "2022-06-18"},
-		{chrono.ISO8601Time, "T210530"},
+		{chrono.ISO8601TimeSimple, "T210530"},
 		{chrono.ISO8601TimeExtended, "T21:05:30"},
-		{chrono.ISO8601DateTime, "20220618T210530"},
+		{chrono.ISO8601DateTimeSimple, "20220618T210530"},
 		{chrono.ISO8601DateTimeExtended, "2022-06-18T21:05:30"},
 	} {
 		t.Run(tt.layout, func(t *testing.T) {
