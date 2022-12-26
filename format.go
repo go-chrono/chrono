@@ -24,7 +24,7 @@ import (
 //   %A: The full name of the day of the week, e.g. Monday, Tuesday, etc. See note (3).
 //   %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc. See note (3).
 //
-//   %G: The ISO 8601 week-based year, which may differ by ±1 to the actual calendar year. See note (2).
+//   %G: The ISO 8601 week-based year, padded to 4 digits with leading 0s. This may differ by ±1 to the actual calendar year. See note (2).
 //   %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53. See note (2).
 //
 //   %P: Either "am" or "pm", where noon is "pm" and midnight is "am".
@@ -75,12 +75,24 @@ import (
 //       on the 12-hour clock.
 const (
 	// ISO 8601.
-	ISO8601Date             = "%Y%m%d"                                  // 20060102
-	ISO8601DateExtended     = "%Y-%m-%d"                                // 2006-01-02
-	ISO8601Time             = "T%H%M%S"                                 // T030405
-	ISO8601TimeExtended     = "T%H:%M:%S"                               // T03:04:05
-	ISO8601DateTime         = ISO8601Date + ISO8601Time                 // 20060102T030405
-	ISO8601DateTimeExtended = ISO8601DateExtended + ISO8601TimeExtended // 2006-01-02T03:04:05
+	ISO8601DateSimple                = "%Y%m%d"                                  // 20060102
+	ISO8601DateExtended              = "%Y-%m-%d"                                // 2006-01-02
+	ISO8601DateTruncated             = "%Y-%m"                                   // 2006-01
+	ISO8601TimeSimple                = "T%H%M%S"                                 // T030405
+	ISO8601TimeExtended              = "T%H:%M:%S"                               // T03:04:05
+	ISO8601TimeMillisSimple          = "T%H%M%S.%3f"                             // T030405.000
+	ISO8601TimeMillisExtended        = "T%H:%M:%S.%3f"                           // T03:04:05.000
+	ISO8601TimeTruncatedMinsSimple   = "T%H%M"                                   // T0304
+	ISO8601TimeTruncatedMinsExtended = "T%H:%M"                                  // T03:04
+	ISO8601TimeTruncatedHours        = "T%H"                                     // T03
+	ISO8601DateTimeSimple            = ISO8601DateSimple + ISO8601TimeSimple     // 20060102T030405
+	ISO8601DateTimeExtended          = ISO8601DateExtended + ISO8601TimeExtended // 2006-01-02T03:04:05
+	ISO8601WeekSimple                = "%GW%V"                                   // 2006W01
+	ISO8601WeekExtended              = "%G-W%V"                                  // 2006-W01
+	ISO8601WeekDaySimple             = "%GW%V%u"                                 // 2006W011
+	ISO8601WeekDayExtended           = "%G-W%V-%u"                               // 2006-W01-1
+	ISO8601OrdinalDateSimple         = "%Y%j"                                    // 2006002
+	ISO8601OrdinalDateExtended       = "%Y-%j"                                   // 2006-002
 	// Layouts defined by the time package.
 	ANSIC   = "%a %b %d %H:%M:%S %Y" // Mon Jan 02 15:04:05 2006
 	Kitchen = "%I:%M%p"              // 3:04PM
@@ -280,7 +292,8 @@ func parse(layout, value string, date, time *int64) error {
 	}
 
 	if time != nil {
-		hour, min, sec, _ = fromLocalTime(*time)
+		hour, min, sec, nsec = fromLocalTime(*time)
+		_, isAfternoon = convert24To12HourClock(hour)
 	}
 
 	var pos int
@@ -387,14 +400,12 @@ func parse(layout, value string, date, time *int64) error {
 					return fmt.Errorf("unrecognized day name %q", original)
 				}
 			case date != nil && main == 'b': // %b
-				haveDate = true
 				lower, original := alphas(3)
 				var ok bool
 				if month, ok = shortMonthNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short month name %q", original)
 				}
 			case date != nil && main == 'B': // %B
-				haveDate = true
 				lower, original := alphas(9)
 				var ok bool
 				if month, ok = longMonthNameLookup[lower]; !ok {
@@ -462,7 +473,6 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case date != nil && main == 'm': // %m
-				haveDate = true
 				if month, err = integer(2); err != nil {
 					return err
 				}
@@ -502,7 +512,6 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 			case date != nil && main == 'y': // %y
-				haveDate = true
 				if localed { // %Ey
 					haveGregorianYear = true
 				}
@@ -512,7 +521,6 @@ func parse(layout, value string, date, time *int64) error {
 				}
 				year += getCentury(year)
 			case date != nil && main == 'Y': // %Y
-				haveDate = true
 				if localed { // %EY
 					haveGregorianYear = true
 				}
@@ -611,7 +619,12 @@ func parse(layout, value string, date, time *int64) error {
 
 		// Check ISO week-year according to note (2).
 		if haveISODate {
-			isoDate, err := ofISOWeek(isoYear, isoWeek, day)
+			weekday := dayOfWeek
+			if dayOfWeek == 0 {
+				weekday = int(Monday)
+			}
+
+			isoDate, err := ofISOWeek(isoYear, isoWeek, weekday)
 			if err != nil {
 				return fmt.Errorf("invalid ISO week-year date %q", getISODateSimpleStr(isoYear, isoWeek, day))
 			}
@@ -627,7 +640,7 @@ func parse(layout, value string, date, time *int64) error {
 		}
 
 		// Check day of week according to note (3).
-		haveDate = haveDate || dayOfYear != 0 || haveISODate
+		haveDate = haveDate || dayOfYear != 0
 		if dayOfWeek != 0 && haveDate {
 			if actual := getWeekday(int32(*date)); dayOfWeek != actual {
 				return fmt.Errorf("day of week %q does not agree with actual day of week %q",
