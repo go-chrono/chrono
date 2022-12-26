@@ -584,6 +584,13 @@ func TestLocalTime_Parse_12HourClock(t *testing.T) {
 			t.Errorf("got %d, want 0", hour)
 		}
 	})
+
+	t.Run("invalid hour", func(t *testing.T) {
+		var time chrono.LocalTime
+		if err := time.Parse("%I %P", "14 am"); err == nil {
+			t.Errorf("expecting error but got nil")
+		}
+	})
 }
 
 func TestLocalDate_Format_eras(t *testing.T) {
