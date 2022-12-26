@@ -555,7 +555,7 @@ func TestDuration_Parse(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			for _, sign := range []string{"", "+", "-"} {
+			for _, sign := range []string{"none", "+", "-"} {
 				t.Run(sign, func(t *testing.T) {
 					input := sign + tt.input
 					expected := tt.expected
