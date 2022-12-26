@@ -594,6 +594,7 @@ func parse(layout, value string, date, time *int64) error {
 	}
 
 	if time != nil {
+		// Check validity of hour on 12-hour clock according to note (5).
 		if have12HourClock {
 			if hour < 1 || hour > 12 {
 				return fmt.Errorf("hour %d is not valid on the 12-hour clock", hour)
