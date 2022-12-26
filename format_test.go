@@ -25,6 +25,10 @@ func setupCenturyParsing() {
 	chrono.SetupCenturyParsing(800)
 }
 
+func tearDownCenturyParsing() {
+	chrono.TearDownCenturyParsing()
+}
+
 func checkYear(t *testing.T, date chrono.LocalDate) {
 	if y, _, _ := date.Date(); y != formatYear {
 		t.Errorf("date.Date() year = %d, want %d", y, formatYear)
@@ -151,6 +155,7 @@ var (
 
 func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 	setupCenturyParsing()
+	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
@@ -181,6 +186,7 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 
 func TestLocalTime_Parse_supported_specifiers(t *testing.T) {
 	setupCenturyParsing()
+	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
@@ -211,6 +217,7 @@ func TestLocalTime_Parse_supported_specifiers(t *testing.T) {
 
 func TestLocalDateTime_Parse_supported_specifiers(t *testing.T) {
 	setupCenturyParsing()
+	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
@@ -633,6 +640,30 @@ func TestLocalDate_Parse_eras(t *testing.T) {
 
 		if year, _, _ := date.Date(); year != 0 {
 			t.Errorf("got %d, want 0", year)
+		}
+	})
+}
+
+func TestLocalDate_Parse_century(t *testing.T) {
+	t.Run("1900s", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%y", "80"); err != nil {
+			t.Errorf("failed to parse date: %v", err)
+		}
+
+		if year, _, _ := date.Date(); year != 1980 {
+			t.Errorf("got %d, want 1980", year)
+		}
+	})
+
+	t.Run("2000s", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%y", "10"); err != nil {
+			t.Errorf("failed to parse date: %v", err)
+		}
+
+		if year, _, _ := date.Date(); year != 2010 {
+			t.Errorf("got %d, want 2010", year)
 		}
 	})
 }
