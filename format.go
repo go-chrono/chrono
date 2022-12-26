@@ -368,7 +368,7 @@ func parse(layout, value string, date, time *int64) error {
 				return string(_lower[:i]), string(_original[:i])
 			}
 
-			_, localed, _, main, err := parseSpecifier(buf)
+			_, localed, precision, main, err := parseSpecifier(buf)
 			if err != nil {
 				return err
 			}
@@ -418,6 +418,30 @@ func parse(layout, value string, date, time *int64) error {
 				haveDate = true
 				if day, err = integer(2); err != nil {
 					return err
+				}
+			case time != nil && main == 'f': // %f
+				if precision == 0 {
+					precision = 6
+				}
+
+				switch precision {
+				case 3: // %3f
+					millis, err := integer(3)
+					if err != nil {
+						return err
+					}
+					nsec = millis * 1000000
+				case 6: // %6f
+					micros, err := integer(6)
+					if err != nil {
+						return err
+					}
+					nsec = micros * 1000
+				case 9: // %9f
+					if nsec, err = integer(9); err != nil {
+						return err
+					}
+				default:
 				}
 			case date != nil && main == 'G': // %G
 				haveISODate = true
@@ -509,7 +533,7 @@ func parse(layout, value string, date, time *int64) error {
 		var (
 			valid             = i < len(layout)
 			isSpecifier       = len(buf) >= 2 && buf[0] == '%'
-			specifierComplete = isSpecifier && (buf[len(buf)-1] != '-' && buf[len(buf)-1] != 'E')
+			specifierComplete = isSpecifier && (buf[len(buf)-1] != '-' && buf[len(buf)-1] != 'E' && (buf[len(buf)-1] < '0' || buf[len(buf)-1] > '9'))
 			isText            = len(buf) >= 1 && buf[0] != '%'
 		)
 
