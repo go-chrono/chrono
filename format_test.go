@@ -467,6 +467,50 @@ func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 	}
 }
 
+func TestLocalTime_Format_timeOfDay(t *testing.T) {
+	t.Run("am", func(t *testing.T) {
+		time := chrono.LocalTimeOf(10, 0, 0, 0)
+		if formatted := time.Format("%I %P"); formatted != "10 am" {
+			t.Errorf("got %q, want '10 am'", formatted)
+		}
+	})
+
+	t.Run("AM", func(t *testing.T) {
+		time := chrono.LocalTimeOf(10, 0, 0, 0)
+		if formatted := time.Format("%I %p"); formatted != "10 AM" {
+			t.Errorf("got %q, want '10 AM'", formatted)
+		}
+	})
+
+	t.Run("pm", func(t *testing.T) {
+		time := chrono.LocalTimeOf(22, 0, 0, 0)
+		if formatted := time.Format("%I %P"); formatted != "10 pm" {
+			t.Errorf("got %q, want '10 pm'", formatted)
+		}
+	})
+
+	t.Run("PM", func(t *testing.T) {
+		time := chrono.LocalTimeOf(22, 0, 0, 0)
+		if formatted := time.Format("%I %p"); formatted != "10 PM" {
+			t.Errorf("got %q, want '10 PM'", formatted)
+		}
+	})
+
+	t.Run("noon", func(t *testing.T) {
+		time := chrono.LocalTimeOf(12, 0, 0, 0)
+		if formatted := time.Format("%I %P"); formatted != "12 pm" {
+			t.Errorf("got %q, want '12 pm'", formatted)
+		}
+	})
+
+	t.Run("midnight", func(t *testing.T) {
+		time := chrono.LocalTimeOf(0, 0, 0, 0)
+		if formatted := time.Format("%I %P"); formatted != "12 am" {
+			t.Errorf("got %q, want '12 am'", formatted)
+		}
+	})
+}
+
 func TestLocalDate_Format_eras(t *testing.T) {
 	t.Run("CE", func(t *testing.T) {
 		date := chrono.LocalDateOf(2022, chrono.June, 18)

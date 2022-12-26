@@ -153,11 +153,8 @@ NextChar:
 			case time != nil && main == 'H':
 				out = append(out, []rune(decimal(hour, 2))...)
 			case time != nil && main == 'I':
-				if hour <= 12 {
-					out = append(out, []rune(decimal(hour, 2))...)
-				} else {
-					out = append(out, []rune(decimal(hour%12, 2))...)
-				}
+				h, _ := convert24To12HourClock(hour)
+				out = append(out, []rune(decimal(h, 2))...)
 			case date != nil && main == 'j':
 				d := date.YearDay()
 				out = append(out, []rune(decimal(d, 3))...)
@@ -166,13 +163,13 @@ NextChar:
 			case time != nil && main == 'M':
 				out = append(out, []rune(decimal(min, 2))...)
 			case time != nil && main == 'p':
-				if hour < 12 {
+				if _, isAfternoon := convert24To12HourClock(hour); !isAfternoon {
 					out = append(out, []rune("AM")...)
 				} else {
 					out = append(out, []rune("PM")...)
 				}
 			case time != nil && main == 'P':
-				if hour < 12 {
+				if _, isAfternoon := convert24To12HourClock(hour); !isAfternoon {
 					out = append(out, []rune("am")...)
 				} else {
 					out = append(out, []rune("pm")...)
@@ -642,15 +639,26 @@ func parseSpecifier(buf []rune) (nopad, localed bool, main rune, err error) {
 	return nopad, localed, buf[len(buf)-1], nil
 }
 
-func convert12To24HourClock(hour int, isAfternoon bool) int {
-	if isAfternoon && hour == 12 {
+func convert12To24HourClock(hour12 int, isAfternoon bool) (hour24 int) {
+	if isAfternoon && hour12 == 12 {
 		return 12
 	} else if isAfternoon {
-		return hour + 12
-	} else if hour == 12 {
+		return hour12 + 12
+	} else if hour12 == 12 {
 		return 0
 	}
-	return hour
+	return hour12
+}
+
+func convert24To12HourClock(hour24 int) (hour12 int, isAfternoon bool) {
+	if hour24 == 0 {
+		return 12, false
+	} else if hour24 == 12 {
+		return 12, true
+	} else if hour24 < 12 {
+		return hour24, false
+	}
+	return hour24 % 12, true
 }
 
 func convertGregorianToISOYear(gregorianYear int, isBCE bool) (isoYear int, err error) {
