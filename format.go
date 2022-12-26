@@ -36,8 +36,8 @@ import (
 //   %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //
 //   %f: Equivalent to %6f.
-//  %3f: The millisecond offset within the represented second, padded to 3 digits with a leading 0.
-//  %6f: The microsecond offset within the represented second, padded to 6 digits with a leading 0.
+//  %3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with a leading 0.
+//  %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with a leading 0.
 //  %9f: The nanosecond offset within the represented second, padded to 9 digits with a leading 0.
 //
 // When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
