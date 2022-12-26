@@ -35,6 +35,11 @@ import (
 //   %M: The minute as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //   %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //
+//   %f: Equivalent to %6f.
+//  %3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with a leading 0.
+//  %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with a leading 0.
+//  %9f: The nanosecond offset within the represented second, padded to 9 digits with a leading 0.
+//
 // When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
 // However, when parsing using these specifiers, it is not required that the input string contains any leading zeros.
@@ -110,11 +115,11 @@ NextChar:
 		buf = append(buf, c)
 
 		if len(buf) >= 2 && buf[0] == '%' {
-			if c == '-' || c == 'E' {
+			if c == '-' || c == 'E' || (c >= '0' && c <= '9') {
 				continue NextChar
 			}
 
-			nopad, localed, main, err := parseSpecifier(buf)
+			nopad, localed, precision, main, err := parseSpecifier(buf)
 			if err != nil {
 				return "", err
 			}
@@ -147,6 +152,22 @@ NextChar:
 				}
 			case date != nil && main == 'd': // %d
 				out = append(out, []rune(decimal(day, 2))...)
+			case time != nil && main == 'f': // %f
+				if precision == 0 {
+					precision = 6
+				}
+
+				nanos := time.Nanosecond()
+				switch precision {
+				case 3: // %3f
+					out = append(out, []rune(decimal(divideAndRoundInt(nanos, 1000000), 3))...)
+				case 6: // %6f
+					out = append(out, []rune(decimal(divideAndRoundInt(nanos, 1000), 6))...)
+				case 9: // %9f
+					out = append(out, []rune(decimal(nanos, 9))...)
+				default:
+					panic(fmt.Sprintf("unsupported specifier '%df'", precision))
+				}
 			case date != nil && main == 'G': // %G
 				y, _ := date.ISOWeek()
 				out = append(out, []rune(decimal(y, 4))...)
@@ -347,7 +368,7 @@ func parse(layout, value string, date, time *int64) error {
 				return string(_lower[:i]), string(_original[:i])
 			}
 
-			_, localed, main, err := parseSpecifier(buf)
+			_, localed, precision, main, err := parseSpecifier(buf)
 			if err != nil {
 				return err
 			}
@@ -397,6 +418,30 @@ func parse(layout, value string, date, time *int64) error {
 				haveDate = true
 				if day, err = integer(2); err != nil {
 					return err
+				}
+			case time != nil && main == 'f': // %f
+				if precision == 0 {
+					precision = 6
+				}
+
+				switch precision {
+				case 3: // %3f
+					millis, err := integer(3)
+					if err != nil {
+						return err
+					}
+					nsec = millis * 1000000
+				case 6: // %6f
+					micros, err := integer(6)
+					if err != nil {
+						return err
+					}
+					nsec = micros * 1000
+				case 9: // %9f
+					if nsec, err = integer(9); err != nil {
+						return err
+					}
+				default:
 				}
 			case date != nil && main == 'G': // %G
 				haveISODate = true
@@ -488,7 +533,7 @@ func parse(layout, value string, date, time *int64) error {
 		var (
 			valid             = i < len(layout)
 			isSpecifier       = len(buf) >= 2 && buf[0] == '%'
-			specifierComplete = isSpecifier && (buf[len(buf)-1] != '-' && buf[len(buf)-1] != 'E')
+			specifierComplete = isSpecifier && (buf[len(buf)-1] != '-' && buf[len(buf)-1] != 'E' && (buf[len(buf)-1] < '0' || buf[len(buf)-1] > '9'))
 			isText            = len(buf) >= 1 && buf[0] != '%'
 		)
 
@@ -612,32 +657,34 @@ func parse(layout, value string, date, time *int64) error {
 	return nil
 }
 
-func parseSpecifier(buf []rune) (nopad, localed bool, main rune, err error) {
+func parseSpecifier(buf []rune) (nopad, localed bool, precision uint, main rune, err error) {
 	if len(buf) == 3 {
-		switch buf[1] {
-		case '-':
+		switch {
+		case buf[1] == '-':
 			nopad = true
-		case 'E':
+		case buf[1] == 'E':
 			localed = true
+		case buf[1] >= '0' && buf[1] <= '9':
+			precision = uint(buf[1] - 48)
 		default:
-			return false, false, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
+			return false, false, 0, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
 		}
 	} else if len(buf) == 4 {
 		switch buf[1] {
 		case '-':
 			nopad = true
 		default:
-			return false, false, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
+			return false, false, 0, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
 		}
 
 		switch buf[2] {
 		case 'E':
 			localed = true
 		default:
-			return false, false, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
+			return false, false, 0, 0, fmt.Errorf("unsupported modifier '%c'", buf[1])
 		}
 	}
-	return nopad, localed, buf[len(buf)-1], nil
+	return nopad, localed, precision, buf[len(buf)-1], nil
 }
 
 func convert12To24HourClock(hour12 int, isAfternoon bool) (hour24 int) {

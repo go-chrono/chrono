@@ -25,3 +25,12 @@ func addInt64(v1, v2 int64) (sum int64, underflows, overflows bool) {
 	}
 	return v1 + v2, false, false
 }
+
+// divideAndRoundInt divides x by y, then rounds the result to the nearest multiple of y, either up or down.
+func divideAndRoundInt(x, y int) int {
+	r := x % y
+	if r >= (y / 2) {
+		return (x - r + y) / y
+	}
+	return (x - r) / y
+}
