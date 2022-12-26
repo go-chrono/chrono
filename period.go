@@ -48,6 +48,9 @@ func (p Period) Format() string {
 }
 
 // Parse the period portion of an ISO 8601 duration.
+// This function supports the ISO 8601-2 extension, which allows weeks (W) to appear in combination
+// with years, months, and days, such as P3W1D. Additionally, it allows a sign character to appear
+// at the start of string, such as +P1M, or -P1M.
 func (p *Period) Parse(s string) error {
 	years, months, weeks, days, _, _, _, err := parseDuration(s, true, false)
 	if err != nil {
@@ -103,7 +106,6 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 	var value int
 	var onTime bool
 	var haveUnit bool
-	var haveWeeks int // 0 = undecided, 1 = W, -1 = YMD
 
 	for i := offset; i < len(s); i++ {
 		digit := (s[i] >= '0' && s[i] <= '9') || s[i] == '.' || s[i] == ','
@@ -133,33 +135,17 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 					return 0, 0, 0, 0, 0, 0, false, err
 				}
 
-				if s[i] == 'W' {
-					switch {
-					case haveWeeks == 0:
-						haveWeeks++
-					case haveWeeks < 0:
-						return 0, 0, 0, 0, 0, 0, false, fmt.Errorf("cannot mix 'W' with 'Y'/'M'/'D'")
-					}
-
+				switch s[i] {
+				case 'Y':
+					years = float32(v)
+				case 'M':
+					months = float32(v)
+				case 'W':
 					weeks = float32(v)
-				} else {
-					switch {
-					case haveWeeks == 0:
-						haveWeeks--
-					case haveWeeks > 0:
-						return 0, 0, 0, 0, 0, 0, false, fmt.Errorf("cannot mix 'Y'/'M'/'D' with 'W'")
-					}
-
-					switch s[i] {
-					case 'Y':
-						years = float32(v)
-					case 'M':
-						months = float32(v)
-					case 'D':
-						days = float32(v)
-					default:
-						return 0, 0, 0, 0, 0, 0, false, fmt.Errorf("unexpected '%c', expecting 'Y', 'M' or 'D'", s[i])
-					}
+				case 'D':
+					days = float32(v)
+				default:
+					return 0, 0, 0, 0, 0, 0, false, fmt.Errorf("unexpected '%c', expecting 'Y', 'M', 'W', or 'D'", s[i])
 				}
 
 				value = 0
