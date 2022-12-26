@@ -8,7 +8,7 @@ type Weekday int
 
 // The days of the week.
 const (
-	Monday Weekday = iota
+	Monday Weekday = iota + 1
 	Tuesday
 	Wednesday
 	Thursday
@@ -22,20 +22,20 @@ func (d Weekday) String() string {
 }
 
 func longWeekdayName(d int) string {
-	if d > int(Sunday) {
+	if d < int(Monday) || d > int(Sunday) {
 		return fmt.Sprintf("%%!Weekday(%d)", d)
 	}
-	return longDayNames[d]
+	return longDayNames[d-1]
 }
 
 var longDayNames = [7]string{
-	Monday:    "Monday",
-	Tuesday:   "Tuesday",
-	Wednesday: "Wednesday",
-	Thursday:  "Thursday",
-	Friday:    "Friday",
-	Saturday:  "Saturday",
-	Sunday:    "Sunday",
+	Monday - 1:    "Monday",
+	Tuesday - 1:   "Tuesday",
+	Wednesday - 1: "Wednesday",
+	Thursday - 1:  "Thursday",
+	Friday - 1:    "Friday",
+	Saturday - 1:  "Saturday",
+	Sunday - 1:    "Sunday",
 }
 
 // Month specifies the month of the year (January = 1, ...).

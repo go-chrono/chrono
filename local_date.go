@@ -84,7 +84,7 @@ func OfFirstWeekday(year int, month Month, weekday Weekday) LocalDate {
 	v := makeJDN(int64(year), int64(month), 1)
 	wd := (v + unixEpochJDN) % 7
 
-	if diff := int64(weekday) - wd; diff < 0 {
+	if diff := int64(weekday) - wd - 1; diff < 0 {
 		v += 7 - (diff * -1)
 	} else if diff > 0 {
 		v += diff
@@ -183,7 +183,7 @@ func (d LocalDate) Weekday() Weekday {
 }
 
 func getWeekday(ordinal int32) int {
-	return int((ordinal + int32(unixEpochJDN)) % 7)
+	return int((ordinal+int32(unixEpochJDN))%7) + 1
 }
 
 // YearDay returns the day of the year specified by d, in the range [1,365] for non-leap years, and [1,366] in leap years.
@@ -210,7 +210,7 @@ func getISOWeek(v int64) (isoYear, isoWeek int, err error) {
 	}
 
 	isoYear = year
-	isoWeek = int((10 + getOrdinalDate(isoYear, int(month), day) - getWeekday(int32(v)) - 1) / 7)
+	isoWeek = int((10 + getOrdinalDate(isoYear, int(month), day) - getWeekday(int32(v))) / 7)
 	if isoWeek == 0 {
 		if isLeapYear(isoYear - 1) {
 			return isoYear - 1, 53, nil

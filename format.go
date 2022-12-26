@@ -177,7 +177,7 @@ NextChar:
 			case time != nil && main == 'S': // %S
 				out = append(out, []rune(decimal(sec, 2))...)
 			case date != nil && main == 'u': // %u
-				out = append(out, []rune(strconv.Itoa(int(date.Weekday())+1))...)
+				out = append(out, []rune(strconv.Itoa(int(date.Weekday())))...)
 			case date != nil && main == 'V': // %V
 				_, w := date.ISOWeek()
 				out = append(out, []rune(decimal(w, 2))...)
@@ -685,10 +685,10 @@ func (d Weekday) short() string {
 }
 
 func shortWeekdayName(d int) string {
-	if d > int(Sunday) {
+	if d < int(Monday) || d > int(Sunday) {
 		return fmt.Sprintf("%%!Weekday(%d)", d)
 	}
-	return shortDayNames[d]
+	return shortDayNames[d-1]
 }
 
 var longDayNameLookup = map[string]int{
@@ -702,13 +702,13 @@ var longDayNameLookup = map[string]int{
 }
 
 var shortDayNames = [7]string{
-	Monday:    "Mon",
-	Tuesday:   "Tue",
-	Wednesday: "Wed",
-	Thursday:  "Thu",
-	Friday:    "Fri",
-	Saturday:  "Sat",
-	Sunday:    "Sun",
+	Monday - 1:    "Mon",
+	Tuesday - 1:   "Tue",
+	Wednesday - 1: "Wed",
+	Thursday - 1:  "Thu",
+	Friday - 1:    "Fri",
+	Saturday - 1:  "Sat",
+	Sunday - 1:    "Sun",
 }
 
 var shortDayNameLookup = map[string]int{

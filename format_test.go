@@ -572,7 +572,7 @@ func TestLocalTime_Parse_12HourClock(t *testing.T) {
 		}
 	})
 
-	t.Run("noon", func(t *testing.T) {
+	t.Run("midnight", func(t *testing.T) {
 		var time chrono.LocalTime
 		if err := time.Parse("%I %P", "12 am"); err != nil {
 			t.Errorf("failed to parse time: %v", err)

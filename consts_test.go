@@ -12,16 +12,20 @@ func TestWeekday_String(t *testing.T) {
 		expected string
 	}{
 		{
-			day:      chrono.Weekday(0),
+			day:      chrono.Weekday(1),
 			expected: "Monday",
 		},
 		{
-			day:      chrono.Weekday(6),
+			day:      chrono.Weekday(7),
 			expected: "Sunday",
 		},
 		{
-			day:      chrono.Weekday(7),
-			expected: "%!Weekday(7)",
+			day:      chrono.Weekday(0),
+			expected: "%!Weekday(0)",
+		},
+		{
+			day:      chrono.Weekday(8),
+			expected: "%!Weekday(8)",
 		},
 	} {
 		t.Run(tt.expected, func(t *testing.T) {
