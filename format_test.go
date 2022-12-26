@@ -668,6 +668,20 @@ func TestLocalDate_Parse_century(t *testing.T) {
 	})
 }
 
+func TestLocalDate_Parse_invalidDayOfYear(t *testing.T) {
+	var date chrono.LocalDate
+	if err := date.Parse("%Y-%m-%d (day %j)", "2020-01-20 (day 21)"); err == nil {
+		t.Errorf("expecting error but got nil")
+	}
+}
+
+func TestLocalDate_Parse_invalidISOWeekYear(t *testing.T) {
+	var date chrono.LocalDate
+	if err := date.Parse("%Y-%m-%d (week %V)", "2020-01-20 (week 2)"); err == nil {
+		t.Errorf("expecting error but got nil")
+	}
+}
+
 func TestLocalDate_Format_invalid_specifier(t *testing.T) {
 	for _, specifier := range []string{
 		"%C",
