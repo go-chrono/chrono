@@ -467,7 +467,7 @@ func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 	}
 }
 
-func TestLocalTime_Format_timeOfDay(t *testing.T) {
+func TestLocalTime_Format_12HourClock(t *testing.T) {
 	t.Run("am", func(t *testing.T) {
 		time := chrono.LocalTimeOf(10, 0, 0, 0)
 		if formatted := time.Format("%I %P"); formatted != "10 am" {
@@ -507,6 +507,74 @@ func TestLocalTime_Format_timeOfDay(t *testing.T) {
 		time := chrono.LocalTimeOf(0, 0, 0, 0)
 		if formatted := time.Format("%I %P"); formatted != "12 am" {
 			t.Errorf("got %q, want '12 am'", formatted)
+		}
+	})
+}
+
+func TestLocalTime_Parse_12HourClock(t *testing.T) {
+	t.Run("am", func(t *testing.T) {
+		var time chrono.LocalTime
+		if err := time.Parse("%I %P", "10 am"); err != nil {
+			t.Errorf("failed to parse time: %v", err)
+		}
+
+		if hour, _, _ := time.Clock(); hour != 10 {
+			t.Errorf("got %d, want 10", hour)
+		}
+	})
+
+	t.Run("AM", func(t *testing.T) {
+		var time chrono.LocalTime
+		if err := time.Parse("%I %p", "10 AM"); err != nil {
+			t.Errorf("failed to parse time: %v", err)
+		}
+
+		if hour, _, _ := time.Clock(); hour != 10 {
+			t.Errorf("got %d, want 10", hour)
+		}
+	})
+
+	t.Run("pm", func(t *testing.T) {
+		var time chrono.LocalTime
+		if err := time.Parse("%I %P", "10 pm"); err != nil {
+			t.Errorf("failed to parse time: %v", err)
+		}
+
+		if hour, _, _ := time.Clock(); hour != 22 {
+			t.Errorf("got %d, want 22", hour)
+		}
+	})
+
+	t.Run("PM", func(t *testing.T) {
+		var time chrono.LocalTime
+		if err := time.Parse("%I %p", "10 PM"); err != nil {
+			t.Errorf("failed to parse time: %v", err)
+		}
+
+		if hour, _, _ := time.Clock(); hour != 22 {
+			t.Errorf("got %d, want 22", hour)
+		}
+	})
+
+	t.Run("noon", func(t *testing.T) {
+		var time chrono.LocalTime
+		if err := time.Parse("%I %P", "12 pm"); err != nil {
+			t.Errorf("failed to parse time: %v", err)
+		}
+
+		if hour, _, _ := time.Clock(); hour != 12 {
+			t.Errorf("got %d, want 12", hour)
+		}
+	})
+
+	t.Run("noon", func(t *testing.T) {
+		var time chrono.LocalTime
+		if err := time.Parse("%I %P", "12 am"); err != nil {
+			t.Errorf("failed to parse time: %v", err)
+		}
+
+		if hour, _, _ := time.Clock(); hour != 0 {
+			t.Errorf("got %d, want 0", hour)
 		}
 	})
 }
