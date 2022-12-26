@@ -682,6 +682,13 @@ func TestLocalDate_Parse_invalidISOWeekYear(t *testing.T) {
 	}
 }
 
+func TestLocalDate_Parse_invalidDayOfWeek(t *testing.T) {
+	var date chrono.LocalDate
+	if err := date.Parse("%Y-%m-%d (weekday %A)", "2020-01-20 (weekday Thursday)"); err == nil {
+		t.Errorf("expecting error but got nil")
+	}
+}
+
 func TestLocalDate_Format_invalid_specifier(t *testing.T) {
 	for _, specifier := range []string{
 		"%C",
