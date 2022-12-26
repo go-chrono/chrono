@@ -9,8 +9,6 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-// TODO test notes 2-5.
-
 const (
 	formatYear  = 807
 	formatMonth = chrono.February
