@@ -190,15 +190,15 @@ var (
 		{chrono.ISO8601TimeTruncatedMinsExtended, "T01:05", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0)},
 		{chrono.ISO8601TimeTruncatedHours, "T01", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, 0, 0, 0)},
 		{chrono.ISO8601DateTimeSimple, "08070209T010502", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
-		{chrono.ISO8601DateTimeExtended, "0807-02-09T01:05:02", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekSimple, "0807W06", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekExtended, "0807-W06", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601DateTimeExtended, "0807-02-09T01:05:02", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
+		{chrono.ISO8601WeekSimple, "0807W06", chrono.LocalDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekExtended, "0807-W06", chrono.LocalDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0)},
 		{chrono.ISO8601WeekDaySimple, "0807W065", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
 		{chrono.ISO8601WeekDayExtended, "0807-W06-5", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601OrdinalDateSimple, "080740", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601OrdinalDateExtended, "0807-40", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateSimple, "0807040", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateExtended, "0807-040", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
 		{chrono.ANSIC, "Fri Feb 09 01:05:02 0807", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
-		{chrono.Kitchen, "01:05AM", chrono.LocalDateTimeOf(0, chrono.January, 1, formatHour, formatMin, formatSec, 0)},
+		{chrono.Kitchen, "01:05AM", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0)},
 	}
 )
 
