@@ -75,8 +75,8 @@ const (
 	ISO8601DateTruncated             = "%Y-%m"                                   // 2006-01
 	ISO8601TimeSimple                = "T%H%M%S"                                 // T030405
 	ISO8601TimeExtended              = "T%H:%M:%S"                               // T03:04:05
-	ISO8601TimeMillisSimple          = "T%H%M%S.%f"                              // T030405.000
-	ISO8601TimeMillisExtended        = "T%H:%M:%S.%f"                            // T03:04:05.000
+	ISO8601TimeMillisSimple          = "T%H%M%S.%3f"                             // T030405.000
+	ISO8601TimeMillisExtended        = "T%H:%M:%S.%3f"                           // T03:04:05.000
 	ISO8601TimeTruncatedMinsSimple   = "T%H%M"                                   // T0304
 	ISO8601TimeTruncatedMinsExtended = "T%H:%M"                                  // T03:04
 	ISO8601TimeTruncatedHours        = "T%H"                                     // T03

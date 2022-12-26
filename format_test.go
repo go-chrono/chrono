@@ -149,6 +149,33 @@ var (
 		{"%S", "02", checkSecond},
 		{"%-S", "2", checkSecond},
 	}
+
+	predefinedLayouts = []struct {
+		layout   string
+		text     string
+		datetime chrono.LocalDateTime
+	}{
+		{chrono.ISO8601DateSimple, "08070209", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601DateExtended, "0807-02-09", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601DateTruncated, "0807-02", chrono.LocalDateTimeOf(formatYear, formatMonth, 1, 0, 0, 0, 0)},
+		{chrono.ISO8601TimeSimple, "T010502", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0)},
+		{chrono.ISO8601TimeExtended, "T01:05:02", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0)},
+		{chrono.ISO8601TimeMillisSimple, "T010502.123", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000)},
+		{chrono.ISO8601TimeMillisExtended, "T01:05:02.123", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000)},
+		{chrono.ISO8601TimeTruncatedMinsSimple, "T0105", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0)},
+		{chrono.ISO8601TimeTruncatedMinsExtended, "T01:05", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0)},
+		{chrono.ISO8601TimeTruncatedHours, "T01", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, 0, 0, 0)},
+		{chrono.ISO8601DateTimeSimple, "08070209T010502", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
+		{chrono.ISO8601DateTimeExtended, "0807-02-09T01:05:02", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekSimple, "0807W06", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekExtended, "0807-W06", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekDaySimple, "0807W065", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekDayExtended, "0807-W06-5", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateSimple, "080740", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateExtended, "0807-40", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
+		{chrono.ANSIC, "Fri Feb 09 01:05:02 0807", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
+		{chrono.Kitchen, "01:05AM", chrono.LocalDateTimeOf(0, chrono.January, 1, formatHour, formatMin, formatSec, 0)},
+	}
 )
 
 func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
@@ -400,27 +427,13 @@ func Test_parse_extra_text_error(t *testing.T) {
 }
 
 func TestLocalDateTime_Parse_predefined_layouts(t *testing.T) {
-	date := chrono.LocalDateOf(2022, chrono.June, 18)
-	time := chrono.LocalTimeOf(21, 05, 30, 0)
-
-	for _, tt := range []struct {
-		layout   string
-		value    string
-		expected chrono.LocalDateTime
-	}{
-		{chrono.ISO8601DateSimple, "20220618", chrono.OfLocalDateAndTime(date, chrono.LocalTime{})},
-		{chrono.ISO8601DateExtended, "2022-06-18", chrono.OfLocalDateAndTime(date, chrono.LocalTime{})},
-		{chrono.ISO8601TimeSimple, "T210530", chrono.OfLocalDateAndTime(chrono.LocalDate(0), time)},
-		{chrono.ISO8601TimeExtended, "T21:05:30", chrono.OfLocalDateAndTime(chrono.LocalDate(0), time)},
-		{chrono.ISO8601DateTimeSimple, "20220618T210530", chrono.OfLocalDateAndTime(date, time)},
-		{chrono.ISO8601DateTimeExtended, "2022-06-18T21:05:30", chrono.OfLocalDateAndTime(date, time)},
-	} {
+	for _, tt := range predefinedLayouts {
 		t.Run(tt.layout, func(t *testing.T) {
 			var datetime chrono.LocalDateTime
-			if err := datetime.Parse(tt.layout, tt.value); err != nil {
-				t.Errorf("datetime.Parse(%s, %s) = %v, want nil", tt.layout, tt.value, err)
-			} else if datetime.Compare(tt.expected) != 0 {
-				t.Errorf("expecting %v, but got %v", tt.expected, datetime)
+			if err := datetime.Parse(tt.layout, tt.text); err != nil {
+				t.Errorf("datetime.Parse(%s, %s) = %v, want nil", tt.layout, tt.text, err)
+			} else if datetime.Compare(tt.datetime) != 0 {
+				t.Errorf("expecting %v, but got %v", tt.datetime, datetime)
 			}
 		})
 	}
@@ -450,23 +463,10 @@ func TestLocalDate_Parse_default_values(t *testing.T) {
 }
 
 func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
-	date := chrono.LocalDateOf(2022, chrono.June, 18)
-	time := chrono.LocalTimeOf(21, 05, 30, 0)
-
-	for _, tt := range []struct {
-		layout   string
-		expected string
-	}{
-		{chrono.ISO8601DateSimple, "20220618"},
-		{chrono.ISO8601DateExtended, "2022-06-18"},
-		{chrono.ISO8601TimeSimple, "T210530"},
-		{chrono.ISO8601TimeExtended, "T21:05:30"},
-		{chrono.ISO8601DateTimeSimple, "20220618T210530"},
-		{chrono.ISO8601DateTimeExtended, "2022-06-18T21:05:30"},
-	} {
+	for _, tt := range predefinedLayouts {
 		t.Run(tt.layout, func(t *testing.T) {
-			if formatted := chrono.OfLocalDateAndTime(date, time).Format(tt.layout); formatted != tt.expected {
-				t.Errorf("datetime.Format(%s) = %s, want %q", tt.layout, formatted, tt.expected)
+			if formatted := tt.datetime.Format(tt.layout); formatted != tt.text {
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.layout, formatted, tt.text)
 			}
 		})
 	}
