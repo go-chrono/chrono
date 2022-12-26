@@ -209,10 +209,34 @@ func TestDuration_Add(t *testing.T) {
 			expected: chrono.DurationOf((2 * chrono.Hour) + (1 * chrono.Second) + (300 * chrono.Millisecond)),
 		},
 		{
-			name:     "subtract",
+			name:     "add nanoseconds component",
+			d1:       chrono.DurationOf(750 * chrono.Millisecond),
+			d2:       chrono.DurationOf(550 * chrono.Millisecond),
+			expected: chrono.DurationOf((1 * chrono.Second) + (300 * chrono.Millisecond)),
+		},
+		{
+			name:     "add both components",
+			d1:       chrono.DurationOf((1 * chrono.Hour) + (750 * chrono.Millisecond)),
+			d2:       chrono.DurationOf((1 * chrono.Hour) + (550 * chrono.Millisecond)),
+			expected: chrono.DurationOf((2 * chrono.Hour) + (1 * chrono.Second) + (300 * chrono.Millisecond)),
+		},
+		{
+			name:     "minus seconds component",
+			d1:       chrono.DurationOf(2 * chrono.Hour),
+			d2:       chrono.DurationOf(-1 * chrono.Hour),
+			expected: chrono.DurationOf(1 * chrono.Hour),
+		},
+		{
+			name:     "minus nanoseconds component",
+			d1:       chrono.DurationOf(750 * chrono.Millisecond),
+			d2:       chrono.DurationOf(-550 * chrono.Millisecond),
+			expected: chrono.DurationOf(200 * chrono.Millisecond),
+		},
+		{
+			name:     "minus both components",
 			d1:       chrono.DurationOf((2 * chrono.Hour) + (750 * chrono.Millisecond)),
-			d2:       chrono.DurationOf(-((3 * chrono.Hour) + (550 * chrono.Millisecond))),
-			expected: chrono.DurationOf((-1 * chrono.Hour) + (200 * chrono.Millisecond)),
+			d2:       chrono.DurationOf(-((1 * chrono.Hour) + (550 * chrono.Millisecond))),
+			expected: chrono.DurationOf((1 * chrono.Hour) + (200 * chrono.Millisecond)),
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

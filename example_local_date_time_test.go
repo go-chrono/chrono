@@ -61,3 +61,11 @@ func ExampleLocalDateTime_Format() {
 	fmt.Println(dt.Format(chrono.ISO8601DateTimeExtended))
 	// Output: 2007-05-20T12:30:15
 }
+
+func ExampleLocalDateTime_Parse() {
+	var dt chrono.LocalDateTime
+	_ = dt.Parse(chrono.ISO8601DateTimeExtended, "2007-05-20T12:30:15")
+
+	fmt.Println(dt)
+	// Output: 2007-05-20 12:30:15
+}

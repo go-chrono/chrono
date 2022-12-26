@@ -36,13 +36,20 @@ fmt.Println(chrono.OfLocalDateAndTime(date, time))
 <br />
 ✅ [See more `LocalDateTime` examples](example_local_date_time_test.go).
 
-## Format dates and times
+## Parse and format dates and times
 
-`chrono` differs from the `time` package because it uses format codes instead of a mnemonic device. The format codes are borrowed from `strftime`, and therefore maybe familiar from other languages. The full list is documented [here](https://pkg.go.dev/github.com/go-chrono/chrono#pkg-constants), but here's a simple example:
+`chrono` differs from the `time` package because it uses format codes instead of a mnemonic device. The format codes are borrowed from `strftime`/`strptime`, and therefore maybe familiar from other languages. The full list is documented [here](https://pkg.go.dev/github.com/go-chrono/chrono#pkg-constants), but here's a simple example of formatting a time:
 
 ```golang
 time := chrono.LocalTimeOf(12, 30, 15, 0)
 fmt.Println(time.Format("%H:%M:%S"))
+```
+
+And parsing a time:
+
+```golang
+var time chrono.LocalTime
+time.Parse("%H:%M:%S", "12:30:15")
 ```
 
 There are also predefined layouts, similar to the `time` package, but with the addition of layouts compatible with ISO 8601.
