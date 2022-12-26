@@ -8,3 +8,5 @@ func SetupCenturyParsing(v int) {
 func TearDownCenturyParsing() {
 	overrideCentury = nil
 }
+
+var DivideAndRoundIntFunc = divideAndRoundInt

@@ -10,13 +10,15 @@ import (
 )
 
 const (
-	formatYear  = 807
-	formatMonth = chrono.February
-	formatDay   = 9
-	formatHour  = 1
-	formatMin   = 5
-	formatSec   = 2
-	formatNsec  = 0
+	formatYear   = 807
+	formatMonth  = chrono.February
+	formatDay    = 9
+	formatHour   = 1
+	formatMin    = 5
+	formatSec    = 2
+	formatMillis = 123
+	formatMicros = 123457
+	formatNanos  = 123456789
 )
 
 func setupCenturyParsing() {
@@ -96,6 +98,24 @@ func checkSecond(t *testing.T, time chrono.LocalTime) {
 	}
 }
 
+func checkMillis(t *testing.T, time chrono.LocalTime) {
+	if nanos := time.Nanosecond(); nanos != formatMillis*1000000 {
+		t.Errorf("time.Nanosecond() = %d, want %d", nanos, formatMillis*1000000)
+	}
+}
+
+func checkMicros(t *testing.T, time chrono.LocalTime) {
+	if nanos := time.Nanosecond(); nanos != formatMicros*1000 {
+		t.Errorf("time.Nanosecond() = %d, want %d", nanos, formatMillis*1000)
+	}
+}
+
+func checkNanos(t *testing.T, time chrono.LocalTime) {
+	if nanos := time.Nanosecond(); nanos != formatNanos {
+		t.Errorf("time.Nanosecond() = %d, want %d", nanos, formatNanos)
+	}
+}
+
 var (
 	dateSpecifiers = []struct {
 		specifier         string
@@ -148,6 +168,10 @@ var (
 		{"%-M", "5", checkMinute},
 		{"%S", "02", checkSecond},
 		{"%-S", "2", checkSecond},
+		{"%3f", "123", checkMillis},
+		{"%6f", "123457", checkMicros},
+		{"%9f", "123456789", checkNanos},
+		{"%f", "123457", checkMicros},
 	}
 
 	predefinedLayouts = []struct {
@@ -303,14 +327,14 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 					}
 				}()
 
-				chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier)
+				chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNanos).Format(tt.specifier)
 			}()
 		})
 	}
 
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
+			if formatted := chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNanos).Format(tt.specifier); formatted != tt.text {
 				t.Errorf("time.Format(%s) = %s, want %q", tt.specifier, formatted, tt.text)
 			}
 		})
@@ -320,7 +344,8 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
-			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.expectedFormatted {
+			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos).
+				Format(tt.specifier); formatted != tt.expectedFormatted {
 				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
 			}
 		})
@@ -328,7 +353,8 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 
 	for _, tt := range timeSpecifiers {
 		t.Run(tt.specifier, func(t *testing.T) {
-			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNsec).Format(tt.specifier); formatted != tt.text {
+			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos).
+				Format(tt.specifier); formatted != tt.text {
 				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.text)
 			}
 		})
