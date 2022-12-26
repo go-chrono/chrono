@@ -127,73 +127,73 @@ NextChar:
 			}
 
 			switch {
-			case date != nil && main == 'a':
+			case date != nil && main == 'a': // %a
 				out = append(out, []rune(date.Weekday().short())...)
-			case date != nil && main == 'A':
+			case date != nil && main == 'A': // %A
 				out = append(out, []rune(date.Weekday().String())...)
-			case date != nil && main == 'b':
+			case date != nil && main == 'b': // %b
 				out = append(out, []rune(shortMonthName(month))...)
-			case date != nil && main == 'B':
+			case date != nil && main == 'B': // %B
 				out = append(out, []rune(longMonthName(month))...)
 			case date != nil && main == 'C':
-				if localed { // 'EC'
+				if localed { // %EC
 					if _, isBCE := convertISOToGregorianYear(year); isBCE {
 						out = append(out, []rune("BCE")...)
 					} else {
 						out = append(out, []rune("CE")...)
 					}
-				} else {
+				} else { // %C
 					panic("unsupported specifier 'C'")
 				}
-			case date != nil && main == 'd':
+			case date != nil && main == 'd': // %d
 				out = append(out, []rune(decimal(day, 2))...)
-			case date != nil && main == 'G':
+			case date != nil && main == 'G': // %G
 				y, _ := date.ISOWeek()
 				out = append(out, []rune(decimal(y, 4))...)
-			case time != nil && main == 'H':
+			case time != nil && main == 'H': // %H
 				out = append(out, []rune(decimal(hour, 2))...)
-			case time != nil && main == 'I':
+			case time != nil && main == 'I': // %I
 				h, _ := convert24To12HourClock(hour)
 				out = append(out, []rune(decimal(h, 2))...)
-			case date != nil && main == 'j':
+			case date != nil && main == 'j': // %j
 				d := date.YearDay()
 				out = append(out, []rune(decimal(d, 3))...)
-			case date != nil && main == 'm':
+			case date != nil && main == 'm': // %m
 				out = append(out, []rune(decimal(int(month), 2))...)
-			case time != nil && main == 'M':
+			case time != nil && main == 'M': // %M
 				out = append(out, []rune(decimal(min, 2))...)
-			case time != nil && main == 'p':
+			case time != nil && main == 'p': // %p
 				if _, isAfternoon := convert24To12HourClock(hour); !isAfternoon {
 					out = append(out, []rune("AM")...)
 				} else {
 					out = append(out, []rune("PM")...)
 				}
-			case time != nil && main == 'P':
+			case time != nil && main == 'P': // %P
 				if _, isAfternoon := convert24To12HourClock(hour); !isAfternoon {
 					out = append(out, []rune("am")...)
 				} else {
 					out = append(out, []rune("pm")...)
 				}
-			case time != nil && main == 'S':
+			case time != nil && main == 'S': // %S
 				out = append(out, []rune(decimal(sec, 2))...)
-			case date != nil && main == 'u':
+			case date != nil && main == 'u': // %u
 				out = append(out, []rune(strconv.Itoa(int(date.Weekday())+1))...)
-			case date != nil && main == 'V':
+			case date != nil && main == 'V': // %V
 				_, w := date.ISOWeek()
 				out = append(out, []rune(decimal(w, 2))...)
-			case date != nil && main == 'y':
+			case date != nil && main == 'y': // %y
 				y := year
-				if localed { // 'Ey'
+				if localed { // %Ey
 					y, _ = convertISOToGregorianYear(y)
 				}
 				out = append(out, []rune(decimal(y%100, 2))...)
-			case date != nil && main == 'Y':
+			case date != nil && main == 'Y': // %Y
 				y := year
-				if localed { // 'EY'
+				if localed { // %EY
 					y, _ = convertISOToGregorianYear(y)
 				}
 				out = append(out, []rune(decimal(y, 4))...)
-			case main == '%':
+			case main == '%': // %%
 				out = append(out, '%')
 			default:
 				return "", fmt.Errorf("unsupported sequence %q", string(buf))
@@ -353,26 +353,26 @@ func parse(layout, value string, date, time *int64) error {
 			}
 
 			switch {
-			case date != nil && main == 'a':
+			case date != nil && main == 'a': // %a
 				lower, original := alphas(3)
 				var ok bool
 				if dayOfWeek, ok = shortDayNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short day name %q", original)
 				}
-			case date != nil && main == 'A':
+			case date != nil && main == 'A': // %A
 				lower, original := alphas(9)
 				var ok bool
 				if dayOfWeek, ok = longDayNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized day name %q", original)
 				}
-			case date != nil && main == 'b':
+			case date != nil && main == 'b': // %b
 				haveDate = true
 				lower, original := alphas(3)
 				var ok bool
 				if month, ok = shortMonthNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short month name %q", original)
 				}
-			case date != nil && main == 'B':
+			case date != nil && main == 'B': // %B
 				haveDate = true
 				lower, original := alphas(9)
 				var ok bool
@@ -380,7 +380,7 @@ func parse(layout, value string, date, time *int64) error {
 					return fmt.Errorf("unrecognized month name %q", original)
 				}
 			case date != nil && main == 'C':
-				if localed { // 'EC'
+				if localed { // %EC
 					haveGregorianYear = true
 					lower, original := alphas(3)
 					switch lower {
@@ -390,42 +390,42 @@ func parse(layout, value string, date, time *int64) error {
 					default:
 						return fmt.Errorf("unrecognized era %q", original)
 					}
-				} else {
+				} else { // %C
 					return fmt.Errorf("unsupported specifier 'C'")
 				}
-			case date != nil && main == 'd':
+			case date != nil && main == 'd': // %d
 				haveDate = true
 				if day, err = integer(2); err != nil {
 					return err
 				}
-			case date != nil && main == 'G':
+			case date != nil && main == 'G': // %G
 				haveISODate = true
 				if isoYear, err = integer(4); err != nil {
 					return err
 				}
-			case time != nil && main == 'H':
+			case time != nil && main == 'H': // %H
 				if hour, err = integer(2); err != nil {
 					return err
 				}
-			case time != nil && main == 'I':
+			case time != nil && main == 'I': // %I
 				have12HourClock = true
 				if hour, err = integer(2); err != nil {
 					return err
 				}
-			case date != nil && main == 'j':
+			case date != nil && main == 'j': // %j
 				if dayOfYear, err = integer(3); err != nil {
 					return err
 				}
-			case date != nil && main == 'm':
+			case date != nil && main == 'm': // %m
 				haveDate = true
 				if month, err = integer(2); err != nil {
 					return err
 				}
-			case time != nil && main == 'M':
+			case time != nil && main == 'M': // %M
 				if min, err = integer(2); err != nil {
 					return err
 				}
-			case time != nil && main == 'p':
+			case time != nil && main == 'p': // %p
 				lower, original := alphas(2)
 				switch strings.ToUpper(lower) {
 				case "AM":
@@ -434,7 +434,7 @@ func parse(layout, value string, date, time *int64) error {
 				default:
 					return fmt.Errorf("failed to parse time of day %q", original)
 				}
-			case time != nil && main == 'P':
+			case time != nil && main == 'P': // %P
 				lower, original := alphas(2)
 				switch lower {
 				case "am":
@@ -443,22 +443,22 @@ func parse(layout, value string, date, time *int64) error {
 				default:
 					return fmt.Errorf("failed to parse time of day %q", original)
 				}
-			case time != nil && main == 'S':
+			case time != nil && main == 'S': // %S
 				if sec, err = integer(2); err != nil {
 					return err
 				}
-			case date != nil && main == 'u':
+			case date != nil && main == 'u': // %u
 				if dayOfWeek, err = integer(1); err != nil {
 					return err
 				}
-			case date != nil && main == 'V':
+			case date != nil && main == 'V': // %V
 				haveISODate = true
 				if isoWeek, err = integer(2); err != nil {
 					return err
 				}
-			case date != nil && main == 'y':
+			case date != nil && main == 'y': // %y
 				haveDate = true
-				if localed { // 'Ey'
+				if localed { // %Ey
 					haveGregorianYear = true
 				}
 
@@ -466,16 +466,16 @@ func parse(layout, value string, date, time *int64) error {
 					return err
 				}
 				year += getCentury(year)
-			case date != nil && main == 'Y':
+			case date != nil && main == 'Y': // %Y
 				haveDate = true
-				if localed { // 'EY'
+				if localed { // %EY
 					haveGregorianYear = true
 				}
 
 				if year, err = integer(4); err != nil {
 					return err
 				}
-			case main == '%':
+			case main == '%': // %%
 			default:
 				return fmt.Errorf("unsupported sequence %q", string(buf))
 			}
