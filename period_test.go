@@ -104,6 +104,11 @@ func TestPeriod_Parse(t *testing.T) {
 		expected chrono.Period
 	}{
 		{
+			name:     "valid YMWD",
+			input:    "P14Y8M5W2D",
+			expected: chrono.Period{Years: 14, Months: 8, Weeks: 5, Days: 2},
+		},
+		{
 			name:     "valid YMD",
 			input:    "P14Y8M2D",
 			expected: chrono.Period{Years: 14, Months: 8, Days: 2},
@@ -124,9 +129,24 @@ func TestPeriod_Parse(t *testing.T) {
 			expected: chrono.Period{Years: 14},
 		},
 		{
+			name:     "valid MWD",
+			input:    "P8M5W2D",
+			expected: chrono.Period{Months: 8, Weeks: 5, Days: 2},
+		},
+		{
+			name:     "valid MW",
+			input:    "P8M5W",
+			expected: chrono.Period{Months: 8, Weeks: 5},
+		},
+		{
 			name:     "valid MD",
 			input:    "P8M2D",
 			expected: chrono.Period{Months: 8, Days: 2},
+		},
+		{
+			name:     "valid WD",
+			input:    "P5W2D",
+			expected: chrono.Period{Weeks: 5, Days: 2},
 		},
 		{
 			name:     "valid M",
@@ -153,20 +173,6 @@ func TestPeriod_Parse(t *testing.T) {
 			}
 		})
 	}
-
-	t.Run("mixing YMD and W", func(t *testing.T) {
-		for _, tt := range []string{
-			"P1Y2W",
-			"P6W2D",
-		} {
-			t.Run(tt, func(t *testing.T) {
-				var p chrono.Period
-				if err := p.Parse(tt); err == nil {
-					t.Errorf("expecting error but got nil: %v", err)
-				}
-			})
-		}
-	})
 }
 
 func TestParseDuration(t *testing.T) {
