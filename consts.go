@@ -4,7 +4,7 @@ import "fmt"
 
 // Weekday specifies the day of the week (Monday = 0, ...).
 // Not compatible standard library's time.Weekday (in which Sunday = 0, ...).
-type Weekday uint
+type Weekday int
 
 // The days of the week.
 const (
@@ -17,11 +17,15 @@ const (
 	Sunday
 )
 
-func (w Weekday) String() string {
-	if w > Sunday {
-		return fmt.Sprintf("%%!Weekday(%d)", w)
+func (d Weekday) String() string {
+	return longWeekdayName(int(d))
+}
+
+func longWeekdayName(d int) string {
+	if d > int(Sunday) {
+		return fmt.Sprintf("%%!Weekday(%d)", d)
 	}
-	return longDayNames[w]
+	return longDayNames[d]
 }
 
 var longDayNames = [7]string{
@@ -35,7 +39,7 @@ var longDayNames = [7]string{
 }
 
 // Month specifies the month of the year (January = 1, ...).
-type Month uint
+type Month int
 
 // The months of the year.
 const (
@@ -54,7 +58,11 @@ const (
 )
 
 func (m Month) String() string {
-	if m < January || m > December {
+	return longMonthName(int(m))
+}
+
+func longMonthName(m int) string {
+	if m < int(January) || m > int(December) {
 		return fmt.Sprintf("%%!Month(%d)", m)
 	}
 	return longMonthNames[m-1]
