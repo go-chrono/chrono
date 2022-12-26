@@ -49,11 +49,6 @@ func TestPeriod_Format(t *testing.T) {
 			expected: "P14Y8M2D",
 		},
 		{
-			name:     "YM",
-			input:    chrono.Period{Years: 14, Months: 8},
-			expected: "P14Y8M",
-		},
-		{
 			name:     "YD",
 			input:    chrono.Period{Years: 14, Days: 2},
 			expected: "P14Y2D",
