@@ -2,30 +2,27 @@ package chrono
 
 import (
 	"fmt"
-	"math"
+	"math/big"
 	"strconv"
 )
 
 // Duration represents a period of time with nanosecond precision,
 // with a range of approximately ±292,300,000,000 years.
 type Duration struct {
-	secs int64
-	nsec uint32
+	v big.Int
 }
 
 // DurationOf creates a new duration from the supplied extent.
 // Durations and extents are semantically equivalent, except that durations exceed,
 // and can therefore not be converted to, Go's basic types. Extents are represented as a single integer.
 func DurationOf(v Extent) Duration {
-	return Duration{
-		secs: int64(v / 1e9),
-		nsec: uint32(math.Mod(float64(v), 1e9)),
-	}
+	return Duration{v: *big.NewInt(int64(v))}
 }
 
-// Equal reports whether d and d2 represent the same duration of time.
-func (d Duration) Equal(d2 Duration) bool {
-	return d2.secs == d.secs && d2.nsec == d.nsec
+// Compare compares d with d2. If d is less than d2, it returns -1;
+// if d is greater than d2, it returns 1; if they're equal, it returns 0.
+func (d Duration) Compare(d2 Duration) int {
+	return d.v.Cmp(&d2.v)
 }
 
 // Add returns the duration d+d2.
@@ -46,60 +43,65 @@ func (d Duration) CanAdd(d2 Duration) bool {
 }
 
 func (d Duration) add(d2 Duration) (Duration, error) {
-	var out Duration
-	var under, over bool
-	if out.secs, under, over = addInt64(d.secs, d2.secs); under {
-		return Duration{}, fmt.Errorf("d2 + d underflows Duration seconds")
-	} else if over {
-		return Duration{}, fmt.Errorf("d2 + d overflows Duration seconds")
-	}
+	out := new(big.Int).Set(&d.v)
+	out.Add(out, &d2.v)
 
-	nsec := d.nsec + d2.nsec
-	secs := int64(nsec / 1e9)
-	out.nsec = nsec % 1e9
-
-	if out.secs, under, over = addInt64(out.secs, secs); under {
-		return Duration{}, fmt.Errorf("d2 + d underflows Duration nanoseconds")
-	} else if over {
-		return Duration{}, fmt.Errorf("d2 + d overflows Duration nanoseconds")
+	if out.Cmp(bigIntMinInt64) == -1 || out.Cmp(bigIntMaxInt64) == 1 {
+		return Duration{}, fmt.Errorf("duration out of range")
 	}
-	return out, nil
+	return Duration{v: *out}, nil
 }
 
 // Nanoseconds returns the duration as a floating point number of nanoseconds.
 func (d Duration) Nanoseconds() float64 {
-	return float64(d.secs*1e9) + float64(d.nsec)
+	out, _ := new(big.Float).SetInt(&d.v).Float64()
+	return out
 }
 
 // Microseconds returns the duration as a floating point number of microseconds.
 func (d Duration) Microseconds() float64 {
-	return float64(d.secs*1e6) + float64(d.nsec/1e3)
+	out, _ := new(big.Float).Quo(new(big.Float).SetInt(&d.v), bigFloatMicrosecondExtent).Float64()
+	return out
 }
 
 // Milliseconds returns the duration as a floating point number of milliseconds.
 func (d Duration) Milliseconds() float64 {
-	return float64(d.secs*1e3) + float64(d.nsec/1e6)
+	out, _ := new(big.Float).Quo(new(big.Float).SetInt(&d.v), bigFloatMillisecondExtent).Float64()
+	return out
 }
 
 // Seconds returns the duration as a floating point number of seconds.
 func (d Duration) Seconds() float64 {
-	return float64(d.secs) + float64(d.nsec/1e9)
+	out, _ := new(big.Float).Quo(new(big.Float).SetInt(&d.v), bigFloatSecondExtent).Float64()
+	return out
 }
 
 // Minutes returns the duration as a floating point number of minutes.
 func (d Duration) Minutes() float64 {
-	return float64(d.secs/60) + float64(d.nsec/1e9*60)
+	out, _ := new(big.Float).Quo(new(big.Float).SetInt(&d.v), bigFloatMinuteExtent).Float64()
+	return out
 }
 
 // Hours returns the duration as a floating point number of hours.
 func (d Duration) Hours() float64 {
-	return float64(d.secs)/(60*60) + float64(d.nsec)/(1e9*60*60)
+	out, _ := new(big.Float).Quo(new(big.Float).SetInt(&d.v), bigFloatHourExtent).Float64()
+	return out
 }
 
 // String returns a string formatted according to ISO 8601.
 // It is equivalent to calling Format with no arguments.
 func (d Duration) String() string {
 	return d.Format()
+}
+
+// Units returns the whole numbers of hours, minutes, seconds, and nanosecond offset represented by d.
+func (d Duration) Units() (hours, mins, secs, nsec int) {
+	_secs, _nsec, _ := d.integers()
+	hours = int(_secs / 3600)
+	mins = int((_secs / 60) % 60)
+	secs = int(_secs % 60)
+	nsec = int(_nsec)
+	return
 }
 
 // Designator of date and time elements present in ISO 8601.
@@ -127,10 +129,15 @@ const (
 // Fractional values are automatically applied to the least significant unit, if applicable.
 // In order to format only integers, the round functions should be used before calling this function.
 func (d Duration) Format(exclusive ...Designator) string {
-	return "P" + d.format(exclusive...)
+	out, neg := d.format(exclusive...)
+	out = "P" + out
+	if neg {
+		out = "-" + out
+	}
+	return out
 }
 
-func (d Duration) format(exclusive ...Designator) string {
+func (d Duration) format(exclusive ...Designator) (_ string, neg bool) {
 	values := make(map[Designator]float64, 3)
 	if len(exclusive) >= 1 {
 		for _, d := range exclusive {
@@ -142,48 +149,52 @@ func (d Duration) format(exclusive ...Designator) string {
 	_, m := values[Minutes]
 	_, s := values[Seconds]
 
+	secs, nsec, neg := d.integers()
+
 	switch {
 	case len(exclusive) == 0:
-		if v := float64(d.secs / 3600); v != 0 {
+		if v := float64(secs / 3600); v != 0 {
 			values[Hours] = v
 			h = true
 		}
 	case h && (m || s):
-		values[Hours] = float64(d.secs / 3600)
+		values[Hours] = float64(secs / 3600)
 	case h:
-		values[Hours] = (float64(d.secs) / 3600) + (float64(d.nsec) / 3.6e12)
+		values[Hours] = (float64(secs) / 3600) + (float64(nsec) / 3.6e12)
 	}
 
 	switch {
 	case len(exclusive) == 0:
-		if v := float64((d.secs % 3600) / 60); v != 0 {
+		if v := float64((secs % 3600) / 60); v != 0 {
 			values[Minutes] = v
 			m = true
 		}
 	case m && s && h:
-		values[Minutes] = float64((d.secs % 3600) / 60)
+		values[Minutes] = float64((secs % 3600) / 60)
 	case m && s:
-		values[Minutes] = float64(d.secs / 60)
+		values[Minutes] = float64(secs / 60)
 	case m && h:
-		values[Minutes] = (float64(d.secs%3600) / 60) + (float64(d.nsec) / 6e10)
+		values[Minutes] = (float64(secs%3600) / 60) + (float64(nsec) / 6e10)
 	case m:
-		values[Minutes] = (float64(d.secs) / 60) + (float64(d.nsec) / 6e10)
+		values[Minutes] = (float64(secs) / 60) + (float64(nsec) / 6e10)
 	}
 
 	switch {
 	case len(exclusive) == 0:
-		if v := float64(d.secs%60) + (float64(d.nsec) / 1e9); v != 0 {
+		if v := float64(secs%60) + (float64(nsec) / 1e9); v != 0 {
 			values[Seconds] = v
 			if h && !m {
 				values[Minutes] = 0
 			}
+		} else if !h && !m {
+			values[Seconds] = 0
 		}
 	case s && m:
-		values[Seconds] = float64(d.secs%60) + (float64(d.nsec) / 1e9)
+		values[Seconds] = float64(secs%60) + (float64(nsec) / 1e9)
 	case s && h:
-		values[Seconds] = float64(d.secs%3600) + (float64(d.nsec) / 1e9)
+		values[Seconds] = float64(secs%3600) + (float64(nsec) / 1e9)
 	case s:
-		values[Seconds] = float64(d.secs) + (float64(d.nsec) / 1e9)
+		values[Seconds] = float64(secs) + (float64(nsec) / 1e9)
 	}
 
 	out := "T"
@@ -198,27 +209,57 @@ func (d Duration) format(exclusive ...Designator) string {
 	if v, ok := values[Seconds]; ok {
 		out += strconv.FormatFloat(v, 'f', -1, 64) + "S"
 	}
-	return out
+	return out, neg
+}
+
+func (d Duration) integers() (secs int64, nsec uint32, neg bool) {
+	v := new(big.Int).Abs(&d.v)
+	var _nsec big.Int
+	_secs, _ := new(big.Int).DivMod(v, bigIntSecondExtent, &_nsec)
+	return _secs.Int64(), uint32(_nsec.Uint64()), d.v.Cmp(bigIntNegOne) == -1
 }
 
 // Parse the time portion of an ISO 8601 duration.
 func (d *Duration) Parse(s string) error {
-	_, _, _, _, secs, nsec, err := parseDuration(s, false, true)
+	_, _, _, _, secs, nsec, neg, err := parseDuration(s, false, true)
 	if err != nil {
 		return err
 	}
 
-	d.secs = secs
-	d.nsec = nsec
+	*d = makeDuration(secs, nsec, neg)
 	return nil
 }
 
-// MinDuration returns the minimum allowed Duration of 0 ns.
+// MinDuration returns the minimum supported duration.
 func MinDuration() Duration {
-	return Duration{secs: math.MinInt64, nsec: 0}
+	return Duration{v: *bigIntMinInt64}
 }
 
-// MaxDuration returns the maximum allowed Duration of 18446744073709551615 s and 999999999 ns (5.846e11 years).
+// MaxDuration returns the maximum supported duration.
 func MaxDuration() Duration {
-	return Duration{secs: math.MaxInt64, nsec: 1e9 - 1}
+	return Duration{v: *bigIntMaxInt64}
 }
+
+func makeDuration(secs int64, nsec uint32, neg bool) Duration {
+	out := new(big.Int).Mul(big.NewInt(secs), bigIntSecondExtent)
+	out.Add(out, big.NewInt(int64(nsec)))
+	if neg {
+		out.Neg(out)
+	}
+	return Duration{v: *out}
+}
+
+var (
+	bigIntNegOne = big.NewInt(-1)
+
+	bigIntMinInt64 = new(big.Int).Lsh(big.NewInt(int64(-Second)), 63)
+	bigIntMaxInt64 = new(big.Int).Add(new(big.Int).Lsh(big.NewInt(int64(Second)), 63), big.NewInt(-1))
+
+	bigIntSecondExtent = big.NewInt(int64(Second))
+
+	bigFloatMicrosecondExtent = big.NewFloat(float64(Microsecond))
+	bigFloatMillisecondExtent = big.NewFloat(float64(Millisecond))
+	bigFloatSecondExtent      = big.NewFloat(float64(Second))
+	bigFloatMinuteExtent      = big.NewFloat(float64(Minute))
+	bigFloatHourExtent        = big.NewFloat(float64(Hour))
+)
