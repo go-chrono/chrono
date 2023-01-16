@@ -267,7 +267,7 @@ func getISODateSimpleStr(year, week, day int) string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Time format specifiers encountered in the layout results in a panic.
 func (d LocalDate) Format(layout string) string {
-	out, err := format(layout, &d, nil)
+	out, err := formatDateAndTime(layout, &d, nil)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -279,7 +279,7 @@ func (d LocalDate) Format(layout string) string {
 // Time format specifiers encountered in the layout results in a panic.
 func (d *LocalDate) Parse(layout, value string) error {
 	v := int64(*d)
-	if err := parse(layout, value, &v, nil); err != nil {
+	if err := parseDateAndTime(layout, value, &v, nil); err != nil {
 		return err
 	}
 

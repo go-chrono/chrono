@@ -1,5 +1,10 @@
 package chrono
 
+import (
+	"fmt"
+	"math"
+)
+
 // Extent represents a period of time measured in nanoseconds.
 // The represented value is exactly equivalent to the standard library's time.Duration.
 type Extent int64
@@ -70,3 +75,74 @@ func (e Extent) Truncate(m Extent) Extent {
 	}
 	return e - e%m
 }
+
+// String returns a string formatted according to ISO 8601.
+// It is equivalent to calling Format with no arguments.
+func (e Extent) String() string {
+	return e.Format()
+}
+
+// Format the extent according to ISO 8601.
+// Behaves the same as Duration.Format.
+func (e Extent) Format(exclusive ...Designator) string {
+	abs := e.abs()
+	out, neg := formatDuration(int64(abs/Second), uint32(abs%Second), e < 0, exclusive...)
+	out = "P" + out
+	if neg {
+		out = "-" + out
+	}
+	return out
+}
+
+// Parse the time portion of an ISO 8601 duration.
+// Behaves the same as Duration.Parse.
+func (e *Extent) Parse(s string) error {
+	_, _, _, _, secs, nsec, neg, err := parseDuration(s, false, true)
+	if err != nil {
+		return err
+	}
+
+	if err := checkExtentRange(secs, nsec, neg); err != nil {
+		return err
+	}
+
+	*e = Extent(secs*int64(Second) + int64(nsec))
+	if neg {
+		*e *= -1
+	}
+
+	return nil
+}
+
+func (e Extent) abs() Extent {
+	if e < 0 {
+		return e * -1
+	}
+	return e
+}
+
+func checkExtentRange(secs int64, nsec uint32, neg bool) error {
+	if neg {
+		switch {
+		case -secs < minSeconds:
+			return fmt.Errorf("seconds underflow")
+		case -secs == minSeconds && nsec > uint32(maxNegNanos):
+			return fmt.Errorf("nanoseconds underflow")
+		}
+	} else {
+		switch {
+		case secs > maxSeconds:
+			return fmt.Errorf("seconds overflow")
+		case secs == maxSeconds && nsec > uint32(maxPosNanos):
+			return fmt.Errorf("nanoseconds overflow")
+		}
+	}
+	return nil
+}
+
+const (
+	minSeconds  = int64(math.MinInt64) / int64(Second)
+	maxNegNanos = -(int64(math.MinInt64) % -minSeconds)
+	maxSeconds  = int64(math.MaxInt64) / int64(Second)
+	maxPosNanos = int64(math.MaxInt64) % maxSeconds
+)

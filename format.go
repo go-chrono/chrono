@@ -98,7 +98,7 @@ const (
 	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
-func format(layout string, date *LocalDate, time *LocalTime) (string, error) {
+func formatDateAndTime(layout string, date *LocalDate, time *LocalTime) (string, error) {
 	var (
 		year  int
 		month int
@@ -255,7 +255,7 @@ func getCentury(year int) int {
 	}
 }
 
-func parse(layout, value string, date, time *int64) error {
+func parseDateAndTime(layout, value string, date, time *int64) error {
 	var (
 		haveDate          bool
 		haveGregorianYear bool

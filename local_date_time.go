@@ -133,7 +133,7 @@ func (d LocalDateTime) String() string {
 // See the constants section of the documentation to see how to represent the layout format.
 func (d LocalDateTime) Format(layout string) string {
 	date, time := d.Split()
-	out, err := format(layout, &date, &time)
+	out, err := formatDateAndTime(layout, &date, &time)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -144,7 +144,7 @@ func (d LocalDateTime) Format(layout string) string {
 // See the constants section of the documentation to see how to represent the layout format.
 func (d *LocalDateTime) Parse(layout, value string) error {
 	dv, tv := d.split()
-	if err := parse(layout, value, &dv, &tv); err != nil {
+	if err := parseDateAndTime(layout, value, &dv, &tv); err != nil {
 		return err
 	}
 
