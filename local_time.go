@@ -126,7 +126,7 @@ func (t LocalTime) String() string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Date format specifiers encountered in the layout results in a panic.
 func (t LocalTime) Format(layout string) string {
-	out, err := format(layout, nil, &t)
+	out, err := formatDateAndTime(layout, nil, &t)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -138,7 +138,7 @@ func (t LocalTime) Format(layout string) string {
 // Date format specifiers encountered in the layout results in a panic.
 func (t *LocalTime) Parse(layout, value string) error {
 	v := int64(t.v)
-	if err := parse(layout, value, nil, &v); err != nil {
+	if err := parseDateAndTime(layout, value, nil, &v); err != nil {
 		return err
 	}
 
