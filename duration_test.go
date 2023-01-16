@@ -369,7 +369,6 @@ func TestDuration_Parse(t *testing.T) {
 					})
 				})
 			}
-
 		})
 	}
 
