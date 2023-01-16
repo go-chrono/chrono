@@ -1,6 +1,7 @@
 package chrono_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/go-chrono/chrono"
@@ -43,4 +44,75 @@ func TestExtent_Units(t *testing.T) {
 	if nsec != 7 {
 		t.Errorf("expecting 7 nsecs, got %d", nsec)
 	}
+}
+
+func TestExtent_Format(t *testing.T) {
+	for _, tt := range formatDurationCases {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Run("positive", func(t *testing.T) {
+				if out := tt.of.Format(tt.exclusive...); out != tt.expected {
+					t.Errorf("formatted extent = %s, want %s", out, tt.expected)
+				}
+			})
+
+			t.Run("negative", func(t *testing.T) {
+				expected := tt.expected
+				if tt.of != 0 {
+					expected = "-" + expected
+				}
+
+				if out := (tt.of * -1).Format(tt.exclusive...); out != expected {
+					t.Errorf("formatted extent = %s, want %s", out, expected)
+				}
+			})
+		})
+	}
+}
+
+func TestExtent_Parse(t *testing.T) {
+	for _, tt := range parseDurationCases {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, sign := range []string{"", "+", "-"} {
+				t.Run(sign, func(t *testing.T) {
+					input := sign + tt.input
+					expected := tt.expected
+					if sign == "-" {
+						expected *= -1
+					}
+
+					run := func() {
+						var e chrono.Extent
+						if err := e.Parse(input); err != nil {
+							t.Errorf("failed to parse duation: %v", err)
+						} else if e != expected {
+							t.Errorf("parsed extent = %v, want %v", e, expected)
+						}
+					}
+
+					t.Run("dots", func(t *testing.T) {
+						run()
+					})
+
+					t.Run("commas", func(t *testing.T) {
+						tt.input = strings.ReplaceAll(tt.input, ".", ",")
+						run()
+					})
+				})
+			}
+		})
+	}
+
+	t.Run("overflows", func(t *testing.T) {
+		var e chrono.Extent
+		if err := e.Parse("PT9223372037S"); err == nil {
+			t.Error("expecting error but got nil")
+		}
+	})
+
+	t.Run("underflows", func(t *testing.T) {
+		var d chrono.Duration
+		if err := d.Parse("PT-9223372035S"); err == nil {
+			t.Error("expecting error but got nil")
+		}
+	})
 }

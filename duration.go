@@ -138,6 +138,11 @@ func (d Duration) Format(exclusive ...Designator) string {
 }
 
 func (d Duration) format(exclusive ...Designator) (_ string, neg bool) {
+	secs, nsec, neg := d.integers()
+	return formatDuration(secs, nsec, neg, exclusive...)
+}
+
+func formatDuration(secs int64, nsec uint32, neg bool, exclusive ...Designator) (_ string, isNeg bool) {
 	values := make(map[Designator]float64, 3)
 	if len(exclusive) >= 1 {
 		for _, d := range exclusive {
@@ -148,8 +153,6 @@ func (d Duration) format(exclusive ...Designator) (_ string, neg bool) {
 	_, h := values[Hours]
 	_, m := values[Minutes]
 	_, s := values[Seconds]
-
-	secs, nsec, neg := d.integers()
 
 	switch {
 	case len(exclusive) == 0:
