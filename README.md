@@ -10,7 +10,7 @@
 
 ---
 
-**Not all features are complete yet. See the [roadmap](https://github.com/go-chrono/chrono/projects/1) for the current state. If in doubt, [create an issue](https://github.com/go-chrono/chrono/issues) to ask a question or open a feature request.**
+**Not all features are complete yet. See the [roadmap](https://github.com/orgs/go-chrono/projects/1) for the current state. If in doubt, [create an issue](https://github.com/go-chrono/chrono/issues) to ask a question or open a feature request.**
 
 ---
 
