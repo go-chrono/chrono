@@ -7,7 +7,7 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-func TestLocalTime(t *testing.T) {
+func TestLocalTimeOf(t *testing.T) {
 	time := chrono.LocalTimeOf(12, 30, 59, 12345678)
 
 	hour, min, sec := time.Clock()
