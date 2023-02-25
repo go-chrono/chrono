@@ -28,6 +28,23 @@ func TestLocalTime(t *testing.T) {
 	}
 }
 
+func TestLocalTime_String(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		time     chrono.LocalTime
+		expected string
+	}{
+		{"simple", chrono.LocalTimeOf(9, 0, 0, 0), "09:00:00"},
+		{"nanoseconds", chrono.LocalTimeOf(9, 0, 0, 12345678), "09:00:00.012345678"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if output := tt.time.String(); output != tt.expected {
+				t.Errorf("LocalTime.String() = %s, want %s", output, tt.expected)
+			}
+		})
+	}
+}
+
 func TestLocalTime_BusinessHour(t *testing.T) {
 	time := chrono.LocalTimeOf(25, 0, 0, 0)
 
