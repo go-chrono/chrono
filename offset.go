@@ -17,8 +17,12 @@ type Offset Extent
 //   * OffsetOf(0, 30) = 00h:30m
 //   * OffsetOf(0, -30) = -00h:30m
 func OffsetOf(hours, mins int) Offset {
+	return Offset(makeOffset(hours, mins))
+}
+
+func makeOffset(hours, mins int) int64 {
 	if hours == 0 {
-		return Offset(Extent(mins) * Minute)
+		return int64(mins) * oneMinute
 	}
 
 	if mins < 0 {
@@ -26,9 +30,9 @@ func OffsetOf(hours, mins int) Offset {
 	}
 
 	if hours < 0 {
-		return Offset((Extent(hours) * Hour) - (Extent(mins) * Minute))
+		return (int64(hours) * oneHour) - (int64(mins) * oneMinute)
 	}
-	return Offset((Extent(hours) * Hour) + (Extent(mins) * Minute))
+	return (int64(hours) * oneHour) + (int64(mins) * oneMinute)
 }
 
 // String returns the time zone designator according to ISO 8601, truncating first to the minute.
@@ -36,7 +40,11 @@ func OffsetOf(hours, mins int) Offset {
 // In all other cases, a string in the format of ±hh:mm is returned.
 // Note that the sign and number of minutes is always included, even if 0.
 func (o Offset) String() string {
-	e := Extent(o).Truncate(Minute)
+	return offsetString(int64(o))
+}
+
+func offsetString(o int64) string {
+	e := truncateExtent(o, oneMinute)
 	if e == 0 {
 		return "Z"
 	}
@@ -46,8 +54,6 @@ func (o Offset) String() string {
 		sign = "-"
 	}
 
-	hours, mins, _, _ := e.abs().Units()
+	hours, mins, _, _ := extentUnits(extentAbs(e))
 	return fmt.Sprintf("%s%02d:%02d", sign, hours, mins)
 }
-
-// func Parse

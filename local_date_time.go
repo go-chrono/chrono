@@ -20,7 +20,7 @@ func LocalDateTimeOf(year int, month Month, day, hour, min, sec, nsec int) Local
 		panic(err.Error())
 	}
 
-	time, err := makeLocalTime(hour, min, sec, nsec)
+	time, err := makeTime(hour, min, sec, nsec)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -48,7 +48,7 @@ func (d LocalDateTime) Compare(d2 LocalDateTime) int {
 // Split returns separate LocalDate and LocalTime that together represent d.
 func (d LocalDateTime) Split() (LocalDate, LocalTime) {
 	date, time := d.split()
-	return LocalDate(date), LocalTime{v: Extent(time)}
+	return LocalDate(date), LocalTime{v: time}
 }
 
 // Add returns the datetime d+v.
@@ -116,7 +116,7 @@ func (d LocalDateTime) addDate(years, months, days int) (LocalDateTime, error) {
 
 func (d LocalDateTime) String() string {
 	date, time := d.split()
-	hour, min, sec, nsec := fromLocalTime(time)
+	hour, min, sec, nsec := fromTime(time)
 	year, month, day, err := fromLocalDate(date)
 	if err != nil {
 		panic(err.Error())
@@ -133,7 +133,7 @@ func (d LocalDateTime) String() string {
 // See the constants section of the documentation to see how to represent the layout format.
 func (d LocalDateTime) Format(layout string) string {
 	date, time := d.Split()
-	out, err := formatDateAndTime(layout, &date, &time)
+	out, err := formatDateAndTime(layout, (*int32)(&date), &time.v)
 	if err != nil {
 		panic(err.Error())
 	}

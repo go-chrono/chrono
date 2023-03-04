@@ -61,15 +61,23 @@ func (e Extent) Hours() float64 {
 
 // Units returns the whole numbers of hours, minutes, seconds, and nanosecond offset represented by e.
 func (e Extent) Units() (hours, mins, secs, nsec int) {
-	hours = int(e / Hour)
-	mins = int(e/Minute) % 60
-	secs = int(e/Second) % 60
-	nsec = int(e % Second)
+	return extentUnits(int64(e))
+}
+
+func extentUnits(e int64) (hours, mins, secs, nsec int) {
+	hours = int(e / oneHour)
+	mins = int(e/oneMinute) % 60
+	secs = int(e/oneSecond) % 60
+	nsec = int(e % oneSecond)
 	return
 }
 
 // Truncate returns the result of rounding e toward zero to a multiple of m.
 func (e Extent) Truncate(m Extent) Extent {
+	return Extent(truncateExtent(int64(e), int64(m)))
+}
+
+func truncateExtent(e, m int64) int64 {
 	if m <= 0 {
 		return e
 	}
@@ -85,8 +93,8 @@ func (e Extent) String() string {
 // Format the extent according to ISO 8601.
 // Behaves the same as Duration.Format.
 func (e Extent) Format(exclusive ...Designator) string {
-	abs := e.abs()
-	out, neg := formatDuration(int64(abs/Second), uint32(abs%Second), e < 0, exclusive...)
+	abs := extentAbs(int64(e))
+	out, neg := formatDuration(abs/oneSecond, uint32(abs%oneSecond), e < 0, exclusive...)
 	out = "P" + out
 	if neg {
 		out = "-" + out
@@ -114,7 +122,7 @@ func (e *Extent) Parse(s string) error {
 	return nil
 }
 
-func (e Extent) abs() Extent {
+func extentAbs(e int64) int64 {
 	if e < 0 {
 		return e * -1
 	}

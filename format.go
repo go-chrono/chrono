@@ -98,7 +98,7 @@ const (
 	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
-func formatDateAndTime(layout string, date *LocalDate, time *LocalTime) (string, error) {
+func formatDateAndTime(layout string, date *int32, time *int64) (string, error) {
 	var (
 		year  int
 		month int
@@ -117,8 +117,8 @@ func formatDateAndTime(layout string, date *LocalDate, time *LocalTime) (string,
 	}
 
 	if time != nil {
-		v := int64(time.v)
-		hour, min, sec, _ = fromLocalTime(v)
+		v := int64(*time)
+		hour, min, sec, _ = fromTime(v)
 	}
 
 	var buf, out []rune
@@ -145,9 +145,9 @@ NextChar:
 
 			switch {
 			case date != nil && main == 'a': // %a
-				out = append(out, []rune(date.Weekday().short())...)
+				out = append(out, []rune(shortWeekdayName(getWeekday(*date)))...)
 			case date != nil && main == 'A': // %A
-				out = append(out, []rune(date.Weekday().String())...)
+				out = append(out, []rune(longWeekdayName(getWeekday(*date)))...)
 			case date != nil && main == 'b': // %b
 				out = append(out, []rune(shortMonthName(month))...)
 			case date != nil && main == 'B': // %B
@@ -169,7 +169,7 @@ NextChar:
 					precision = 6
 				}
 
-				nanos := time.Nanosecond()
+				nanos := timeNanoseconds(*time)
 				switch precision {
 				case 3: // %3f
 					out = append(out, []rune(decimal(divideAndRoundInt(nanos, 1000000), 3))...)
@@ -181,7 +181,11 @@ NextChar:
 					panic(fmt.Sprintf("unsupported specifier '%df'", precision))
 				}
 			case date != nil && main == 'G': // %G
-				y, _ := date.ISOWeek()
+				v := int64(*date)
+				y, _, err := getISOWeek(v)
+				if err != nil {
+					panic(err.Error())
+				}
 				out = append(out, []rune(decimal(y, 4))...)
 			case time != nil && main == 'H': // %H
 				out = append(out, []rune(decimal(hour, 2))...)
@@ -189,7 +193,11 @@ NextChar:
 				h, _ := convert24To12HourClock(hour)
 				out = append(out, []rune(decimal(h, 2))...)
 			case date != nil && main == 'j': // %j
-				d := date.YearDay()
+				v := int64(*date)
+				d, err := getYearDay(v)
+				if err != nil {
+					panic(err.Error())
+				}
 				out = append(out, []rune(decimal(d, 3))...)
 			case date != nil && main == 'm': // %m
 				out = append(out, []rune(decimal(int(month), 2))...)
@@ -210,9 +218,13 @@ NextChar:
 			case time != nil && main == 'S': // %S
 				out = append(out, []rune(decimal(sec, 2))...)
 			case date != nil && main == 'u': // %u
-				out = append(out, []rune(strconv.Itoa(int(date.Weekday())))...)
+				out = append(out, []rune(strconv.Itoa(getWeekday(*date)))...)
 			case date != nil && main == 'V': // %V
-				_, w := date.ISOWeek()
+				v := int64(*date)
+				_, w, err := getISOWeek(v)
+				if err != nil {
+					panic(err.Error())
+				}
 				out = append(out, []rune(decimal(w, 2))...)
 			case date != nil && main == 'y': // %y
 				y := year
@@ -292,7 +304,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 	}
 
 	if time != nil {
-		hour, min, sec, nsec = fromLocalTime(*time)
+		hour, min, sec, nsec = fromTime(*time)
 		_, isAfternoon = convert24To12HourClock(hour)
 	}
 
@@ -660,7 +672,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 			hour = convert12To24HourClock(hour, isAfternoon)
 		}
 
-		v, err := makeLocalTime(hour, min, sec, nsec)
+		v, err := makeTime(hour, min, sec, nsec)
 		if err != nil {
 			return err
 		}
@@ -738,10 +750,6 @@ func convertISOToGregorianYear(isoYear int) (gregorianYear int, isBCE bool) {
 		return (isoYear * -1) + 1, true
 	}
 	return isoYear, false
-}
-
-func (d Weekday) short() string {
-	return shortWeekdayName(int(d))
 }
 
 func shortWeekdayName(d int) string {

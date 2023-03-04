@@ -12,15 +12,15 @@ func TestLocalTime(t *testing.T) {
 
 	hour, min, sec := time.Clock()
 	if hour != 12 {
-		t.Errorf("time.Hour() = %d, want 12", hour)
+		t.Errorf("time.Clock() hour = %d, want 12", hour)
 	}
 
 	if min != 30 {
-		t.Errorf("time.Minute() = %d, want 30", min)
+		t.Errorf("time.Clock() min = %d, want 30", min)
 	}
 
 	if sec != 59 {
-		t.Errorf("time.Second() = %d, want 59", sec)
+		t.Errorf("time.Clock() sec = %d, want 59", sec)
 	}
 
 	if nsec := time.Nanosecond(); nsec != 12345678 {
@@ -138,5 +138,15 @@ func TestLocalTime_Compare(t *testing.T) {
 				t.Errorf("t.Compare(t2) = %d, want %d", v, tt.expected)
 			}
 		})
+	}
+}
+
+func TestLocalTime_AtOffset(t *testing.T) {
+	time := chrono.LocalTimeOf(9, 0, 0, 0)
+	output := time.AtOffset(chrono.OffsetOf(2, 30))
+
+	expected := chrono.OffsetTimeOf(9, 0, 0, 0, 2, 30)
+	if output.Compare(expected) != 0 {
+		t.Errorf("time.AtOffset = %s, want %s", output, expected)
 	}
 }

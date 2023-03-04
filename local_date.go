@@ -188,8 +188,19 @@ func getWeekday(ordinal int32) int {
 
 // YearDay returns the day of the year specified by d, in the range [1,365] for non-leap years, and [1,366] in leap years.
 func (d LocalDate) YearDay() int {
-	year, month, day := d.Date()
-	return getOrdinalDate(year, int(month), day)
+	out, err := getYearDay(int64(d))
+	if err != nil {
+		panic(err.Error())
+	}
+	return out
+}
+
+func getYearDay(v int64) (int, error) {
+	year, month, day, err := fromLocalDate(v)
+	if err != nil {
+		return 0, err
+	}
+	return getOrdinalDate(year, int(month), day), nil
 }
 
 // ISOWeek returns the ISO 8601 year and week number in which d occurs.
@@ -267,7 +278,7 @@ func getISODateSimpleStr(year, week, day int) string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Time format specifiers encountered in the layout results in a panic.
 func (d LocalDate) Format(layout string) string {
-	out, err := formatDateAndTime(layout, &d, nil)
+	out, err := formatDateAndTime(layout, (*int32)(&d), nil)
 	if err != nil {
 		panic(err.Error())
 	}
