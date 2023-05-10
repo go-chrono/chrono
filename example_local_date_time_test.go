@@ -13,11 +13,11 @@ func ExampleLocalDateTimeOf() {
 	// Output: 2007-05-20 12:30:15
 }
 
-func ExampleOfLocalDateAndTime() {
+func ExampleOfLocalDateTime() {
 	d := chrono.LocalDateOf(2007, chrono.May, 20)
 	t := chrono.LocalTimeOf(12, 30, 15, 0)
 
-	dt := chrono.OfLocalDateAndTime(d, t)
+	dt := chrono.OfLocalDateTime(d, t)
 
 	fmt.Println(dt)
 	// Output: 2007-05-20 12:30:15

@@ -265,7 +265,7 @@ func TestLocalDateTime_Parse_predefined_layouts(t *testing.T) {
 			var datetime chrono.LocalDateTime
 			if err := datetime.Parse(tt.layout, tt.text); err != nil {
 				t.Errorf("datetime.Parse(%s, %s) = %v, want nil", tt.layout, tt.text, err)
-			} else if datetime.Compare(tt.datetime) != 0 {
+			} else if datetime.Compare(tt.datetime.Local()) != 0 {
 				t.Errorf("expecting %v, but got %v", tt.datetime, datetime)
 			}
 		})
@@ -298,7 +298,7 @@ func TestLocalDate_Parse_default_values(t *testing.T) {
 func TestLocalDateTime_Format_predefined_layouts(t *testing.T) {
 	for _, tt := range predefinedLayouts {
 		t.Run(tt.layout, func(t *testing.T) {
-			if formatted := tt.datetime.Format(tt.layout); formatted != tt.text {
+			if formatted := tt.datetime.Local().Format(tt.layout); formatted != tt.text {
 				t.Errorf("datetime.Format(%s) = %s, want %q", tt.layout, formatted, tt.text)
 			}
 		})

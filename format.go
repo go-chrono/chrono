@@ -36,9 +36,12 @@ import (
 //   %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //
 //   %f: Equivalent to %6f.
-//  %3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with a leading 0.
-//  %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with a leading 0.
-//  %9f: The nanosecond offset within the represented second, padded to 9 digits with a leading 0.
+//  %3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with leading 0s.
+//  %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with leading 0s.
+//  %9f: The nanosecond offset within the represented second, padded to 9 digits with leading 0s.
+//
+//   %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See note (6).
+//  %Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See note (6).
 //
 // When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
@@ -73,6 +76,8 @@ import (
 //       the time of day is assumed to be before noon, i.e. am or AM.
 //   (5) When a time is parsed that contains the time of day (%P or %p), any hour (%H) that is present must be valid
 //       on the 12-hour clock.
+//   (6) When UTC offsets are parsed into a type which do not include a time offset element, the offset is optional
+//       unless the offset is a representation of UTC. In other cases, an error will be returned.
 const (
 	// ISO 8601.
 	ISO8601DateSimple                = "%Y%m%d"                                  // 20060102
@@ -82,6 +87,8 @@ const (
 	ISO8601TimeExtended              = "T%H:%M:%S"                               // T03:04:05
 	ISO8601TimeMillisSimple          = "T%H%M%S.%3f"                             // T030405.000
 	ISO8601TimeMillisExtended        = "T%H:%M:%S.%3f"                           // T03:04:05.000
+	ISO8601TimeOffsetSimple          = "T%H%M%S%z"                               // T030405-0700
+	ISO8601TimeOffsetExtended        = "T%H:%M:%S:%Ez"                           // T03:04:05-07:00
 	ISO8601TimeTruncatedMinsSimple   = "T%H%M"                                   // T0304
 	ISO8601TimeTruncatedMinsExtended = "T%H:%M"                                  // T03:04
 	ISO8601TimeTruncatedHours        = "T%H"                                     // T03
@@ -98,7 +105,7 @@ const (
 	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
-func formatDateAndTime(layout string, date *int32, time *int64) (string, error) {
+func formatDateTimeOffset(layout string, date *int32, time *int64, offset int64) (string, error) {
 	var (
 		year  int
 		month int
@@ -238,6 +245,12 @@ NextChar:
 					y, _ = convertISOToGregorianYear(y)
 				}
 				out = append(out, []rune(decimal(y, 4))...)
+			case time != nil && main == 'z':
+				if localed { // %Ez
+					out = append(out, []rune(offsetString(offset, ":"))...)
+				} else { // %z
+					out = append(out, []rune(offsetString(offset, ""))...)
+				}
 			case main == '%': // %%
 				out = append(out, '%')
 			default:
@@ -605,7 +618,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 			return fmt.Errorf("invalid date %q", getDateSimpleStr(year, month, day))
 		}
 
-		_date, err := makeLocalDate(year, month, day)
+		_date, err := makeDate(year, month, day)
 		if err != nil {
 			return err
 		}

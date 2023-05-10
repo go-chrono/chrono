@@ -15,7 +15,7 @@ type LocalDateTime struct {
 // hour, minute, second, and nanosecond offset within the specified second.
 // The same range of values as supported by OfLocalDate and OfLocalTime are allowed here.
 func LocalDateTimeOf(year int, month Month, day, hour, min, sec, nsec int) LocalDateTime {
-	date, err := makeLocalDate(year, int(month), day)
+	date, err := makeDate(year, int(month), day)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -24,19 +24,20 @@ func LocalDateTimeOf(year int, month Month, day, hour, min, sec, nsec int) Local
 	if err != nil {
 		panic(err.Error())
 	}
-	return makeLocalDateTime(date, time)
+
+	return LocalDateTime{v: makeDateTime(date, time)}
 }
 
-// OfLocalDateAndTime combines the supplied LocalDate and LocalTime into a single LocalDateTime.
-func OfLocalDateAndTime(date LocalDate, time LocalTime) LocalDateTime {
-	return makeLocalDateTime(int64(date), int64(time.v))
+// OfLocalDateTime combines the supplied LocalDate and LocalTime into a single LocalDateTime.
+func OfLocalDateTime(date LocalDate, time LocalTime) LocalDateTime {
+	return LocalDateTime{v: makeDateTime(int64(date), time.v)}
 }
 
-func makeLocalDateTime(date, time int64) LocalDateTime {
+func makeDateTime(date, time int64) big.Int {
 	out := big.NewInt(date)
 	out.Mul(out, bigIntDayExtent)
 	out.Add(out, big.NewInt(time))
-	return LocalDateTime{v: *out}
+	return *out
 }
 
 // Compare compares d with d2. If d is before d2, it returns -1;
@@ -45,9 +46,9 @@ func (d LocalDateTime) Compare(d2 LocalDateTime) int {
 	return d.v.Cmp(&d2.v)
 }
 
-// Split returns separate LocalDate and LocalTime that together represent d.
+// Split returns separate a LocalDate and LocalTime that together represent d.
 func (d LocalDateTime) Split() (LocalDate, LocalTime) {
-	date, time := d.split()
+	date, time := splitDateAndTime(d.v)
 	return LocalDate(date), LocalTime{v: time}
 }
 
@@ -115,7 +116,7 @@ func (d LocalDateTime) addDate(years, months, days int) (LocalDateTime, error) {
 }
 
 func (d LocalDateTime) String() string {
-	date, time := d.split()
+	date, time := splitDateAndTime(d.v)
 	hour, min, sec, nsec := fromTime(time)
 	year, month, day, err := fromLocalDate(date)
 	if err != nil {
@@ -133,7 +134,7 @@ func (d LocalDateTime) String() string {
 // See the constants section of the documentation to see how to represent the layout format.
 func (d LocalDateTime) Format(layout string) string {
 	date, time := d.Split()
-	out, err := formatDateAndTime(layout, (*int32)(&date), &time.v)
+	out, err := formatDateTimeOffset(layout, (*int32)(&date), &time.v, 0)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -143,20 +144,20 @@ func (d LocalDateTime) Format(layout string) string {
 // Parse a formatted string and store the value it represents in d.
 // See the constants section of the documentation to see how to represent the layout format.
 func (d *LocalDateTime) Parse(layout, value string) error {
-	dv, tv := d.split()
+	dv, tv := splitDateAndTime(d.v)
 	if err := parseDateAndTime(layout, value, &dv, &tv); err != nil {
 		return err
 	}
 
-	*d = makeLocalDateTime(dv, tv)
+	d.v = makeDateTime(dv, tv)
 	return nil
 }
 
-func (d LocalDateTime) split() (date, time int64) {
-	v := new(big.Int).Set(&d.v)
+func splitDateAndTime(v big.Int) (date, time int64) {
+	vv := new(big.Int).Set(&v)
 
 	var _time big.Int
-	_date, _ := v.DivMod(v, bigIntDayExtent, &_time)
+	_date, _ := vv.DivMod(vv, bigIntDayExtent, &_time)
 	return _date.Int64(), _time.Int64()
 }
 
@@ -173,6 +174,6 @@ func MaxLocalDateTime() LocalDateTime {
 var (
 	bigIntDayExtent = big.NewInt(24 * int64(Hour))
 
-	minLocalDateTime = OfLocalDateAndTime(MinLocalDate(), LocalTimeOf(0, 0, 0, 0))
-	maxLocalDateTime = OfLocalDateAndTime(MaxLocalDate(), LocalTimeOf(99, 59, 59, 999999999))
+	minLocalDateTime = OfLocalDateTime(MinLocalDate(), LocalTimeOf(0, 0, 0, 0))
+	maxLocalDateTime = OfLocalDateTime(MaxLocalDate(), LocalTimeOf(99, 59, 59, 999999999))
 )

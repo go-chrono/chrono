@@ -83,7 +83,7 @@ func (t LocalTime) AtOffset(offset Offset) OffsetTime {
 // See the constants section of the documentation to see how to represent the layout format.
 // Date format specifiers encountered in the layout results in a panic.
 func (t LocalTime) Format(layout string) string {
-	out, err := formatDateAndTime(layout, nil, &t.v)
+	out, err := formatDateTimeOffset(layout, nil, &t.v, 0)
 	if err != nil {
 		panic(err.Error())
 	}

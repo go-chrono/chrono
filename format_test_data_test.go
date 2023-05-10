@@ -16,6 +16,7 @@ const (
 	formatMillis = 123
 	formatMicros = 123457
 	formatNanos  = 123456789
+	formatOffset = 0
 )
 
 func setupCenturyParsing() {
@@ -26,90 +27,107 @@ func tearDownCenturyParsing() {
 	chrono.TearDownCenturyParsing()
 }
 
-func checkYear(t *testing.T, date chrono.LocalDate) {
+type date interface {
+	Date() (year int, month chrono.Month, day int)
+	YearDay() int
+	ISOWeek() (isoYear, isoWeek int)
+}
+
+func checkYear(t *testing.T, date date) {
 	if y, _, _ := date.Date(); y != formatYear {
 		t.Errorf("date.Date() year = %d, want %d", y, formatYear)
 	}
 }
 
-func checkYearDay(t *testing.T, date chrono.LocalDate) {
+func checkYearDay(t *testing.T, date date) {
 	if d := date.YearDay(); d != 40 {
 		t.Errorf("date.YearDay() = %d, want %d", d, 40)
 	}
 }
 
-func checkMonth(t *testing.T, date chrono.LocalDate) {
+func checkMonth(t *testing.T, date date) {
 	if _, m, _ := date.Date(); m != formatMonth {
 		t.Errorf("date.Date() month = %d, want %d", m, formatMonth)
 	}
 }
 
-func checkDay(t *testing.T, date chrono.LocalDate) {
+func checkDay(t *testing.T, date date) {
 	if _, _, d := date.Date(); d != formatDay {
 		t.Errorf("date.Date() day = %d, want %d", d, formatDay)
 	}
 }
 
-func checkWeekday(t *testing.T, date chrono.LocalDate) {
+func checkWeekday(t *testing.T, date date) {
 	// A parsed weekday is only checked for correctness - it does not affect the resulting LocalDate.
 	// See note (3).
 }
 
-func checkISOYear(t *testing.T, date chrono.LocalDate) {
+func checkISOYear(t *testing.T, date date) {
 	if y, _ := date.ISOWeek(); y != 807 {
 		t.Errorf("date.ISOWeek() year = %d, want %d", y, 807)
 	}
 }
 
-func checkISOWeek(t *testing.T, date chrono.LocalDate) {
+func checkISOWeek(t *testing.T, date date) {
 	if _, w := date.ISOWeek(); w != 6 {
 		t.Errorf("date.ISOWeek() week = %d, want %d", w, 6)
 	}
 }
 
-func checkTimeOfDay(t *testing.T, time chrono.LocalTime) {
+type time interface {
+	Clock() (hour, min, sec int)
+	Nanosecond() int
+}
+
+func checkTimeOfDay(t *testing.T, time time) {
 	// Time of day is checked implicitly by checking the hour.
 }
 
-func checkHour12HourClock(t *testing.T, time chrono.LocalTime) {
+func checkHour12HourClock(t *testing.T, time time) {
 	if h, _, _ := time.Clock(); h != formatHour {
 		t.Errorf("time.Clock() hour = %d, want %d", h, formatHour)
 	}
 }
 
-func checkHour(t *testing.T, time chrono.LocalTime) {
+func checkHour(t *testing.T, time time) {
 	if h, _, _ := time.Clock(); h != formatHour {
 		t.Errorf("time.Clock() hour = %d, want %d", h, formatHour)
 	}
 }
 
-func checkMinute(t *testing.T, time chrono.LocalTime) {
+func checkMinute(t *testing.T, time time) {
 	if _, m, _ := time.Clock(); m != formatMin {
 		t.Errorf("time.Clock() min = %d, want %d", m, formatMin)
 	}
 }
 
-func checkSecond(t *testing.T, time chrono.LocalTime) {
+func checkSecond(t *testing.T, time time) {
 	if _, _, s := time.Clock(); s != formatSec {
 		t.Errorf("time.Clock() sec = %d, want %d", s, formatSec)
 	}
 }
 
-func checkMillis(t *testing.T, time chrono.LocalTime) {
+func checkMillis(t *testing.T, time time) {
 	if nanos := time.Nanosecond(); nanos != formatMillis*1000000 {
 		t.Errorf("time.Nanosecond() = %d, want %d", nanos, formatMillis*1000000)
 	}
 }
 
-func checkMicros(t *testing.T, time chrono.LocalTime) {
+func checkMicros(t *testing.T, time time) {
 	if nanos := time.Nanosecond(); nanos != formatMicros*1000 {
 		t.Errorf("time.Nanosecond() = %d, want %d", nanos, formatMillis*1000)
 	}
 }
 
-func checkNanos(t *testing.T, time chrono.LocalTime) {
+func checkNanos(t *testing.T, time time) {
 	if nanos := time.Nanosecond(); nanos != formatNanos {
 		t.Errorf("time.Nanosecond() = %d, want %d", nanos, formatNanos)
+	}
+}
+
+func checkOffset(t *testing.T, time chrono.OffsetTime) {
+	if offset := time.Offset(); offset != formatOffset {
+		t.Errorf("time.Offset() = %d, want %d", offset, formatOffset)
 	}
 }
 
@@ -117,7 +135,7 @@ var (
 	dateSpecifiers = []struct {
 		specifier         string
 		textToParse       string
-		checkParse        func(*testing.T, chrono.LocalDate)
+		checkParse        func(*testing.T, date)
 		expectedFormatted string
 	}{
 		{"%Y", "0807", checkYear, "0807"},
@@ -153,7 +171,7 @@ var (
 	timeSpecifiers = []struct {
 		specifier  string
 		text       string
-		checkParse func(*testing.T, chrono.LocalTime)
+		checkParse func(*testing.T, time)
 	}{
 		{"%P", "am", checkTimeOfDay},
 		{"%p", "AM", checkTimeOfDay},
@@ -171,30 +189,39 @@ var (
 		{"%f", "123457", checkMicros},
 	}
 
+	offsetTimeSpecifiers = []struct {
+		specifier  string
+		text       string
+		checkParse func(*testing.T, chrono.OffsetTime)
+	}{
+		{"%z", "+0000", checkOffset},
+		{"%Ez", "Z", checkOffset},
+	}
+
 	predefinedLayouts = []struct {
 		layout   string
 		text     string
-		datetime chrono.LocalDateTime
+		datetime chrono.OffsetDateTime
 	}{
-		{chrono.ISO8601DateSimple, "08070209", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601DateExtended, "0807-02-09", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601DateTruncated, "0807-02", chrono.LocalDateTimeOf(formatYear, formatMonth, 1, 0, 0, 0, 0)},
-		{chrono.ISO8601TimeSimple, "T010502", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0)},
-		{chrono.ISO8601TimeExtended, "T01:05:02", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0)},
-		{chrono.ISO8601TimeMillisSimple, "T010502.123", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000)},
-		{chrono.ISO8601TimeMillisExtended, "T01:05:02.123", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000)},
-		{chrono.ISO8601TimeTruncatedMinsSimple, "T0105", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0)},
-		{chrono.ISO8601TimeTruncatedMinsExtended, "T01:05", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0)},
-		{chrono.ISO8601TimeTruncatedHours, "T01", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, 0, 0, 0)},
-		{chrono.ISO8601DateTimeSimple, "08070209T010502", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
-		{chrono.ISO8601DateTimeExtended, "0807-02-09T01:05:02", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
-		{chrono.ISO8601WeekSimple, "0807W06", chrono.LocalDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekExtended, "0807-W06", chrono.LocalDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekDaySimple, "0807W065", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekDayExtended, "0807-W06-5", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601OrdinalDateSimple, "0807040", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ISO8601OrdinalDateExtended, "0807-040", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0)},
-		{chrono.ANSIC, "Fri Feb 09 01:05:02 0807", chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0)},
-		{chrono.Kitchen, "01:05AM", chrono.LocalDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0)},
+		{chrono.ISO8601DateSimple, "08070209", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601DateExtended, "0807-02-09", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601DateTruncated, "0807-02", chrono.OffsetDateTimeOf(formatYear, formatMonth, 1, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601TimeSimple, "T010502", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.ISO8601TimeExtended, "T01:05:02", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.ISO8601TimeMillisSimple, "T010502.123", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000, 0, 0)},
+		{chrono.ISO8601TimeMillisExtended, "T01:05:02.123", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000, 0, 0)},
+		{chrono.ISO8601TimeTruncatedMinsSimple, "T0105", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
+		{chrono.ISO8601TimeTruncatedMinsExtended, "T01:05", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
+		{chrono.ISO8601TimeTruncatedHours, "T01", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601DateTimeSimple, "08070209T010502", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.ISO8601DateTimeExtended, "0807-02-09T01:05:02", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.ISO8601WeekSimple, "0807W06", chrono.OffsetDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekExtended, "0807-W06", chrono.OffsetDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekDaySimple, "0807W065", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekDayExtended, "0807-W06-5", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateSimple, "0807040", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateExtended, "0807-040", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ANSIC, "Fri Feb 09 01:05:02 0807", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.Kitchen, "01:05AM", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
 	}
 )

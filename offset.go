@@ -1,8 +1,6 @@
 package chrono
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // UTC represents Universal Coordinated Time (UTC).
 const UTC = Offset(0)
@@ -40,10 +38,10 @@ func makeOffset(hours, mins int) int64 {
 // In all other cases, a string in the format of ±hh:mm is returned.
 // Note that the sign and number of minutes is always included, even if 0.
 func (o Offset) String() string {
-	return offsetString(int64(o))
+	return offsetString(int64(o), ":")
 }
 
-func offsetString(o int64) string {
+func offsetString(o int64, sep string) string {
 	e := truncateExtent(o, oneMinute)
 	if e == 0 {
 		return "Z"
@@ -55,5 +53,5 @@ func offsetString(o int64) string {
 	}
 
 	hours, mins, _, _ := extentUnits(extentAbs(e))
-	return fmt.Sprintf("%s%02d:%02d", sign, hours, mins)
+	return fmt.Sprintf("%s%02d%s%02d", sign, hours, sep, mins)
 }

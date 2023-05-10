@@ -33,12 +33,13 @@ func TestOffsetTime(t *testing.T) {
 	}
 }
 
-func TestOfLocalTimeAndOffset(t *testing.T) {
+func TestOfTimeOffset(t *testing.T) {
 	expectedLocalTime := chrono.LocalTimeOf(12, 30, 59, 12345678)
 	expectedOffset := chrono.OffsetOf(3, 30)
 
-	offsetTime := chrono.OfLocalTimeAndOffset(expectedLocalTime, expectedOffset)
-	localTime, offset := offsetTime.Split()
+	offsetTime := chrono.OfTimeOffset(expectedLocalTime, expectedOffset)
+	localTime := offsetTime.Local()
+	offset := offsetTime.Offset()
 
 	if localTime.Compare(expectedLocalTime) != 0 {
 		t.Errorf("LocalTime = %s, want %s", localTime, expectedLocalTime)
@@ -146,7 +147,8 @@ func TestOffsetTime_Add(t *testing.T) {
 
 func TestOffsetTime_Split(t *testing.T) {
 	offsetTime := chrono.OffsetTimeOf(12, 30, 59, 12345678, 3, 30)
-	localTime, offset := offsetTime.Split()
+	localTime := offsetTime.Local()
+	offset := offsetTime.Offset()
 
 	expectedLocalTime := chrono.LocalTimeOf(12, 30, 59, 12345678)
 	expectedOffset := chrono.OffsetOf(3, 30)
@@ -159,8 +161,10 @@ func TestOffsetTime_Split(t *testing.T) {
 }
 
 func TestOffsetTime_UTC(t *testing.T) {
-	time := chrono.OffsetTimeOf(12, 30, 59, 12345678, 3, 30)
-	localTime, offset := time.UTC().Split()
+	offsetTime := chrono.OffsetTimeOf(12, 30, 59, 12345678, 3, 30)
+	utc := offsetTime.UTC()
+	localTime := utc.Local()
+	offset := utc.Offset()
 
 	expectedLocalTime := chrono.LocalTimeOf(9, 0, 59, 12345678)
 	if localTime.Compare(expectedLocalTime) != 0 {
@@ -185,7 +189,10 @@ func TestOffsetTime_In(t *testing.T) {
 		{"negative", chrono.OffsetOf(-5, 30), chrono.LocalTimeOf(3, 30, 0, 0)},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			localTime, offset := originalTime.In(tt.offset).Split()
+			inOffset := originalTime.In(tt.offset)
+			localTime := inOffset.Local()
+			offset := inOffset.Offset()
+
 			if localTime.Compare(tt.expected) != 0 {
 				t.Errorf("time.In(%s).Split() time = %s, want %s", tt.offset, localTime, tt.expected)
 			}

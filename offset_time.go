@@ -6,7 +6,7 @@ type OffsetTime struct {
 }
 
 // OffsetTimeOf returns an OffsetTime that represents the specified hour, minute, second, and nanosecond offset within the specified second.
-// The supplied offset is applied to the returned OffsetTime in the same manner as AsOffset.
+// The supplied offset is applied to the returned OffsetTime in the same manner as OffsetOf.
 // A valid time is between 00:00:00 and 99:59:59.999999999. If an invalid time is specified, this function panics.
 func OffsetTimeOf(hour, min, sec, nsec, offsetHours, offsetMins int) OffsetTime {
 	v, err := makeTime(hour, min, sec, nsec)
@@ -19,8 +19,8 @@ func OffsetTimeOf(hour, min, sec, nsec, offsetHours, offsetMins int) OffsetTime 
 	}
 }
 
-// OfLocalTimeAndOffset combines a LocalTime and Offset into an OffsetTime.
-func OfLocalTimeAndOffset(time LocalTime, offset Offset) OffsetTime {
+// OfTimeOffset combines a LocalTime and Offset into an OffsetTime.
+func OfTimeOffset(time LocalTime, offset Offset) OffsetTime {
 	return OffsetTime{
 		v: time.v,
 		o: int64(offset),
@@ -39,11 +39,6 @@ func (t OffsetTime) BusinessHour() int {
 func (t OffsetTime) Clock() (hour, min, sec int) {
 	hour, min, sec, _ = fromTime(int64(t.v))
 	return
-}
-
-// Offset returns the offset of t.
-func (t OffsetTime) Offset() Offset {
-	return Offset(t.o)
 }
 
 // Nanosecond returns the nanosecond offset within the second specified by t, in the range [0, 999999999].
@@ -84,12 +79,7 @@ func (t OffsetTime) Compare(t2 OffsetTime) int {
 }
 
 func (t OffsetTime) String() string {
-	return timeString(t.v) + offsetString(t.o)
-}
-
-// Split returns the LocalTime and Offset represented by t.
-func (t OffsetTime) Split() (LocalTime, Offset) {
-	return LocalTime{v: t.v}, Offset(t.o)
+	return timeString(t.v) + offsetString(t.o, ":")
 }
 
 // In returns a copy of t, adjusted to the supplied offset.
@@ -105,6 +95,16 @@ func (t OffsetTime) UTC() OffsetTime {
 	return OffsetTime{v: t.utc()}
 }
 
+// Local returns the LocalTime represented by t.
+func (t OffsetTime) Local() LocalTime {
+	return LocalTime{v: t.v}
+}
+
+// Offset returns the offset of t.
+func (t OffsetTime) Offset() Offset {
+	return Offset(t.o)
+}
+
 func (t OffsetTime) utc() int64 {
 	return t.v - int64(t.o)
 }
@@ -113,7 +113,7 @@ func (t OffsetTime) utc() int64 {
 // See the constants section of the documentation to see how to represent the layout format.
 // Date format specifiers encountered in the layout results in a panic.
 func (t OffsetTime) Format(layout string) string {
-	out, err := formatDateAndTime(layout, nil, &t.v)
+	out, err := formatDateTimeOffset(layout, nil, &t.v, t.o)
 	if err != nil {
 		panic(err.Error())
 	}

@@ -36,8 +36,8 @@ func TestLocalDateTime(t *testing.T) {
 	}
 }
 
-func TestOfLocalDateAndTime(t *testing.T) {
-	datetime := chrono.OfLocalDateAndTime(
+func TestOfLocalDateTime(t *testing.T) {
+	datetime := chrono.OfLocalDateTime(
 		chrono.LocalDateOf(2020, chrono.March, 18),
 		chrono.LocalTimeOf(12, 30, 0, 100000000),
 	)

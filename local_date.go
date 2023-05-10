@@ -31,7 +31,7 @@ func LocalDateOf(year int, month Month, day int) LocalDate {
 		panic("invalid date")
 	}
 
-	out, err := makeLocalDate(year, int(month), day)
+	out, err := makeDate(year, int(month), day)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -71,7 +71,7 @@ func ofDayOfYear(year, day int) (int64, error) {
 		total += n
 	}
 
-	return makeLocalDate(year, int(month), day)
+	return makeDate(year, int(month), day)
 }
 
 // OfFirstWeekday returns the LocalDate that represents the first of the specified weekday of the supplied month and year.
@@ -108,7 +108,7 @@ func ofISOWeek(year, week, day int) (int64, error) {
 		return 0, fmt.Errorf("invalid week number")
 	}
 
-	jan4th, err := makeLocalDate(year, int(January), 4)
+	jan4th, err := makeDate(year, int(January), 4)
 	if err != nil {
 		return 0, err
 	}
@@ -133,7 +133,7 @@ func getDaysInYear(year int) int {
 	return 365
 }
 
-func makeLocalDate(year, month, day int) (int64, error) {
+func makeDate(year, month, day int) (int64, error) {
 	if !isDateInBounds(year, month, day) {
 		return 0, fmt.Errorf("date out of bounds")
 	}
@@ -257,7 +257,7 @@ func (d LocalDate) add(years, months, days int) (LocalDate, error) {
 		return 0, err
 	}
 
-	out, err := makeLocalDate(year+years, int(month)+months, day+days)
+	out, err := makeDate(year+years, int(month)+months, day+days)
 	return LocalDate(out), err
 }
 
@@ -278,7 +278,7 @@ func getISODateSimpleStr(year, week, day int) string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Time format specifiers encountered in the layout results in a panic.
 func (d LocalDate) Format(layout string) string {
-	out, err := formatDateAndTime(layout, (*int32)(&d), nil)
+	out, err := formatDateTimeOffset(layout, (*int32)(&d), nil, 0)
 	if err != nil {
 		panic(err.Error())
 	}
