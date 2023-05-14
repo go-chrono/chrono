@@ -88,7 +88,7 @@ const (
 	ISO8601TimeMillisSimple          = "T%H%M%S.%3f"                             // T030405.000
 	ISO8601TimeMillisExtended        = "T%H:%M:%S.%3f"                           // T03:04:05.000
 	ISO8601TimeOffsetSimple          = "T%H%M%S%z"                               // T030405-0700
-	ISO8601TimeOffsetExtended        = "T%H:%M:%S:%Ez"                           // T03:04:05-07:00
+	ISO8601TimeOffsetExtended        = "T%H:%M:%S%Ez"                            // T03:04:05-07:00
 	ISO8601TimeTruncatedMinsSimple   = "T%H%M"                                   // T0304
 	ISO8601TimeTruncatedMinsExtended = "T%H:%M"                                  // T03:04
 	ISO8601TimeTruncatedHours        = "T%H"                                     // T03
