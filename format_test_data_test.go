@@ -59,7 +59,7 @@ func checkDay(t *testing.T, date date) {
 	}
 }
 
-func checkWeekday(t *testing.T, date date) {
+func checkWeekday(_ *testing.T, _ date) {
 	// A parsed weekday is only checked for correctness - it does not affect the resulting LocalDate.
 	// See note (3).
 }
@@ -81,7 +81,7 @@ type time interface {
 	Nanosecond() int
 }
 
-func checkTimeOfDay(t *testing.T, time time) {
+func checkTimeOfDay(_ *testing.T, _ time) {
 	// Time of day is checked implicitly by checking the hour.
 }
 
