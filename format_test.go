@@ -100,6 +100,89 @@ func TestLocalDateTime_Parse_supported_specifiers(t *testing.T) {
 	}
 }
 
+func TestOffsetTime_Parse_suported_specifiers(t *testing.T) {
+	setupCenturyParsing()
+	defer tearDownCenturyParsing()
+
+	for _, tt := range dateSpecifiers {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				var time chrono.OffsetTime
+				time.Format(tt.specifier)
+			}()
+		})
+	}
+
+	for _, tt := range timeSpecifiers {
+		t.Run(tt.specifier, func(t *testing.T) {
+			var time chrono.OffsetTime
+			if err := time.Parse(tt.specifier, tt.text); err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			}
+
+			tt.checkParse(t, time)
+		})
+	}
+
+	for _, tt := range offsetTimeSpecifiersUTC {
+		t.Run(tt.specifier, func(t *testing.T) {
+			var time chrono.OffsetTime
+			if err := time.Parse(tt.specifier, tt.text); err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			}
+
+			tt.checkParse(t, time)
+		})
+	}
+}
+
+func TestOffsetDateTime_Parse_supported_specifiers(t *testing.T) {
+	setupCenturyParsing()
+	defer tearDownCenturyParsing()
+
+	for _, tt := range dateSpecifiers {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			var dt chrono.OffsetDateTime
+			if err := dt.Parse(tt.specifier, tt.textToParse); err != nil {
+				t.Errorf("failed to parse date: %v", err)
+			}
+
+			date, _ := dt.Split()
+			tt.checkParse(t, date)
+		})
+	}
+
+	for _, tt := range timeSpecifiers {
+		t.Run(tt.specifier, func(t *testing.T) {
+			var dt chrono.OffsetDateTime
+			if err := dt.Parse(tt.specifier, tt.text); err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			}
+
+			_, time := dt.Split()
+			tt.checkParse(t, time)
+		})
+	}
+
+	for _, tt := range offsetTimeSpecifiersUTC {
+		t.Run(tt.specifier, func(t *testing.T) {
+			var dt chrono.OffsetDateTime
+			if err := dt.Parse(tt.specifier, tt.text); err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			}
+
+			_, time := dt.Split()
+			tt.checkParse(t, time)
+		})
+	}
+}
+
 func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
 		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
@@ -163,6 +246,131 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos).
 				Format(tt.specifier); formatted != tt.text {
 				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.text)
+			}
+		})
+	}
+}
+
+func TestOffsetTime_Format_supported_specifiers(t *testing.T) {
+	for _, tt := range dateSpecifiers {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			func() {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Error("expecting panic that didn't occur")
+					}
+				}()
+
+				chrono.OffsetTimeOf(formatHour, formatMin, formatSec, formatNanos,
+					formatOffsetHours, formatOffsetMins).Format(tt.specifier)
+			}()
+		})
+	}
+
+	for _, tt := range timeSpecifiers {
+		t.Run(tt.specifier, func(t *testing.T) {
+			if formatted := chrono.OffsetTimeOf(formatHour, formatMin, formatSec, formatNanos,
+				formatOffsetHours, formatOffsetMins).Format(tt.specifier); formatted != tt.text {
+				t.Errorf("time.Format(%s) = %s, want %q", tt.specifier, formatted, tt.text)
+			}
+		})
+	}
+
+	for _, tt := range offsetTimeSpecifiersUTC {
+		t.Run(tt.specifier, func(t *testing.T) {
+			if formatted := chrono.OffsetTimeOf(formatHour, formatMin, formatSec, formatNanos,
+				formatOffsetHours, formatOffsetMins).Format(tt.specifier); formatted != tt.expectedFormatted {
+				t.Errorf("time.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
+			}
+		})
+	}
+}
+
+func TestOffsetDateTime_Format_supported_specifiers(t *testing.T) {
+	for _, tt := range dateSpecifiers {
+		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+			if formatted := chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos,
+				formatOffsetHours, formatOffsetMins).Format(tt.specifier); formatted != tt.expectedFormatted {
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
+			}
+		})
+	}
+
+	for _, tt := range timeSpecifiers {
+		t.Run(tt.specifier, func(t *testing.T) {
+			if formatted := chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos,
+				formatOffsetHours, formatOffsetMins).Format(tt.specifier); formatted != tt.text {
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.text)
+			}
+		})
+	}
+
+	for _, tt := range offsetTimeSpecifiersUTC {
+		t.Run(tt.specifier, func(t *testing.T) {
+			if formatted := chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos,
+				formatOffsetHours, formatOffsetMins).Format(tt.specifier); formatted != tt.expectedFormatted {
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
+			}
+		})
+	}
+}
+
+func TestOffsetTime_Parse_offset_formats(t *testing.T) {
+	for _, tt := range offsetTimeSpecifiers {
+		t.Run(fmt.Sprintf("%s-%s", tt.specifier, tt.text), func(t *testing.T) {
+			var time chrono.OffsetTime
+			if err := time.Parse(tt.specifier, tt.text); !tt.expectErr && err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			} else if err == nil && tt.expectErr {
+				t.Errorf("expecting error")
+			}
+
+			if v := time.Offset(); v != chrono.Offset(tt.expected) {
+				t.Errorf("time.Offset() = %d, want %d", v, tt.expected)
+			}
+		})
+	}
+}
+
+func TestOffsetDateTime_Parse_offset_formats(t *testing.T) {
+	for _, tt := range offsetTimeSpecifiers {
+		t.Run(fmt.Sprintf("%s-%s", tt.specifier, tt.text), func(t *testing.T) {
+			var dt chrono.OffsetDateTime
+			if err := dt.Parse(tt.specifier, tt.text); !tt.expectErr && err != nil {
+				t.Errorf("failed to parse time: %v", err)
+			} else if err == nil && tt.expectErr {
+				t.Errorf("expecting error")
+			}
+
+			if v := dt.Offset(); v != chrono.Offset(tt.expected) {
+				t.Errorf("dt.Offset() = %d, want %d", v, tt.expected)
+			}
+		})
+	}
+}
+
+func TestOffsetTime_Format_offset_formats(t *testing.T) {
+	for _, tt := range offsetTimeSpecifiers {
+		t.Run(fmt.Sprintf("%s-%s", tt.specifier, tt.text), func(t *testing.T) {
+			time := chrono.OfTimeOffset(chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNanos), chrono.Offset(tt.expected))
+			if formatted := time.Format(tt.specifier); formatted != tt.expectedFormatted {
+				t.Errorf("time = %s, time.Format(%s) = %s, want %q", time, tt.specifier, formatted, tt.expectedFormatted)
+			}
+		})
+	}
+}
+
+func TestOffsetDateTime_Format_offset_formats(t *testing.T) {
+	for _, tt := range offsetTimeSpecifiers {
+		t.Run(fmt.Sprintf("%s-%s", tt.specifier, tt.text), func(t *testing.T) {
+			dt := chrono.OfLocalDateTimeOffset(
+				chrono.LocalDateOf(formatYear, formatMonth, formatDay),
+				chrono.LocalTimeOf(formatHour, formatMin, formatSec, formatNanos),
+				tt.expected,
+			)
+
+			if formatted := dt.Format(tt.specifier); formatted != tt.expectedFormatted {
+				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
 			}
 		})
 	}

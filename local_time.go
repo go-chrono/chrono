@@ -40,8 +40,8 @@ func (t LocalTime) Nanosecond() int {
 }
 
 // Sub returns the duration t-u.
-func (t LocalTime) Sub(u LocalTime) Duration {
-	return DurationOf(Extent(t.v - u.v))
+func (t LocalTime) Sub(u LocalTime) Extent {
+	return Extent(t.v - u.v)
 }
 
 // Add returns the time t+v. If the result exceeds the maximum representable time, this function panics.
@@ -68,22 +68,25 @@ func (t LocalTime) Compare(t2 LocalTime) int {
 }
 
 func (t LocalTime) String() string {
-	return timeString(t.v)
+	hour, min, sec, nsec := fromTime(t.v)
+	return simpleTimeStr(hour, min, sec, nsec, nil)
 }
 
-// AtOffset returns the OffsetTime represeting t with the specified offset.
-func (t LocalTime) AtOffset(offset Offset) OffsetTime {
-	return OffsetTime{
-		v: t.v,
-		o: int64(offset),
-	}
+// In returns the OffsetTime represeting t with the specified offset.
+func (t LocalTime) In(offset Offset) OffsetTime {
+	return OffsetTime{v: t.v, o: int64(offset)}
+}
+
+// UTC returns the OffsetTime represeting t at the UTC offset.
+func (t LocalTime) UTC() OffsetTime {
+	return OffsetTime{v: t.v}
 }
 
 // Format returns a textual representation of the time value formatted according to the layout defined by the argument.
 // See the constants section of the documentation to see how to represent the layout format.
 // Date format specifiers encountered in the layout results in a panic.
 func (t LocalTime) Format(layout string) string {
-	out, err := formatDateTimeOffset(layout, nil, &t.v, 0)
+	out, err := formatDateTimeOffset(layout, nil, &t.v, nil)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -95,7 +98,7 @@ func (t LocalTime) Format(layout string) string {
 // Date format specifiers encountered in the layout results in a panic.
 func (t *LocalTime) Parse(layout, value string) error {
 	v := t.v
-	if err := parseDateAndTime(layout, value, nil, &v); err != nil {
+	if err := parseDateAndTime(layout, value, nil, &v, nil); err != nil {
 		return err
 	}
 

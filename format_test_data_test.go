@@ -7,16 +7,18 @@ import (
 )
 
 const (
-	formatYear   = 807
-	formatMonth  = chrono.February
-	formatDay    = 9
-	formatHour   = 1
-	formatMin    = 5
-	formatSec    = 2
-	formatMillis = 123
-	formatMicros = 123457
-	formatNanos  = 123456789
-	formatOffset = 0
+	formatYear        = 807
+	formatMonth       = chrono.February
+	formatDay         = 9
+	formatHour        = 1
+	formatMin         = 5
+	formatSec         = 2
+	formatMillis      = 123
+	formatMicros      = 123457
+	formatNanos       = 123456789
+	formatOffsetHours = 0
+	formatOffsetMins  = 0
+	formatOffset      = 0
 )
 
 func setupCenturyParsing() {
@@ -189,13 +191,55 @@ var (
 		{"%f", "123457", checkMicros},
 	}
 
-	offsetTimeSpecifiers = []struct {
-		specifier  string
-		text       string
-		checkParse func(*testing.T, chrono.OffsetTime)
+	offsetTimeSpecifiersUTC = []struct {
+		specifier         string
+		text              string
+		checkParse        func(*testing.T, chrono.OffsetTime)
+		expectedFormatted string
 	}{
-		{"%z", "+0000", checkOffset},
-		{"%Ez", "Z", checkOffset},
+		{"%z", "+0000", checkOffset, "Z"},
+		{"%Ez", "Z", checkOffset, "Z"},
+	}
+
+	offsetTimeSpecifiers = []struct {
+		specifier         string
+		text              string
+		expected          chrono.Extent
+		expectedFormatted string
+		expectErr         bool
+	}{
+		{"%z", "Z", 0 * chrono.Hour, "Z", false},
+		{"%z", "z", 0, "Z", true},
+		{"%z", "+00", 0, "Z", false},
+		{"%z", "-00", 0, "Z", false},
+		{"%z", "+0000", 0 * chrono.Hour, "Z", false},
+		{"%z", "-0000", 0 * chrono.Hour, "Z", false},
+		{"%z", "+00:00", 0, "Z", true},
+		{"%z", "-00:00", 0, "Z", true},
+		{"%z", "+02", 2 * chrono.Hour, "+0200", false},
+		{"%z", "-02", -2 * chrono.Hour, "-0200", false},
+		{"%z", "+0230", 2*chrono.Hour + 30*chrono.Minute, "+0230", false},
+		{"%z", "-0230", -2*chrono.Hour - 30*chrono.Minute, "-0230", false},
+		{"%z", "+02:", 0, "Z", true},
+		{"%z", "-02:", 0, "Z", true},
+		{"%z", "+02:30", 0, "Z", true},
+		{"%z", "-02:30", 0, "Z", true},
+		{"%Ez", "Z", 0 * chrono.Hour, "Z", false},
+		{"%Ez", "z", 0, "Z", true},
+		{"%Ez", "+00", 0, "Z", false},
+		{"%Ez", "-00", 0, "Z", false},
+		{"%Ez", "+0000", 0, "Z", true},
+		{"%Ez", "-0000", 0, "Z", true},
+		{"%Ez", "+00:00", 0 * chrono.Hour, "Z", false},
+		{"%Ez", "-00:00", 0 * chrono.Hour, "Z", false},
+		{"%Ez", "+02", 2 * chrono.Hour, "+02:00", false},
+		{"%Ez", "-02", -2 * chrono.Hour, "-02:00", false},
+		{"%Ez", "+0230", 0, "Z", true},
+		{"%Ez", "-0230", 0, "Z", true},
+		{"%Ez", "+02:", 0, "Z", true},
+		{"%Ez", "-02:", 0, "Z", true},
+		{"%Ez", "+02:30", 2*chrono.Hour + 30*chrono.Minute, "+02:30", false},
+		{"%Ez", "-02:30", -2*chrono.Hour - 30*chrono.Minute, "-02:30", false},
 	}
 
 	predefinedLayouts = []struct {

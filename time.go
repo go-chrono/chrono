@@ -47,13 +47,16 @@ func addTime(t, v int64) (int64, error) {
 	return out, nil
 }
 
-func timeString(t int64) string {
-	hour, min, sec, nsec := fromTime(int64(t))
+func simpleTimeStr(hour, min, sec, nsec int, offset *int64) string {
 	out := fmt.Sprintf("%02d:%02d:%02d", hour, min, sec)
 	if nsec != 0 {
 		out += fmt.Sprintf(".%09d", nsec)
 	}
-	return out
+
+	if offset == nil {
+		return out
+	}
+	return out + offsetString(*offset, ":")
 }
 
 func timeBusinessHour(t int64) int {

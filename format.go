@@ -40,8 +40,8 @@ import (
 //  %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with leading 0s.
 //  %9f: The nanosecond offset within the represented second, padded to 9 digits with leading 0s.
 //
-//   %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See note (6).
-//  %Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See note (6).
+//   %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See note (6) and (7).
+//  %Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See note (6) and (7).
 //
 // When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
@@ -76,19 +76,19 @@ import (
 //       the time of day is assumed to be before noon, i.e. am or AM.
 //   (5) When a time is parsed that contains the time of day (%P or %p), any hour (%H) that is present must be valid
 //       on the 12-hour clock.
-//   (6) When UTC offsets are parsed into a type which do not include a time offset element, the offset is optional
-//       unless the offset is a representation of UTC. In other cases, an error will be returned.
+//   (6) When UTC offsets are parsed into a type which do not include a time offset element, the offset present in the string is ignored.
+//       When UTC offsets are fornatted from a type which do not include a time offset element, the offset will not be present in the returned string.
+//   (7) When UTC offsets are parsed (%z or %Ez), the shorted form of ±HH is accepted.
+//       However, when formatted, only the full forms are returned (either ±HHMM or ±HH:MM).
 const (
 	// ISO 8601.
 	ISO8601DateSimple                = "%Y%m%d"                                  // 20060102
 	ISO8601DateExtended              = "%Y-%m-%d"                                // 2006-01-02
 	ISO8601DateTruncated             = "%Y-%m"                                   // 2006-01
-	ISO8601TimeSimple                = "T%H%M%S"                                 // T030405
-	ISO8601TimeExtended              = "T%H:%M:%S"                               // T03:04:05
-	ISO8601TimeMillisSimple          = "T%H%M%S.%3f"                             // T030405.000
-	ISO8601TimeMillisExtended        = "T%H:%M:%S.%3f"                           // T03:04:05.000
-	ISO8601TimeOffsetSimple          = "T%H%M%S%z"                               // T030405-0700
-	ISO8601TimeOffsetExtended        = "T%H:%M:%S%Ez"                            // T03:04:05-07:00
+	ISO8601TimeSimple                = "T%H%M%S%z"                               // T030405-0700
+	ISO8601TimeExtended              = "T%H:%M:%S%Ez"                            // T03:04:05-07:00
+	ISO8601TimeMillisSimple          = "T%H%M%S.%3f%z"                           // T030405.000-0700
+	ISO8601TimeMillisExtended        = "T%H:%M:%S.%3f%Ez"                        // T03:04:05.000-07:00
 	ISO8601TimeTruncatedMinsSimple   = "T%H%M"                                   // T0304
 	ISO8601TimeTruncatedMinsExtended = "T%H:%M"                                  // T03:04
 	ISO8601TimeTruncatedHours        = "T%H"                                     // T03
@@ -105,7 +105,7 @@ const (
 	Kitchen = "%I:%M%p"              // 3:04PM
 )
 
-func formatDateTimeOffset(layout string, date *int32, time *int64, offset int64) (string, error) {
+func formatDateTimeOffset(layout string, date *int32, time *int64, offset *int64) (string, error) {
 	var (
 		year  int
 		month int
@@ -118,7 +118,7 @@ func formatDateTimeOffset(layout string, date *int32, time *int64, offset int64)
 	var err error
 	if date != nil {
 		v := int64(*date)
-		if year, month, day, err = fromLocalDate(v); err != nil {
+		if year, month, day, err = fromDate(v); err != nil {
 			return "", err
 		}
 	}
@@ -246,10 +246,16 @@ NextChar:
 				}
 				out = append(out, []rune(decimal(y, 4))...)
 			case time != nil && main == 'z':
+				// Formatting %z from a type that contains no offset (e.g. LocalTime, LocalDateTime)
+				// is valid, although it will not be printed.
+				if offset == nil {
+					break
+				}
+
 				if localed { // %Ez
-					out = append(out, []rune(offsetString(offset, ":"))...)
+					out = append(out, []rune(offsetString(*offset, ":"))...)
 				} else { // %z
-					out = append(out, []rune(offsetString(offset, ""))...)
+					out = append(out, []rune(offsetString(*offset, ""))...)
 				}
 			case main == '%': // %%
 				out = append(out, '%')
@@ -280,7 +286,12 @@ func getCentury(year int) int {
 	}
 }
 
-func parseDateAndTime(layout, value string, date, time *int64) error {
+const (
+	extraTextErrMsg   = "parsing time \"%s\": extra text: \"%s\""
+	endOfStringErrMsg = "parsing time \"%s\": end of string"
+)
+
+func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 	var (
 		haveDate          bool
 		haveGregorianYear bool
@@ -307,7 +318,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 
 	var err error
 	if date != nil {
-		if year, month, day, err = fromLocalDate(*date); err != nil {
+		if year, month, day, err = fromDate(*date); err != nil {
 			return err
 		}
 
@@ -354,15 +365,26 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 
 		processSpecifier := func() error {
 			integer := func(maxLen int) (int, error) {
+				var neg bool
+
 				str := value[pos:]
-				if len(str) >= 1 && (str[0] == '+' || str[0] == '-') {
-					maxLen++
+				if len(str) >= 1 {
+					switch str[0] {
+					case '-':
+						neg = true
+						fallthrough
+					case '+':
+						str = str[1:]
+						pos++
+					}
 				}
 
-				if l := len(str); l < maxLen {
+				if l := len(str); l == 0 {
+					return 0, fmt.Errorf(endOfStringErrMsg, value)
+				} else if l < maxLen {
 					maxLen = l
 				}
-				str = value[pos : pos+maxLen]
+				str = str[:maxLen]
 
 				var i int
 				for _, char := range str {
@@ -373,7 +395,32 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 				}
 				pos += i
 
-				return strconv.Atoi(str[:i])
+				if i == 0 {
+					return 0, fmt.Errorf(extraTextErrMsg, value, str)
+				}
+
+				out, err := strconv.Atoi(str[:i])
+				if err != nil {
+					return 0, fmt.Errorf(extraTextErrMsg, value, str)
+				}
+
+				if neg {
+					return out * -1, nil
+				}
+				return out, nil
+			}
+
+			hasMore := func() bool {
+				return len(value[pos:]) > 0
+			}
+
+			casedAlpha := func(char rune) (rune, bool) {
+				r := rune(value[pos:][0])
+				if r == char {
+					pos++
+					return r, true
+				}
+				return r, false
 			}
 
 			alphas := func(maxLen int) (lower, original string) {
@@ -553,6 +600,45 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 				if year, err = integer(4); err != nil {
 					return err
 				}
+			case time != nil && main == 'z': // %z
+				// Parsing %z into a type that contains no offset (e.g. LocalTime, LocalDateTime)
+				// is valid, although the value itself is ignored.
+				if offset == nil {
+					break
+				}
+
+				// Catch the 'Z' case, which is valid for both %z and %Ez.
+				if _, ok := casedAlpha('Z'); ok {
+					*offset = 0
+					break
+				}
+
+				h, err := integer(2)
+				if err != nil {
+					return err
+				}
+
+				var m int
+				if !hasMore() {
+					goto CalculateOffset
+				}
+
+				if localed { // %Ez
+					if actual, ok := casedAlpha(':'); !ok {
+						return fmt.Errorf(extraTextErrMsg, value, string(actual))
+					}
+				}
+
+				if m, err = integer(2); err != nil {
+					return err
+				}
+
+			CalculateOffset:
+				if h >= 0 {
+					*offset = int64(h)*oneHour + int64(m)*oneMinute
+				} else {
+					*offset = int64(h)*oneHour - int64(m)*oneMinute
+				}
 			case main == '%': // %%
 			default:
 				return fmt.Errorf("unsupported sequence %q", string(buf))
@@ -604,7 +690,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 	}
 
 	if pos < len(value) {
-		return fmt.Errorf("parsing time \"%s\": extra text: \"%s\"", value, value[pos:])
+		return fmt.Errorf(extraTextErrMsg, value, value[pos:])
 	}
 
 	if date != nil {
@@ -615,7 +701,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 		}
 
 		if !isDateValid(year, month, day) {
-			return fmt.Errorf("invalid date %q", getDateSimpleStr(year, month, day))
+			return fmt.Errorf("invalid date %q", simpleDateStr(year, month, day))
 		}
 
 		_date, err := makeDate(year, month, day)
@@ -635,7 +721,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 			if haveDate && (doyDate != _date) {
 				return fmt.Errorf("day-of-year date %q does not agree with date %q",
 					LocalDate(doyDate).String(),
-					getDateSimpleStr(year, month, day),
+					simpleDateStr(year, month, day),
 				)
 			}
 
@@ -657,7 +743,7 @@ func parseDateAndTime(layout, value string, date, time *int64) error {
 			if haveDate && (isoDate != _date) {
 				return fmt.Errorf("ISO week-year date %q does not agree with date %q",
 					getISODateSimpleStr(isoYear, isoWeek, day),
-					getDateSimpleStr(year, month, day),
+					simpleDateStr(year, month, day),
 				)
 			}
 

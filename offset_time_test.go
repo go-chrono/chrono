@@ -90,7 +90,7 @@ func TestOffsetTime_Sub(t *testing.T) {
 		{chrono.OffsetTimeOf(12, 0, 0, 0, -2, 30), chrono.OffsetTimeOf(6, 0, 0, 0, -1, 0), 7*chrono.Hour + 30*chrono.Minute},
 	} {
 		t.Run(fmt.Sprintf("%s - %s", tt.t1, tt.t2), func(t *testing.T) {
-			if d := tt.t1.Sub(tt.t2); d.Compare(chrono.DurationOf(tt.diff)) != 0 {
+			if d := tt.t1.Sub(tt.t2); d != tt.diff {
 				t.Errorf("t1.Sub(t2) = %v, want %v", d, tt.diff)
 			}
 		})

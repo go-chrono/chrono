@@ -1,7 +1,6 @@
 package chrono
 
 import (
-	"fmt"
 	"math/big"
 )
 
@@ -33,13 +32,6 @@ func OfLocalDateTime(date LocalDate, time LocalTime) LocalDateTime {
 	return LocalDateTime{v: makeDateTime(int64(date), time.v)}
 }
 
-func makeDateTime(date, time int64) big.Int {
-	out := big.NewInt(date)
-	out.Mul(out, bigIntDayExtent)
-	out.Add(out, big.NewInt(time))
-	return *out
-}
-
 // Compare compares d with d2. If d is before d2, it returns -1;
 // if d is after d2, it returns 1; if they're the same, it returns 0.
 func (d LocalDateTime) Compare(d2 LocalDateTime) int {
@@ -52,89 +44,70 @@ func (d LocalDateTime) Split() (LocalDate, LocalTime) {
 	return LocalDate(date), LocalTime{v: time}
 }
 
+// In returns the OffsetDateTime represeting d with the specified offset.
+func (d LocalDateTime) In(offset Offset) OffsetDateTime {
+	return OffsetDateTime{v: d.v, o: int64(offset)}
+}
+
+// UTC returns the OffsetDateTime represeting d at the UTC offset.
+func (d LocalDateTime) UTC() OffsetDateTime {
+	return OffsetDateTime{v: d.v}
+}
+
 // Add returns the datetime d+v.
 // This function panics if the resulting datetime would fall outside of the allowed range.
 func (d LocalDateTime) Add(v Duration) LocalDateTime {
-	out, err := d.add(v)
+	out, err := addDurationToBigDate(d.v, v)
 	if err != nil {
 		panic(err.Error())
 	}
-	return out
+	return LocalDateTime{v: out}
 }
 
 // CanAdd returns false if Add would panic if passed the same arguments.
 func (d LocalDateTime) CanAdd(v Duration) bool {
-	_, err := d.add(v)
+	_, err := addDurationToBigDate(d.v, v)
 	return err == nil
-}
-
-func (d LocalDateTime) add(v Duration) (LocalDateTime, error) {
-	out := new(big.Int).Set(&d.v)
-	out.Add(out, &v.v)
-
-	if out.Cmp(&minLocalDateTime.v) == -1 || out.Cmp(&maxLocalDateTime.v) == 1 {
-		return LocalDateTime{}, fmt.Errorf("datetime out of range")
-	}
-	return LocalDateTime{v: *out}, nil
 }
 
 // AddDate returns the datetime corresponding to adding the given number of years, months, and days to d.
 // This function panic if the resulting datetime would fall outside of the allowed date range.
 func (d LocalDateTime) AddDate(years, months, days int) LocalDateTime {
-	out, err := d.addDate(years, months, days)
+	out, err := addDateToBigDate(d.v, years, months, days)
 	if err != nil {
 		panic(err.Error())
 	}
-	return out
+	return LocalDateTime{v: out}
 }
 
 // CanAddDate returns false if AddDate would panic if passed the same arguments.
 func (d LocalDateTime) CanAddDate(years, months, days int) bool {
-	_, err := d.addDate(years, months, days)
+	_, err := addDateToBigDate(d.v, years, months, days)
 	return err == nil
 }
 
-func (d LocalDateTime) addDate(years, months, days int) (LocalDateTime, error) {
-	date, _ := d.Split()
-
-	added, err := date.add(years, months, days)
-	if err != nil {
-		return LocalDateTime{}, err
-	}
-
-	if added < minJDN || added > maxJDN {
-		return LocalDateTime{}, fmt.Errorf("date out of bounds")
-	}
-
-	diff := big.NewInt(int64(added - date))
-	diff.Mul(diff, bigIntDayExtent)
-
+// Sub returns the duration d-u.
+func (d LocalDateTime) Sub(u LocalDateTime) Duration {
 	out := new(big.Int).Set(&d.v)
-	out.Add(out, diff)
-
-	return LocalDateTime{v: *out}, nil
+	out.Sub(out, &u.v)
+	return Duration{v: *out}
 }
 
 func (d LocalDateTime) String() string {
 	date, time := splitDateAndTime(d.v)
 	hour, min, sec, nsec := fromTime(time)
-	year, month, day, err := fromLocalDate(date)
+	year, month, day, err := fromDate(date)
 	if err != nil {
 		panic(err.Error())
 	}
-
-	out := fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, min, sec)
-	if nsec != 0 {
-		out += fmt.Sprintf(".%09d", nsec)
-	}
-	return out
+	return simpleDateStr(year, month, day) + " " + simpleTimeStr(hour, min, sec, nsec, nil)
 }
 
 // Format returns a textual representation of the date-time value formatted according to the layout defined by the argument.
 // See the constants section of the documentation to see how to represent the layout format.
 func (d LocalDateTime) Format(layout string) string {
 	date, time := d.Split()
-	out, err := formatDateTimeOffset(layout, (*int32)(&date), &time.v, 0)
+	out, err := formatDateTimeOffset(layout, (*int32)(&date), &time.v, nil)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -145,20 +118,12 @@ func (d LocalDateTime) Format(layout string) string {
 // See the constants section of the documentation to see how to represent the layout format.
 func (d *LocalDateTime) Parse(layout, value string) error {
 	dv, tv := splitDateAndTime(d.v)
-	if err := parseDateAndTime(layout, value, &dv, &tv); err != nil {
+	if err := parseDateAndTime(layout, value, &dv, &tv, nil); err != nil {
 		return err
 	}
 
 	d.v = makeDateTime(dv, tv)
 	return nil
-}
-
-func splitDateAndTime(v big.Int) (date, time int64) {
-	vv := new(big.Int).Set(&v)
-
-	var _time big.Int
-	_date, _ := vv.DivMod(vv, bigIntDayExtent, &_time)
-	return _date.Int64(), _time.Int64()
 }
 
 // MinLocalDateTime returns the earliest supported datetime.
@@ -170,10 +135,3 @@ func MinLocalDateTime() LocalDateTime {
 func MaxLocalDateTime() LocalDateTime {
 	return maxLocalDateTime
 }
-
-var (
-	bigIntDayExtent = big.NewInt(24 * int64(Hour))
-
-	minLocalDateTime = OfLocalDateTime(MinLocalDate(), LocalTimeOf(0, 0, 0, 0))
-	maxLocalDateTime = OfLocalDateTime(MaxLocalDate(), LocalTimeOf(99, 59, 59, 999999999))
-)

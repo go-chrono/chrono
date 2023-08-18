@@ -67,7 +67,7 @@ func TestLocalTime_Sub(t *testing.T) {
 		{chrono.LocalTimeOf(12, 0, 0, 22), chrono.LocalTimeOf(12, 0, 0, 40), -18 * chrono.Nanosecond},
 	} {
 		t.Run(fmt.Sprintf("%s - %s", tt.t1, tt.t2), func(t *testing.T) {
-			if d := tt.t1.Sub(tt.t2); d.Compare(chrono.DurationOf(tt.diff)) != 0 {
+			if d := tt.t1.Sub(tt.t2); d != tt.diff {
 				t.Errorf("t1.Sub(t2) = %v, want %v", d, tt.diff)
 			}
 		})
@@ -141,12 +141,22 @@ func TestLocalTime_Compare(t *testing.T) {
 	}
 }
 
-func TestLocalTime_AtOffset(t *testing.T) {
+func TestLocalTime_In(t *testing.T) {
 	time := chrono.LocalTimeOf(9, 0, 0, 0)
-	output := time.AtOffset(chrono.OffsetOf(2, 30))
+	output := time.In(chrono.OffsetOf(2, 30))
 
 	expected := chrono.OffsetTimeOf(9, 0, 0, 0, 2, 30)
 	if output.Compare(expected) != 0 {
-		t.Errorf("time.AtOffset = %s, want %s", output, expected)
+		t.Errorf("time.In = %s, want %s", output, expected)
+	}
+}
+
+func TestLocalTime_UTC(t *testing.T) {
+	time := chrono.LocalTimeOf(9, 0, 0, 0)
+	output := time.UTC()
+
+	expected := chrono.OffsetTimeOf(9, 0, 0, 0, 0, 0)
+	if output.Compare(expected) != 0 {
+		t.Errorf("time.UTC() = %s, want %s", output, expected)
 	}
 }

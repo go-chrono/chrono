@@ -5,7 +5,8 @@ type OffsetTime struct {
 	v, o int64
 }
 
-// OffsetTimeOf returns an OffsetTime that represents the specified hour, minute, second, and nanosecond offset within the specified second.
+// OffsetTimeOf returns an OffsetTime that represents the specified hour, minute, second,
+// and nanosecond offset within the specified second.
 // The supplied offset is applied to the returned OffsetTime in the same manner as OffsetOf.
 // A valid time is between 00:00:00 and 99:59:59.999999999. If an invalid time is specified, this function panics.
 func OffsetTimeOf(hour, min, sec, nsec, offsetHours, offsetMins int) OffsetTime {
@@ -47,8 +48,8 @@ func (t OffsetTime) Nanosecond() int {
 }
 
 // Sub returns the duration t-u.
-func (t OffsetTime) Sub(u OffsetTime) Duration {
-	return DurationOf(Extent(t.utc() - u.utc()))
+func (t OffsetTime) Sub(u OffsetTime) Extent {
+	return Extent(t.utc() - u.utc())
 }
 
 // Add returns the time t+v, maintaining the offset of t.
@@ -79,7 +80,8 @@ func (t OffsetTime) Compare(t2 OffsetTime) int {
 }
 
 func (t OffsetTime) String() string {
-	return timeString(t.v) + offsetString(t.o, ":")
+	hour, min, sec, nsec := fromTime(t.v)
+	return simpleTimeStr(hour, min, sec, nsec, &t.o)
 }
 
 // In returns a copy of t, adjusted to the supplied offset.
@@ -113,7 +115,7 @@ func (t OffsetTime) utc() int64 {
 // See the constants section of the documentation to see how to represent the layout format.
 // Date format specifiers encountered in the layout results in a panic.
 func (t OffsetTime) Format(layout string) string {
-	out, err := formatDateTimeOffset(layout, nil, &t.v, t.o)
+	out, err := formatDateTimeOffset(layout, nil, &t.v, &t.o)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -124,11 +126,12 @@ func (t OffsetTime) Format(layout string) string {
 // See the constants section of the documentation to see how to represent the layout format.
 // Date format specifiers encountered in the layout results in a panic.
 func (t *OffsetTime) Parse(layout, value string) error {
-	v := t.v
-	if err := parseDateAndTime(layout, value, nil, &v); err != nil {
+	v, o := t.v, t.o
+	if err := parseDateAndTime(layout, value, nil, &v, &o); err != nil {
 		return err
 	}
 
 	t.v = v
+	t.o = o
 	return nil
 }
