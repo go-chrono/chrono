@@ -16,7 +16,11 @@ type Duration struct {
 // Durations and extents are semantically equivalent, except that durations exceed,
 // and can therefore not be converted to, Go's basic types. Extents are represented as a single integer.
 func DurationOf(v Extent) Duration {
-	return Duration{v: *big.NewInt(int64(v))}
+	return durationOf(int64(v))
+}
+
+func durationOf(v int64) Duration {
+	return Duration{v: *big.NewInt(v)}
 }
 
 // Compare compares d with d2. If d is less than d2, it returns -1;

@@ -12,19 +12,36 @@ func TestLocalTime(t *testing.T) {
 
 	hour, min, sec := time.Clock()
 	if hour != 12 {
-		t.Errorf("time.Hour() = %d, want 12", hour)
+		t.Errorf("time.Clock() hour = %d, want 12", hour)
 	}
 
 	if min != 30 {
-		t.Errorf("time.Minute() = %d, want 30", min)
+		t.Errorf("time.Clock() min = %d, want 30", min)
 	}
 
 	if sec != 59 {
-		t.Errorf("time.Second() = %d, want 59", sec)
+		t.Errorf("time.Clock() sec = %d, want 59", sec)
 	}
 
 	if nsec := time.Nanosecond(); nsec != 12345678 {
 		t.Errorf("time.Nanosecond() = %d, want 12345678", nsec)
+	}
+}
+
+func TestLocalTime_String(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		time     chrono.LocalTime
+		expected string
+	}{
+		{"simple", chrono.LocalTimeOf(9, 0, 0, 0), "09:00:00"},
+		{"nanoseconds", chrono.LocalTimeOf(9, 0, 0, 12345678), "09:00:00.012345678"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if output := tt.time.String(); output != tt.expected {
+				t.Errorf("LocalTime.String() = %s, want %s", output, tt.expected)
+			}
+		})
 	}
 }
 
@@ -50,7 +67,7 @@ func TestLocalTime_Sub(t *testing.T) {
 		{chrono.LocalTimeOf(12, 0, 0, 22), chrono.LocalTimeOf(12, 0, 0, 40), -18 * chrono.Nanosecond},
 	} {
 		t.Run(fmt.Sprintf("%s - %s", tt.t1, tt.t2), func(t *testing.T) {
-			if d := tt.t1.Sub(tt.t2); d.Compare(chrono.DurationOf(tt.diff)) != 0 {
+			if d := tt.t1.Sub(tt.t2); d != tt.diff {
 				t.Errorf("t1.Sub(t2) = %v, want %v", d, tt.diff)
 			}
 		})
@@ -121,5 +138,25 @@ func TestLocalTime_Compare(t *testing.T) {
 				t.Errorf("t.Compare(t2) = %d, want %d", v, tt.expected)
 			}
 		})
+	}
+}
+
+func TestLocalTime_In(t *testing.T) {
+	time := chrono.LocalTimeOf(9, 0, 0, 0)
+	output := time.In(chrono.OffsetOf(2, 30))
+
+	expected := chrono.OffsetTimeOf(9, 0, 0, 0, 2, 30)
+	if output.Compare(expected) != 0 {
+		t.Errorf("time.In = %s, want %s", output, expected)
+	}
+}
+
+func TestLocalTime_UTC(t *testing.T) {
+	time := chrono.LocalTimeOf(9, 0, 0, 0)
+	output := time.UTC()
+
+	expected := chrono.OffsetTimeOf(9, 0, 0, 0, 0, 0)
+	if output.Compare(expected) != 0 {
+		t.Errorf("time.UTC() = %s, want %s", output, expected)
 	}
 }

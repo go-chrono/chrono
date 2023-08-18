@@ -151,7 +151,9 @@ func parseDuration(s string, parsePeriod, parseTime bool) (years, months, weeks,
 				value = 0
 				haveUnit = true
 			} else {
-				if digit {
+				if !parseTime {
+					return 0, 0, 0, 0, 0, 0, false, fmt.Errorf("cannot parse duration as Period")
+				} else if digit {
 					continue
 				}
 

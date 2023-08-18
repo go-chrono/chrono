@@ -62,9 +62,9 @@ func ExampleLocalDate_add_subtract() {
 	// Output: 2007-05-25
 }
 
-func ExampleLocalDate_Add() {
+func ExampleLocalDate_AddDate() {
 	d := chrono.LocalDateOf(2007, chrono.May, 20)
-	d = d.Add(0, 1, 1)
+	d = d.AddDate(0, 1, 1)
 
 	fmt.Println(d)
 	// Output: 2007-06-21

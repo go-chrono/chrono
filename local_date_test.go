@@ -216,7 +216,7 @@ func TestLocalDate_Date(t *testing.T) {
 	}
 }
 
-func TestLocalDate_Add(t *testing.T) {
+func TestLocalDate_AddDate(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
 		date      chrono.LocalDate
@@ -237,11 +237,11 @@ func TestLocalDate_Add(t *testing.T) {
 		{"wrap around day", chrono.LocalDateOf(2020, chrono.March, 18), 0, 0, 20, chrono.LocalDateOf(2020, chrono.April, 7)},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			if ok := tt.date.CanAdd(tt.addYears, tt.addMonths, tt.addDays); !ok {
+			if ok := tt.date.CanAddDate(tt.addYears, tt.addMonths, tt.addDays); !ok {
 				t.Errorf("date = %s, date.CanAdd(%d, %d, %d) = false, want true", tt.date, tt.addYears, tt.addMonths, tt.addDays)
 			}
 
-			if date := tt.date.Add(tt.addYears, tt.addMonths, tt.addDays); date != tt.expected {
+			if date := tt.date.AddDate(tt.addYears, tt.addMonths, tt.addDays); date != tt.expected {
 				t.Errorf("date = %s, date.Add(%d, %d, %d) = %s, want %s", tt.date, tt.addYears, tt.addMonths, tt.addDays, date, tt.expected)
 			}
 		})
@@ -256,7 +256,7 @@ func TestLocalDate_Add(t *testing.T) {
 		{"overflow", chrono.MaxLocalDate(), 1},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			if ok := tt.date.CanAdd(0, 0, tt.addDays); ok {
+			if ok := tt.date.CanAddDate(0, 0, tt.addDays); ok {
 				t.Errorf("date = %s, date.CanAdd(0, 0, %d) = true, want false", tt.date, tt.addDays)
 			}
 
@@ -267,7 +267,7 @@ func TestLocalDate_Add(t *testing.T) {
 					}
 				}()
 
-				tt.date.Add(0, 0, tt.addDays)
+				tt.date.AddDate(0, 0, tt.addDays)
 			}()
 		})
 	}

@@ -1,12 +1,13 @@
 package chrono_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-chrono/chrono"
 )
 
-func TestLocalDateTime(t *testing.T) {
+func TestLocalDateTimeOf(t *testing.T) {
 	for _, tt := range []struct {
 		datetime     chrono.LocalDateTime
 		expectedDate chrono.LocalDate
@@ -36,8 +37,8 @@ func TestLocalDateTime(t *testing.T) {
 	}
 }
 
-func TestOfLocalDateAndTime(t *testing.T) {
-	datetime := chrono.OfLocalDateAndTime(
+func TestOfLocalDateTime(t *testing.T) {
+	datetime := chrono.OfLocalDateTime(
 		chrono.LocalDateOf(2020, chrono.March, 18),
 		chrono.LocalTimeOf(12, 30, 0, 100000000),
 	)
@@ -181,5 +182,50 @@ func TestLocalDateTime_AddDate(t *testing.T) {
 				tt.datetime.AddDate(0, 0, tt.addDays)
 			}()
 		})
+	}
+}
+
+func TestLocalDateTime_Sub(t *testing.T) {
+	for _, tt := range []struct {
+		dt1  chrono.LocalDateTime
+		dt2  chrono.LocalDateTime
+		diff chrono.Duration
+	}{
+		{
+			chrono.LocalDateTimeOf(2020, chrono.January, 5, 12, 0, 0, 0),
+			chrono.LocalDateTimeOf(2020, chrono.January, 3, 6, 0, 0, 0),
+			chrono.DurationOf(54 * chrono.Hour),
+		},
+		{
+			chrono.LocalDateTimeOf(2020, chrono.January, 5, 12, 0, 0, 22),
+			chrono.LocalDateTimeOf(2020, chrono.January, 5, 12, 0, 0, 40),
+			chrono.DurationOf(-18 * chrono.Nanosecond),
+		},
+	} {
+		t.Run(fmt.Sprintf("%s - %s", tt.dt1, tt.dt2), func(t *testing.T) {
+			if d := tt.dt1.Sub(tt.dt2); d.Compare(tt.diff) != 0 {
+				t.Errorf("dt1.Sub(dt2) = %v, want %v", d, tt.diff)
+			}
+		})
+	}
+}
+
+func TestLocalDateTime_In(t *testing.T) {
+	dt := chrono.LocalDateTimeOf(2020, chrono.March, 18, 12, 30, 0, 0)
+	output := dt.In(chrono.OffsetOf(2, 30))
+
+	expected := chrono.OffsetDateTimeOf(2020, chrono.March, 18, 12, 30, 0, 0, 2, 30)
+	if output.Compare(expected) != 0 {
+		t.Errorf("dt.In = %s, want %s", output, expected)
+	}
+}
+
+func TestLocalDateTime_UTC(t *testing.T) {
+	dt := chrono.LocalDateTimeOf(2020, chrono.March, 18, 12, 30, 0, 0)
+	output := dt.UTC()
+
+	expected := chrono.OffsetDateTimeOf(2020, chrono.March, 18, 12, 30, 0, 0, 0, 0)
+	if output.Compare(expected) != 0 {
+		t.Errorf("dt.UTC() = %s, want %s", output, expected)
 	}
 }
