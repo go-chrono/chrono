@@ -417,12 +417,15 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 			}
 
 			casedAlpha := func(char rune) (rune, bool) {
-				r := rune(value[pos:][0])
-				if r == char {
-					pos++
-					return r, true
+				str := value[pos:]
+				if len(str) != 0 {
+					r := rune(str[0])
+					if r == char {
+						pos++
+						return r, true
+					}
 				}
-				return r, false
+				return ' ', false
 			}
 
 			alphas := func(maxLen int) (lower, original string) {
