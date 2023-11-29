@@ -293,6 +293,12 @@ const (
 	endOfStringErrMsg = "parsing time \"%s\": end of string"
 )
 
+// parseDateAndTime parses the supplied value according to the specified layout.
+// date, time and offset must be provided in order for those components to be parsed.
+// If not provided, and the specifiers that pertain to those components are
+// encountered in the supplied layout, then an error is returned.
+// If non-zero, date, time, and offset and taken as starting points, where the individual values
+// that they represent are replaced only if present in the supplied layout.
 func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 	var (
 		haveDate          bool

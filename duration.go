@@ -56,6 +56,16 @@ func (d Duration) add(d2 Duration) (Duration, error) {
 	return Duration{v: *out}, nil
 }
 
+func (d Duration) mul(v int64) (Duration, error) {
+	out := new(big.Int).Set(&d.v)
+	out.Mul(out, big.NewInt(v))
+
+	if out.Cmp(bigIntMinInt64) == -1 || out.Cmp(bigIntMaxInt64) == 1 {
+		return Duration{}, fmt.Errorf("duration out of range")
+	}
+	return Duration{v: *out}, nil
+}
+
 // Nanoseconds returns the duration as a floating point number of nanoseconds.
 func (d Duration) Nanoseconds() float64 {
 	out, _ := new(big.Float).SetInt(&d.v).Float64()
