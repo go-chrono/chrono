@@ -7,7 +7,7 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-func TestInterval_Parse(t *testing.T) {
+func TestParseInterval(t *testing.T) {
 	for _, tr := range []struct {
 		str      string
 		expected string
@@ -31,11 +31,13 @@ func TestInterval_Parse(t *testing.T) {
 			durationOk bool
 		}{
 			{
-				str:     "2007-03-01T13:00:00Z/2008-05-11T15:30:00Z",
-				start:   chrono.OffsetDateTimeOf(2007, chrono.March, 1, 13, 0, 0, 0, 0, 0),
-				startOk: true,
-				end:     chrono.OffsetDateTimeOf(2008, chrono.May, 11, 15, 30, 0, 0, 0, 0),
-				endOk:   true,
+				str:        "2007-03-01T13:00:00Z/2008-05-11T15:30:00Z",
+				start:      chrono.OffsetDateTimeOf(2007, chrono.March, 1, 13, 0, 0, 0, 0, 0),
+				startOk:    true,
+				end:        chrono.OffsetDateTimeOf(2008, chrono.May, 11, 15, 30, 0, 0, 0, 0),
+				endOk:      true,
+				duration:   chrono.DurationOf(10490*chrono.Hour + 30*chrono.Minute),
+				durationOk: true,
 			},
 			{
 				str:        "2007-03-01T13:00:00Z/P1Y2M10DT2H30M",
