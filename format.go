@@ -22,31 +22,37 @@ import (
 //   - %d: The day of the month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 31.
 //
 // Days of week:
+//
 //   - %u: The day of the week as a decimal number, e.g. 1 for Monday, 2 for Tuesday, etc. See note (3).
 //   - %A: The full name of the day of the week, e.g. Monday, Tuesday, etc. See note (3).
 //   - %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc. See note (3).
 //
 // Week numbers:
+//
 //   - %G: The ISO 8601 week-based year, padded to 4 digits with leading 0s. This may differ by ±1 to the actual calendar year. See note (2).
 //   - %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53. See note (2).
 //
 // Times of day:
+//
 //   - %P: Either "am" or "pm", where noon is "pm" and midnight is "am".
 //   - %p: Either "AM" or "PM", where noon is "PM" and midnight is "AM".
 //   - %I: The hour of the day using the 12-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12. See note (4).
 //
 // Time components:
+//
 //   - %H: The hour of the day using the 24-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 23. See note (5).
 //   - %M: The minute as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //   - %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
 //
 // Millisecond precisions:
+//
 //   - %f: Equivalent to %6f.
 //   - %3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with leading 0s.
 //   - %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with leading 0s.
 //   - %9f: The nanosecond offset within the represented second, padded to 9 digits with leading 0s.
 //
 // Time offsets:
+//
 //   - %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See notes (6), (7), and (8).
 //   - %Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See notes (6) and (7).
 //
