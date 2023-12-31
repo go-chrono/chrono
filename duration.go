@@ -103,7 +103,7 @@ func (d Duration) Hours() float64 {
 }
 
 // String returns a string formatted according to ISO 8601.
-// It is equivalent to calling Format with no arguments.
+// It is equivalent to calling [Format] with no arguments.
 func (d Duration) String() string {
 	return d.Format()
 }
