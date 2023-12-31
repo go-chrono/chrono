@@ -66,7 +66,7 @@ import (
 //
 // Notes:
 //
-//  1. When 2-digit years are parsed, they are converted according to the POSIX and ISO C standards:
+//  1. When 2-digit years are parsed (%y or %Ey), they are converted according to the POSIX and ISO C standards:
 //     values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
 //  2. When a date is parsed in combination with a day of year (%j), and/or an ISO week-based date (%G and/or %V),
 //     an error will be returned if the represented dates to not match.
