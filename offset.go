@@ -10,10 +10,10 @@ type Offset Extent
 
 // OffsetOf returns the Offset represented by a number of hours and minutes.
 // If hours is non-zero, the sign of minutes is ignored, e.g.:
-//   * OffsetOf(-2, 30) = -02h:30m
-//   * OffsetOf(2, -30) = 02h:30m
-//   * OffsetOf(0, 30) = 00h:30m
-//   * OffsetOf(0, -30) = -00h:30m
+//   - OffsetOf(-2, 30) = -02h:30m
+//   - OffsetOf(2, -30) = 02h:30m
+//   - OffsetOf(0, 30) = 00h:30m
+//   - OffsetOf(0, -30) = -00h:30m
 func OffsetOf(hours, mins int) Offset {
 	return Offset(makeOffset(hours, mins))
 }
