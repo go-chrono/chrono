@@ -100,15 +100,16 @@ func (i Interval) string(sep string) string {
 // If neither are possible (i.e. only a duration is present),
 // [ErrUnsupportedRepresentation] is returned instead.
 func (i Interval) Start() (OffsetDateTime, error) {
-	if i.s != nil {
+	switch {
+	case i.s != nil:
 		return *i.s, nil
-	} else if i.e != nil {
+	case i.e != nil:
 		d, err := i.d.mul(-1)
 		if err != nil {
 			return OffsetDateTime{}, err
 		}
 		return i.e.AddDate(-int(i.d.Years), -int(i.d.Months), -int(i.d.Days)).Add(d), nil
-	} else {
+	default:
 		return OffsetDateTime{}, ErrUnsupportedRepresentation
 	}
 }
@@ -118,11 +119,12 @@ func (i Interval) Start() (OffsetDateTime, error) {
 // If neither are possible, (i.e. only a duration is present),
 // then [ErrUnsupportedRepresentation] is returned instead.
 func (i Interval) End() (OffsetDateTime, error) {
-	if i.e != nil {
+	switch {
+	case i.e != nil:
 		return *i.e, nil
-	} else if i.s != nil {
+	case i.s != nil:
 		return i.s.AddDate(int(i.d.Years), int(i.d.Months), int(i.d.Days)).Add(i.d.Duration), nil
-	} else {
+	default:
 		return OffsetDateTime{}, ErrUnsupportedRepresentation
 	}
 }
@@ -131,11 +133,12 @@ func (i Interval) End() (OffsetDateTime, error) {
 // if possible by substracting i.Start() from i.End(). Note that the latter case,
 // the [Period] returned will always be the zero value.
 func (i Interval) Duration() (Period, Duration, error) {
-	if i.d != nil {
+	switch {
+	case i.d != nil:
 		return i.d.Period, i.d.Duration, nil
-	} else if i.s != nil && i.e != nil {
+	case i.s != nil && i.e != nil:
 		return Period{}, i.e.Sub(*i.s), nil
-	} else {
+	default:
 		return Period{}, Duration{}, ErrUnsupportedRepresentation
 	}
 }
