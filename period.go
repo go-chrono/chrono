@@ -21,6 +21,12 @@ func (p Period) Equal(p2 Period) bool {
 	return p2.Years == p.Years && p2.Months == p.Months && p2.Weeks == p.Weeks && p2.Days == p.Days
 }
 
+// String returns a string formatted according to ISO 8601.
+// It is equivalent to calling [Format] with no arguments.
+func (p Period) String() string {
+	return p.Format()
+}
+
 // Format the duration according to ISO 8601.
 // The output consists of only the period component - the time component is never included.
 func (p Period) Format() string {

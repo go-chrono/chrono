@@ -81,3 +81,16 @@ fmt.Println(chrono.FormatDuration(period, duration))
 ```
 
 ✅ [See more examples](example_duration_period_test.go).
+
+## Intervals
+
+Intervals as a concept are absent from the `time` package. `chrono` introduces the `Interval` type, which can be used to represent the intervening time between two time points. This can be by reference to a pair of times (start and end), a start time and a duration, a duration and an end time, or just a duration.
+
+Parsing and formatting of intervals using the ISO 8601 notation is supported as follows, including the use of repeating intervals:
+
+```go
+interval, _ := chrono.ParseInterval("R5/2007-03-01T13:00:00Z/P1Y2M10DT2H30M")
+fmt.Println(interval.String())
+```
+
+✅ [See more examples](example_interval_test.go).

@@ -243,29 +243,30 @@ var (
 	}
 
 	predefinedLayouts = []struct {
-		layout   string
-		text     string
-		datetime chrono.OffsetDateTime
+		layout                 string
+		textToParse            string
+		expectedFormattedLocal string
+		datetime               chrono.OffsetDateTime
 	}{
-		{chrono.ISO8601DateSimple, "08070209", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601DateExtended, "0807-02-09", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601DateTruncated, "0807-02", chrono.OffsetDateTimeOf(formatYear, formatMonth, 1, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601TimeSimple, "T010502", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0, 0, 0)},
-		{chrono.ISO8601TimeExtended, "T01:05:02", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0, 0, 0)},
-		{chrono.ISO8601TimeMillisSimple, "T010502.123", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000, 0, 0)},
-		{chrono.ISO8601TimeMillisExtended, "T01:05:02.123", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000, 0, 0)},
-		{chrono.ISO8601TimeTruncatedMinsSimple, "T0105", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
-		{chrono.ISO8601TimeTruncatedMinsExtended, "T01:05", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
-		{chrono.ISO8601TimeTruncatedHours, "T01", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601DateTimeSimple, "08070209T010502", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, 0, 0)},
-		{chrono.ISO8601DateTimeExtended, "0807-02-09T01:05:02", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, 0, 0)},
-		{chrono.ISO8601WeekSimple, "0807W06", chrono.OffsetDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekExtended, "0807-W06", chrono.OffsetDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekDaySimple, "0807W065", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601WeekDayExtended, "0807-W06-5", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601OrdinalDateSimple, "0807040", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
-		{chrono.ISO8601OrdinalDateExtended, "0807-040", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
-		{chrono.ANSIC, "Fri Feb 09 01:05:02 0807", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, 0, 0)},
-		{chrono.Kitchen, "01:05AM", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
+		{chrono.ISO8601DateSimple, "08070209", "08070209", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601DateExtended, "0807-02-09", "0807-02-09", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601DateTruncated, "0807-02", "0807-02", chrono.OffsetDateTimeOf(formatYear, formatMonth, 1, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601TimeSimple, "T010502", "T010502", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.ISO8601TimeExtended, "T01:05:02", "T01:05:02", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.ISO8601TimeMillisSimple, "T010502.123", "T010502.123", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000, 0, 0)},
+		{chrono.ISO8601TimeMillisExtended, "T01:05:02.123", "T01:05:02.123", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, formatSec, 123000000, 0, 0)},
+		{chrono.ISO8601TimeTruncatedMinsSimple, "T0105", "T0105", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
+		{chrono.ISO8601TimeTruncatedMinsExtended, "T01:05", "T01:05", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
+		{chrono.ISO8601TimeTruncatedHours, "T01", "T01", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601DateTimeSimple, "08070209T010502Z", "08070209T010502", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, formatOffsetHours, formatOffsetMins)},
+		{chrono.ISO8601DateTimeExtended, "0807-02-09T01:05:02Z", "0807-02-09T01:05:02", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, formatOffsetHours, formatOffsetMins)},
+		{chrono.ISO8601WeekSimple, "0807W06", "0807W06", chrono.OffsetDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekExtended, "0807-W06", "0807-W06", chrono.OffsetDateTimeOf(formatYear, formatMonth, 5, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekDaySimple, "0807W065", "0807W065", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601WeekDayExtended, "0807-W06-5", "0807-W06-5", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateSimple, "0807040", "0807040", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ISO8601OrdinalDateExtended, "0807-040", "0807-040", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, 0, 0, 0, 0, 0, 0)},
+		{chrono.ANSIC, "Fri Feb 09 01:05:02 0807", "Fri Feb 09 01:05:02 0807", chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, 0, 0, 0)},
+		{chrono.Kitchen, "01:05AM", "01:05AM", chrono.OffsetDateTimeOf(1970, chrono.January, 1, formatHour, formatMin, 0, 0, 0, 0)},
 	}
 )
