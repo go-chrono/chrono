@@ -40,8 +40,8 @@ import (
 //	%6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with leading 0s.
 //	%9f: The nanosecond offset within the represented second, padded to 9 digits with leading 0s.
 //
-//	 %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See note (6) and (7).
-//	%Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See note (6) and (7).
+//	 %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See notes (6) and (7).
+//	%Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See notes (6) and (7).
 //
 // When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
@@ -66,21 +66,22 @@ import (
 //
 // Notes:
 //
-//	(1) When 2-digit years are parsed, they are converted according to the POSIX and ISO C standards:
-//	    values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
-//	(2) When a date is parsed in combination with a day of year (%j), and/or an ISO week-based date (%G and/or %V),
-//	    an error will be returned if the represented dates to not match.
-//	(3) When a date is parsed in combination with a day of the week (%a, %A and/or %u),
-//	    an error will be returned if it does not match the day represented by the parsed date.
-//	    The day of the week is otherwise ignored - it does not have any effect on the result.
-//	(4) When a time represented in the 12-hour clock format (%I) is parsed, and no time of day (%P or %p) is present,
-//	    the time of day is assumed to be before noon, i.e. am or AM.
-//	(5) When a time is parsed that contains the time of day (%P or %p), any hour (%H) that is present must be valid
-//	    on the 12-hour clock.
-//	(6) When UTC offsets are parsed into a type which do not include a time offset element, the offset present in the string is ignored.
-//	    When UTC offsets are fornatted from a type which do not include a time offset element, the offset will not be present in the returned string.
-//	(7) When UTC offsets are parsed (%z or %Ez), the shorted form of ±HH is accepted.
-//	    However, when formatted, only the full forms are returned (either ±HHMM or ±HH:MM).
+//		(1) When 2-digit years are parsed, they are converted according to the POSIX and ISO C standards:
+//		    values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
+//		(2) When a date is parsed in combination with a day of year (%j), and/or an ISO week-based date (%G and/or %V),
+//		    an error will be returned if the represented dates to not match.
+//		(3) When a date is parsed in combination with a day of the week (%a, %A and/or %u),
+//		    an error will be returned if it does not match the day represented by the parsed date.
+//		    The day of the week is otherwise ignored - it does not have any effect on the result.
+//		(4) When a time represented in the 12-hour clock format (%I) is parsed, and no time of day (%P or %p) is present,
+//		    the time of day is assumed to be before noon, i.e. am or AM.
+//		(5) When a time is parsed that contains the time of day (%P or %p), any hour (%H) that is present must be valid
+//		    on the 12-hour clock.
+//		(6) When UTC offsets are parsed into a type which do not include a time offset element, the offset present in the string is ignored.
+//		    When UTC offsets are formatted from a type which does not include a time offset element,
+//	     the offset will not be present in the returned string.
+//		(7) When UTC offsets are parsed (%z or %Ez), the shorted form of ±HH is accepted.
+//		    However, when formatted, only the full forms are returned (either ±HHMM or ±HH:MM).
 const (
 	// ISO 8601.
 	ISO8601                          = ISO8601DateTimeExtended
