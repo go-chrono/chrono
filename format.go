@@ -79,7 +79,7 @@ import (
 //		    on the 12-hour clock.
 //		(6) When UTC offsets are parsed into a type which do not include a time offset element, the offset present in the string is ignored.
 //		    When UTC offsets are formatted from a type which does not include a time offset element,
-//	     the offset will not be present in the returned string.
+//	        the offset will not be present in the returned string.
 //		(7) When UTC offsets are parsed (%z or %Ez), the shorted form of ±HH is accepted.
 //		    However, when formatted, only the full forms are returned (either ±HHMM or ±HH:MM).
 const (
