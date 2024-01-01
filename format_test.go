@@ -14,7 +14,7 @@ func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			var date chrono.LocalDate
 			if err := date.Parse(tt.specifier, tt.textToParse); err != nil {
 				t.Errorf("failed to parse date: %v", err)
@@ -45,7 +45,7 @@ func TestLocalTime_Parse_supported_specifiers(t *testing.T) {
 	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r == nil {
@@ -76,7 +76,7 @@ func TestLocalDateTime_Parse_supported_specifiers(t *testing.T) {
 	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			var dt chrono.LocalDateTime
 			if err := dt.Parse(tt.specifier, tt.textToParse); err != nil {
 				t.Errorf("failed to parse date: %v", err)
@@ -105,7 +105,7 @@ func TestOffsetTime_Parse_suported_specifiers(t *testing.T) {
 	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r == nil {
@@ -147,7 +147,7 @@ func TestOffsetDateTime_Parse_supported_specifiers(t *testing.T) {
 	defer tearDownCenturyParsing()
 
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			var dt chrono.OffsetDateTime
 			if err := dt.Parse(tt.specifier, tt.textToParse); err != nil {
 				t.Errorf("failed to parse date: %v", err)
@@ -185,7 +185,7 @@ func TestOffsetDateTime_Parse_supported_specifiers(t *testing.T) {
 
 func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			if formatted := chrono.LocalDateOf(formatYear, formatMonth, formatDay).Format(tt.specifier); formatted != tt.expectedFormatted {
 				t.Errorf("date.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
 			}
@@ -209,7 +209,7 @@ func TestLocalDate_Format_supported_specifiers(t *testing.T) {
 
 func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r == nil {
@@ -233,7 +233,7 @@ func TestLocalTime_Format_supported_specifiers(t *testing.T) {
 
 func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			if formatted := chrono.LocalDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos).
 				Format(tt.specifier); formatted != tt.expectedFormatted {
 				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
@@ -253,7 +253,7 @@ func TestLocalDateTime_Format_supported_specifiers(t *testing.T) {
 
 func TestOffsetTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r == nil {
@@ -288,7 +288,7 @@ func TestOffsetTime_Format_supported_specifiers(t *testing.T) {
 
 func TestOffsetDateTime_Format_supported_specifiers(t *testing.T) {
 	for _, tt := range dateSpecifiers {
-		t.Run(fmt.Sprintf("%s (%q)", tt.specifier, tt.textToParse), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s (%v)", tt.specifier, tt.textToParse), func(t *testing.T) {
 			if formatted := chrono.OffsetDateTimeOf(formatYear, formatMonth, formatDay, formatHour, formatMin, formatSec, formatNanos,
 				formatOffsetHours, formatOffsetMins).Format(tt.specifier); formatted != tt.expectedFormatted {
 				t.Errorf("datetime.Format(%s) = %s, want %q", tt.specifier, formatted, tt.expectedFormatted)
@@ -691,6 +691,39 @@ func TestLocalDate_Parse_eras(t *testing.T) {
 }
 
 func TestLocalDate_Parse_century(t *testing.T) {
+	var date chrono.LocalDate
+	if err := date.Parse("%C", "19"); err != nil {
+		t.Errorf("failed to parse date: %v", err)
+	}
+
+	if year, _, _ := date.Date(); year != 1900 {
+		t.Errorf("got %d, want 1900", year)
+	}
+}
+
+func TestLocalDate_Parse_century_withYear(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%C %Y", "19 1970"); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+
+		if year, _, _ := date.Date(); year != 1970 {
+			t.Errorf("got %d, want 1970", year)
+		}
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%C %Y", "18 1970"); err == nil {
+			t.Errorf("expecting error, got nil")
+		} else if err.Error() != "year century 18 does not agree with year 1970" {
+			t.Errorf("unexpected error text %q", err.Error())
+		}
+	})
+}
+
+func TestLocalDate_Parse_shortYear(t *testing.T) {
 	t.Run("1900s", func(t *testing.T) {
 		var date chrono.LocalDate
 		if err := date.Parse("%y", "80"); err != nil {
@@ -710,6 +743,70 @@ func TestLocalDate_Parse_century(t *testing.T) {
 
 		if year, _, _ := date.Date(); year != 2010 {
 			t.Errorf("got %d, want 2010", year)
+		}
+	})
+}
+
+func TestLocalDate_Parse_shortYear_withYear(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%y %Y", "70 1970"); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+
+		if year, _, _ := date.Date(); year != 1970 {
+			t.Errorf("got %d, want 1970", year)
+		}
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%y %Y", "75 1970"); err == nil {
+			t.Errorf("expecting error, got nil")
+		} else if err.Error() != "short year 75 (1975) does not agree with year 1970" {
+			t.Errorf("unexpected error text %q", err.Error())
+		}
+	})
+}
+
+func TestLocalDate_Parse_century_shortYear(t *testing.T) {
+	var date chrono.LocalDate
+	if err := date.Parse("%C%y", "1970"); err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
+
+	if year, _, _ := date.Date(); year != 1970 {
+		t.Errorf("got %d, want 1970", year)
+	}
+}
+
+func TestLocalDate_Parse_century_shortYear_withYear(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%C%y %Y", "1970 1970"); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+
+		if year, _, _ := date.Date(); year != 1970 {
+			t.Errorf("got %d, want 1970", year)
+		}
+	})
+
+	t.Run("invalid century", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%C%y %Y", "1970 1870"); err == nil {
+			t.Errorf("expecting error, got nil")
+		} else if err.Error() != "year century 19 does not agree with year 1870" {
+			t.Errorf("unexpected error text %q", err.Error())
+		}
+	})
+
+	t.Run("invalid year", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%C%y %Y", "1970 1971"); err == nil {
+			t.Errorf("expecting error, got nil")
+		} else if err.Error() != "short year 70 (1970) does not agree with year 1971" {
+			t.Errorf("unexpected error text %q", err.Error())
 		}
 	})
 }
@@ -737,7 +834,6 @@ func TestLocalDate_Parse_invalidDayOfWeek(t *testing.T) {
 
 func TestLocalDate_Format_invalid_specifier(t *testing.T) {
 	for _, specifier := range []string{
-		"%C",
 		"%Z",
 	} {
 		t.Run(specifier, func(t *testing.T) {
@@ -755,7 +851,6 @@ func TestLocalDate_Format_invalid_specifier(t *testing.T) {
 
 func TestLocalDate_Parse_invalid_specifier(t *testing.T) {
 	for _, specifier := range []string{
-		"%C",
 		"%Z",
 	} {
 		t.Run(specifier, func(t *testing.T) {
