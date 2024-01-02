@@ -9,39 +9,52 @@ import (
 // These are predefined layouts used for the parsing and formatting of dates, times and date-times.
 // Additional layouts can be composed using the specifiers detailed below:
 //
-//	 %Y: The ISO 8601 year as a decimal number, padded to 4 digits with leading 0s.
-//	%EY: The year in the era as a decimal number, padded to 4 digits with leading 0s.
-//	 %y: The ISO 8601 year without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
-//	%Ey: The year in the era without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
-//	%EC: The name of the era, either "CE" (for Common Era) "BCE" (for Before the Common Era).
-//	 %j: The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366. See note (2).
-//	 %m: The month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
-//	 %B: The full month name, e.g. January, February, etc.
-//	 %b: The abbreviated month name, e.g. Jan, Feb, etc.
-//	 %d: The day of the month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 31.
+//   - %Y: The ISO 8601 year as a decimal number, padded to 4 digits with leading 0s.
+//   - %EY: The year in the era as a decimal number, padded to 4 digits with leading 0s.
+//   - %y: The ISO 8601 year without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
+//   - %Ey: The year in the era without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See notes (1) and (9).
+//   - %C: The century as a decimal number, padded to 2 digits with a leading 0, e.g. 19 for 1980. See note (9).
+//   - %EC: The name of the era, either "CE" (for Common Era) "BCE" (for Before the Common Era).
+//   - %j: The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366. See note (2).
+//   - %m: The month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
+//   - %B: The full month name, e.g. January, February, etc.
+//   - %b: The abbreviated month name, e.g. Jan, Feb, etc.
+//   - %d: The day of the month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 31.
 //
-//	 %u: The day of the week as a decimal number, e.g. 1 for Monday, 2 for Tuesday, etc. See note (3).
-//	 %A: The full name of the day of the week, e.g. Monday, Tuesday, etc. See note (3).
-//	 %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc. See note (3).
+// Days of week:
 //
-//	 %G: The ISO 8601 week-based year, padded to 4 digits with leading 0s. This may differ by ±1 to the actual calendar year. See note (2).
-//	 %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53. See note (2).
+//   - %u: The day of the week as a decimal number, e.g. 1 for Monday, 2 for Tuesday, etc. See note (3).
+//   - %A: The full name of the day of the week, e.g. Monday, Tuesday, etc. See note (3).
+//   - %a: The abbreviated name of the day of the week, e.g. Mon, Tue, etc. See note (3).
 //
-//	 %P: Either "am" or "pm", where noon is "pm" and midnight is "am".
-//	 %p: Either "AM" or "PM", where noon is "PM" and midnight is "AM".
-//	 %I: The hour of the day using the 12-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12. See note (4).
+// Week numbers:
 //
-//	 %H: The hour of the day using the 24-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 23. See note (5).
-//	 %M: The minute as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
-//	 %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
+//   - %G: The ISO 8601 week-based year, padded to 4 digits with leading 0s. This may differ by ±1 to the actual calendar year. See note (2).
+//   - %V: The ISO week number, padded to 2 digits with a leading 0, in the range 01 to 53. See note (2).
 //
-//	 %f: Equivalent to %6f.
-//	%3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with leading 0s.
-//	%6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with leading 0s.
-//	%9f: The nanosecond offset within the represented second, padded to 9 digits with leading 0s.
+// Times of day:
 //
-//	 %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See notes (6), (7), and (8).
-//	%Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See notes (6) and (7).
+//   - %P: Either "am" or "pm", where noon is "pm" and midnight is "am".
+//   - %p: Either "AM" or "PM", where noon is "PM" and midnight is "AM".
+//   - %I: The hour of the day using the 12-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12. See note (4).
+//
+// Time components:
+//
+//   - %H: The hour of the day using the 24-hour clock as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 23. See note (5).
+//   - %M: The minute as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
+//   - %S: The second as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 59.
+//
+// Millisecond precisions:
+//
+//   - %f: Equivalent to %6f.
+//   - %3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with leading 0s.
+//   - %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with leading 0s.
+//   - %9f: The nanosecond offset within the represented second, padded to 9 digits with leading 0s.
+//
+// Time offsets:
+//
+//   - %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See notes (6), (7), and (8).
+//   - %Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See notes (6) and (7).
 //
 // When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
@@ -66,7 +79,7 @@ import (
 //
 // Notes:
 //
-//  1. When 2-digit years are parsed, they are converted according to the POSIX and ISO C standards:
+//  1. When 2-digit years are parsed (%y or %Ey), they are converted according to the POSIX and ISO C standards:
 //     values 69–99 are mapped to 1969–1999, and values 0–68 are mapped to 2000–2068.
 //  2. When a date is parsed in combination with a day of year (%j), and/or an ISO week-based date (%G and/or %V),
 //     an error will be returned if the represented dates to not match.
@@ -75,8 +88,8 @@ import (
 //     The day of the week is otherwise ignored - it does not have any effect on the result.
 //  4. When a time represented in the 12-hour clock format (%I) is parsed, and no time of day (%P or %p) is present,
 //     the time of day is assumed to be before noon, i.e. am or AM.
-//  5. When a time is parsed that contains the time of day (%P or %p), any hour (%H) that is present must be valid
-//     on the 12-hour clock.
+//  5. When a time is parsed that contains the time of day (%P or %p), any hour (%H) that is present
+//     must be valid on the 12-hour clock.
 //  6. When UTC offsets are parsed (%z or %Ez) into a type which do not include a time offset element,
 //     the offset present in the string is ignored.
 //     When UTC offsets are formatted from a type which does not include a time offset element,
@@ -84,6 +97,8 @@ import (
 //  7. When UTC offsets are parsed (%z or %Ez), the shorted form of ±HH is accepted.
 //     However, when formatted, only the full forms are returned (either ±HHMM or ±HH:MM).
 //  8. When %z is used for parsing a UTC offset, 'Z' can be used to represent an offset of +0000.
+//  9. When parsing partial years (%Ey and %C) in combination with a full year (%Y or %EY),
+//     an error will be returned if the represented years to not match.
 const (
 	// ISO 8601.
 	ISO8601                          = ISO8601DateTimeExtended
@@ -172,7 +187,7 @@ NextChar:
 						out = append(out, []rune("CE")...)
 					}
 				} else { // %C
-					panic("unsupported specifier 'C'")
+					out = append(out, []rune(fmt.Sprintf("%02d", year/100))...)
 				}
 			case date != nil && main == 'd': // %d
 				out = append(out, []rune(decimal(day, 2))...)
@@ -308,8 +323,12 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 		haveGregorianYear bool
 		isBCE             bool
 		year              int
-		month             int
-		day               int
+		yearCentury       *int
+		shortYear         *int
+		yearType          int // -1 = short/century, 0 = none, 1 = full year
+
+		month int
+		day   int
 
 		dayOfWeek int
 
@@ -509,7 +528,12 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 						return fmt.Errorf("unrecognized era %q", original)
 					}
 				} else { // %C
-					return fmt.Errorf("unsupported specifier 'C'")
+					var v int
+					if v, err = integer(2); err != nil {
+						return err
+					}
+					yearCentury = &v
+					yearType = -1
 				}
 			case date != nil && main == 'd': // %d
 				haveDate = true
@@ -602,10 +626,12 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 					haveGregorianYear = true
 				}
 
-				if year, err = integer(2); err != nil {
+				var v int
+				if v, err = integer(2); err != nil {
 					return err
 				}
-				year += getCentury(year)
+				shortYear = &v
+				yearType = -1
 			case date != nil && main == 'Y': // %Y
 				if localed { // %EY
 					haveGregorianYear = true
@@ -614,6 +640,7 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 				if year, err = integer(4); err != nil {
 					return err
 				}
+				yearType = 1
 			case time != nil && main == 'z': // %z
 				// If at end of input and no offset is requested, break.
 				// But continue to parse in the case where offset is not requested, but may be present.
@@ -716,6 +743,29 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 	}
 
 	if date != nil {
+		// Check century according to note (9).
+		if yearCentury != nil {
+			if yearType == 1 && year/100 != *yearCentury {
+				return fmt.Errorf("year century %d does not agree with year %d", *yearCentury, year)
+			} else if yearType != 1 {
+				year = *yearCentury * 100
+			}
+		}
+
+		// Check 2-digit year according to note (9).
+		if shortYear != nil {
+			_year := getCentury(*shortYear) + *shortYear
+			if yearCentury != nil {
+				_year = *yearCentury*100 + *shortYear
+			}
+
+			if yearType == 1 && year-(year/100*100) != *shortYear {
+				return fmt.Errorf("short year %d (%d) does not agree with year %d", *shortYear, _year, year)
+			} else if yearType != 1 {
+				year = _year
+			}
+		}
+
 		if haveGregorianYear {
 			if year, err = convertGregorianToISOYear(year, isBCE); err != nil {
 				return err
