@@ -9,6 +9,10 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
+func TestFoo(t *testing.T) {
+	fmt.Println("layout =", chrono.ParseToLayout("2006-04-09", chrono.ParseConfig{}))
+}
+
 func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 	setupCenturyParsing()
 	defer tearDownCenturyParsing()

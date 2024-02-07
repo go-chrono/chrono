@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // These are predefined layouts used for the parsing and formatting of dates, times and date-times.
@@ -295,6 +296,63 @@ const (
 	extraTextErrMsg   = "parsing time \"%s\": extra text: \"%s\""
 	endOfStringErrMsg = "parsing time \"%s\": end of string"
 )
+
+type ParseConfig struct {
+	DayFirst  bool
+	YearFirst bool
+}
+
+func ParseToLayout(value string, conf ParseConfig) string {
+	var (
+		typ, prevTyp rune // a = alpha, n = numeric, s = separator, w = whitespace, o = other
+		sign         int  // -1 = negative, 0 = no sign, 1 = positive
+		buf          []rune
+
+		state  state
+		layout []string
+		parts  parts
+	)
+
+	_ = sign // TODO
+
+	for i, c := range []rune(value) {
+		switch {
+		case (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'):
+			typ = 'a'
+		case c >= '0' && c <= '9':
+			typ = 'n'
+		case (c == '+' || c == '-') && (prevTyp == 0 || prevTyp != 'n'):
+			typ = 'n'
+		case c == '/' || c == '-' || c == '.' || c == ',' || c == ':':
+			typ = 's'
+		case unicode.IsSpace(c):
+			typ = 'w'
+		default:
+			typ = 'o'
+		}
+
+		if typ == prevTyp {
+			buf = append(buf, c)
+
+			if i != len(value)-1 {
+				continue
+			}
+		}
+
+		// if prevTyp != 0 {
+		// 	fmt.Println("fragment", string(prevTyp), string(buf))
+		// }
+
+		evalParseRules(prevTyp, buf, conf, &state, &layout, &parts)
+
+		prevTyp = typ
+		typ = 0
+		sign = 0
+		buf = []rune{c}
+	}
+
+	return strings.Join(layout, "")
+}
 
 // parseDateAndTime parses the supplied value according to the specified layout.
 // date, time and offset must be provided in order for those components to be parsed.
