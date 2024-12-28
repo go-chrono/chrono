@@ -1,31 +1,67 @@
 package chrono
 
 import (
+	"fmt"
 	"strconv"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
-var rules = []func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts) (string, bool){
-	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts) (string, bool) {
-		if digits == 4 && sign != 0 {
+var rules = []func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool){
+	// [2006]-01-02 => %Y
+	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
+		if digits == 4 {
+			fmt.Println("rule 0", v)
 			state.component = componentDate
 			state.datePart = datePartYear
+			// TODO sign
 			return "%Y", true
 		}
 		return "", false
 	},
-	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts) (string, bool) {
-		if digits == 4 {
+	// 01-[02] => %d
+	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
+		if digits == 2 && state.component == componentDate && state.d(rev) == datePartNone {
+			fmt.Println("rule 1", v)
 			state.component = componentDate
-			state.datePart = datePartYear
-			return "%Y", true
+			state.datePart = datePartDay
+			return "%d", true
+		}
+		return "", false
+	},
+	// 2006-[01]-02 => %m
+	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
+		if digits == 2 && state.component == componentDate && state.d(rev) != datePartMonth {
+			fmt.Println("rule 2", v)
+			state.component = componentDate
+			state.datePart = datePartMonth
+			return "%m", true
+		}
+		return "", false
+	},
+	// 2006-01-[02] %d
+	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
+		if digits == 2 && state.component == componentDate && state.d(rev) != datePartDay {
+			fmt.Println("rule 3", v)
+			state.component = componentDate
+			state.datePart = datePartDay
+			return "%d", true
 		}
 		return "", false
 	},
 }
 
-func evalParseRules(prevTyp rune, buf []rune, conf ParseConfig, state *state, layout *[]string, parts *parts) {
+func evalParseRules(prevTyp rune, buf []rune, conf ParseConfig, state *state, layout *[]string, parts *parts, ambiguous *[]chunk) {
 	switch prevTyp {
-	case 's', 'w', 'o':
+	case 'w', 'o':
+		*layout = append(*layout, string(buf))
+	case 's':
+		switch buf[0] {
+		case '-':
+			state.component = componentDate
+		case ':':
+			state.component = componentTime
+		}
 		*layout = append(*layout, string(buf))
 	case 'n':
 		var sign int
@@ -42,9 +78,37 @@ func evalParseRules(prevTyp rune, buf []rune, conf ParseConfig, state *state, la
 		}
 
 		for _, rule := range rules {
-			str, ok := rule(v, sign, uint(len(buf)), conf, state, parts)
-			if ok {
+			spew.Dump(state)
+			if str, ok := rule(v, sign, uint(len(buf)), conf, state, parts, false); ok {
 				*layout = append(*layout, str)
+
+				if len(*ambiguous) != 0 {
+					(*ambiguous)[len(*ambiguous)-1].state = *state
+				}
+
+				return
+			}
+		}
+
+		*layout = append(*layout, "")
+		*ambiguous = append(*ambiguous, chunk{
+			pos:    uint(len(*layout) - 1),
+			v:      v,
+			sign:   sign,
+			digits: uint(len(buf)),
+		})
+	}
+}
+
+func evalAmbiguous(chunks []chunk, conf ParseConfig, layout []string, parts *parts) {
+	fmt.Println("========= evalAmbiguous")
+	for i := len(chunks) - 1; i >= 0; i-- {
+		spew.Dump(chunks[i])
+
+		for _, rule := range rules {
+			str, ok := rule(chunks[i].v, chunks[i].sign, chunks[i].digits, conf, &chunks[i].state, parts, true)
+			layout[chunks[i].pos] = str
+			if ok {
 				break
 			}
 		}
@@ -57,29 +121,56 @@ type state struct {
 	timePart
 }
 
-type component int
+func (s state) String() string {
+	return string(s.component) + string(s.datePart) + string(s.timePart)
+}
+
+func (s state) d(rev bool) datePart {
+	if rev && s.datePart == datePartYear {
+		return datePartDay
+	} else if rev && s.datePart == datePartDay {
+		return datePartYear
+	} else {
+		return s.datePart
+	}
+}
+
+func (s state) t(rev bool) timePart {
+	return s.timePart // TODO
+}
+
+type component rune
 
 const (
-	componentDate component = iota + 1
-	componentTime
+	componentDate component = 'd'
+	componentTime component = 't'
 )
 
-type datePart int
+type datePart rune
 
 const (
-	datePartYear datePart = iota + 1
-	datePartMonth
-	datePartDay
+	datePartNone           = 0
+	datePartYear  datePart = 'y'
+	datePartMonth datePart = 'm'
+	datePartDay   datePart = 'd'
 )
 
-type timePart int
+type timePart rune
 
 const (
-	timePartHour timePart = iota + 1
-	timePartMinute
-	timePartSecond
+	timePartHour   timePart = 'h'
+	timePartMinute timePart = 'm'
+	timePartSecond timePart = 's'
 )
 
 type parts struct {
 	year int
+}
+
+type chunk struct {
+	pos    uint
+	v      int
+	sign   int
+	digits uint
+	state  state
 }

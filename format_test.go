@@ -9,10 +9,6 @@ import (
 	"github.com/go-chrono/chrono"
 )
 
-func TestFoo(t *testing.T) {
-	fmt.Println("layout =", chrono.ParseToLayout("2006-04-09", chrono.ParseConfig{}))
-}
-
 func TestLocalDate_Parse_supported_specifiers(t *testing.T) {
 	setupCenturyParsing()
 	defer tearDownCenturyParsing()
@@ -766,6 +762,24 @@ func TestLocalDate_Parse_invalid_specifier(t *testing.T) {
 			var date chrono.LocalDate
 			if err := date.Parse(specifier, ""); err == nil {
 				t.Errorf("expecting error but got nil")
+			}
+		})
+	}
+}
+
+func TestParseToLayout(t *testing.T) {
+	for _, tt := range []struct {
+		name           string
+		value          string
+		conf           chrono.ParseConfig
+		expectedLayout string
+	}{
+		{"%Y-%m-%d", "2006-04-09", chrono.ParseConfig{}, "%Y-%m-%d"},
+		{"%m-%d", "04-09", chrono.ParseConfig{}, "%m-%d"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if actual := chrono.ParseToLayout(tt.value, tt.conf); actual != tt.expectedLayout {
+				t.Errorf("got %q, want %q", actual, tt.expectedLayout)
 			}
 		})
 	}

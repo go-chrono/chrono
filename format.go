@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 // These are predefined layouts used for the parsing and formatting of dates, times and date-times.
@@ -298,19 +300,25 @@ const (
 )
 
 type ParseConfig struct {
-	DayFirst  bool
-	YearFirst bool
+	DayLast  bool
+	YearLast bool
 }
 
+// ParseToLayout attempts to parse the input string as a datetime and returns
+// the applicable layout string that would parse that string, or format a datetime to that string.
+// Any valid and non-ambiguous ISO 8601 string will be parsed correctly,
+// and any other string will be parsed with a best effort attempt, although the resulting
+// layout string may not be valid.
 func ParseToLayout(value string, conf ParseConfig) string {
 	var (
 		typ, prevTyp rune // a = alpha, n = numeric, s = separator, w = whitespace, o = other
 		sign         int  // -1 = negative, 0 = no sign, 1 = positive
 		buf          []rune
 
-		state  state
-		layout []string
-		parts  parts
+		state     state
+		layout    []string
+		parts     parts
+		ambiguous []chunk
 	)
 
 	_ = sign // TODO
@@ -343,13 +351,20 @@ func ParseToLayout(value string, conf ParseConfig) string {
 		// 	fmt.Println("fragment", string(prevTyp), string(buf))
 		// }
 
-		evalParseRules(prevTyp, buf, conf, &state, &layout, &parts)
+		evalParseRules(prevTyp, buf, conf, &state, &layout, &parts, &ambiguous)
 
 		prevTyp = typ
 		typ = 0
 		sign = 0
 		buf = []rune{c}
 	}
+
+	fmt.Println("end main loop")
+
+	spew.Dump(ambiguous)
+	spew.Dump(layout)
+
+	evalAmbiguous(ambiguous, conf, layout, &parts)
 
 	return strings.Join(layout, "")
 }
