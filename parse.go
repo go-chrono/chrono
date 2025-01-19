@@ -1,54 +1,121 @@
+//go:build parse
+
 package chrono
 
 import (
-	"fmt"
 	"strconv"
-
-	"github.com/davecgh/go-spew/spew"
+	"strings"
+	"unicode"
 )
 
-var rules = []func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool){
-	// [2006]-01-02 => %Y
-	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
-		if digits == 4 {
-			fmt.Println("rule 0", v)
-			state.component = componentDate
-			state.datePart = datePartYear
-			// TODO sign
-			return "%Y", true
+type ParseConfig struct {
+	DayFirst bool
+}
+
+type Chronological interface {
+	String() string
+	Parse(layout, value string) error
+	get() (dv, tv, ov *int64)
+	set(dv, tv, ov int64)
+}
+
+func Parse(value string, conf ParseConfig) (Chronological, error) {
+	// pick type
+
+	return nil, nil
+}
+
+// ParseToLayout attempts to parse the input string as C and returns
+// the applicable layout string that would parse that string, or format C to that string.
+// Any valid and non-ambiguous ISO 8601 string will be parsed correctly,
+// and any other string will be parsed with a best effort attempt, although the resulting
+// layout string may not be valid.
+func ParseToLayout(value string, conf ParseConfig, c Chronological) (string, error) {
+	var (
+		typ, prevTyp rune // a = alpha, n = numeric, s = separator, w = whitespace, o = other
+		sign         int  // -1 = negative, 0 = no sign, 1 = positive
+		buf          []rune
+
+		state     state
+		layout    []string
+		parts     parts
+		ambiguous []chunk
+	)
+
+	var date, time, offset *int64
+	if c != nil {
+		date, time, offset = c.get()
+	}
+
+	var err error
+	if date != nil {
+		if parts.year, parts.month, parts.day, err = fromDate(*date); err != nil {
+			return "", err
 		}
-		return "", false
-	},
-	// 01-[02] => %d
-	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
-		if digits == 2 && state.component == componentDate && state.d(rev) == datePartNone {
-			fmt.Println("rule 1", v)
-			state.component = componentDate
-			state.datePart = datePartDay
-			return "%d", true
+
+		if parts.isoYear, parts.isoWeek, err = getISOWeek(*date); err != nil {
+			return "", err
 		}
-		return "", false
-	},
-	// 2006-[01]-02 => %m
-	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
-		if digits == 2 && state.component == componentDate && state.d(rev) != datePartMonth {
-			fmt.Println("rule 2", v)
-			state.component = componentDate
-			state.datePart = datePartMonth
-			return "%m", true
+	}
+
+	if time != nil {
+		parts.hour, parts.min, parts.sec, parts.nsec = fromTime(*time)
+		_, parts.isAfternoon = convert24To12HourClock(parts.hour)
+	}
+
+	if offset != nil {
+		parts.offset = *offset
+	}
+
+	_ = sign // TODO
+
+	for i, c := range []rune(value) {
+		switch {
+		case (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'):
+			typ = 'a'
+		case c >= '0' && c <= '9':
+			typ = 'n'
+		case (c == '+' || c == '-') && (prevTyp == 0 || prevTyp != 'n'):
+			typ = 'n'
+		case c == '/' || c == '-' || c == '.' || c == ',' || c == ':':
+			typ = 's'
+		case unicode.IsSpace(c):
+			typ = 'w'
+		default:
+			typ = 'o'
 		}
-		return "", false
-	},
-	// 2006-01-[02] %d
-	func(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (string, bool) {
-		if digits == 2 && state.component == componentDate && state.d(rev) != datePartDay {
-			fmt.Println("rule 3", v)
-			state.component = componentDate
-			state.datePart = datePartDay
-			return "%d", true
+
+		if typ == prevTyp {
+			buf = append(buf, c)
+
+			if i != len(value)-1 {
+				continue
+			}
 		}
-		return "", false
-	},
+
+		evalParseRules(prevTyp, buf, conf, &state, &layout, &parts, &ambiguous)
+
+		prevTyp = typ
+		typ = 0
+		sign = 0
+		buf = []rune{c}
+	}
+
+	//fmt.Println("=>", layout)
+
+	evalAmbiguous(ambiguous, conf, layout, &parts)
+
+	layoutStr := strings.Join(layout, "")
+
+	if c != nil {
+		if err := applyParts(parts, date, time, offset); err != nil {
+			return layoutStr, err
+		}
+
+		c.set(*date, *time, *offset)
+	}
+
+	return layoutStr, nil
 }
 
 func evalParseRules(prevTyp rune, buf []rune, conf ParseConfig, state *state, layout *[]string, parts *parts, ambiguous *[]chunk) {
@@ -59,6 +126,9 @@ func evalParseRules(prevTyp rune, buf []rune, conf ParseConfig, state *state, la
 		switch buf[0] {
 		case '-':
 			state.component = componentDate
+		case '/':
+			state.component = componentDate
+			// TODO conf
 		case ':':
 			state.component = componentTime
 		}
@@ -77,20 +147,17 @@ func evalParseRules(prevTyp rune, buf []rune, conf ParseConfig, state *state, la
 			panic(err)
 		}
 
-		for _, rule := range rules {
-			spew.Dump(state)
-			if str, ok := rule(v, sign, uint(len(buf)), conf, state, parts, false); ok {
-				*layout = append(*layout, str)
+		if str, ok := eval(v, sign, uint(len(buf)), conf, state, parts, false); ok {
+			*layout = append(*layout, str)
 
-				if len(*ambiguous) != 0 {
-					(*ambiguous)[len(*ambiguous)-1].state = *state
-				}
-
-				return
+			if len(*ambiguous) != 0 {
+				(*ambiguous)[len(*ambiguous)-1].state = *state
 			}
+
+			return
 		}
 
-		*layout = append(*layout, "")
+		*layout = append(*layout, string(buf))
 		*ambiguous = append(*ambiguous, chunk{
 			pos:    uint(len(*layout) - 1),
 			v:      v,
@@ -101,16 +168,9 @@ func evalParseRules(prevTyp rune, buf []rune, conf ParseConfig, state *state, la
 }
 
 func evalAmbiguous(chunks []chunk, conf ParseConfig, layout []string, parts *parts) {
-	fmt.Println("========= evalAmbiguous")
 	for i := len(chunks) - 1; i >= 0; i-- {
-		spew.Dump(chunks[i])
-
-		for _, rule := range rules {
-			str, ok := rule(chunks[i].v, chunks[i].sign, chunks[i].digits, conf, &chunks[i].state, parts, true)
+		if str, ok := eval(chunks[i].v, chunks[i].sign, chunks[i].digits, conf, &chunks[i].state, parts, true); ok {
 			layout[chunks[i].pos] = str
-			if ok {
-				break
-			}
 		}
 	}
 }
@@ -130,9 +190,8 @@ func (s state) d(rev bool) datePart {
 		return datePartDay
 	} else if rev && s.datePart == datePartDay {
 		return datePartYear
-	} else {
-		return s.datePart
 	}
+	return s.datePart
 }
 
 func (s state) t(rev bool) timePart {
@@ -142,6 +201,7 @@ func (s state) t(rev bool) timePart {
 type component rune
 
 const (
+	componentNone           = 0
 	componentDate component = 'd'
 	componentTime component = 't'
 )
@@ -163,14 +223,143 @@ const (
 	timePartSecond timePart = 's'
 )
 
-type parts struct {
-	year int
-}
-
 type chunk struct {
 	pos    uint
 	v      int
 	sign   int
 	digits uint
 	state  state
+}
+
+func eval(v int, sign int, digits uint, conf ParseConfig, state *state, parts *parts, rev bool) (str string, ok bool) {
+	// fmt.Println("========= eval")
+	// fmt.Println("v:", v)
+	// fmt.Println("sign:", sign)
+	// fmt.Println("digits:", digits)
+	// fmt.Println("conf:", conf)
+	// fmt.Println("state:", *state)
+	// fmt.Println("datePart:", string(state.d(rev)))
+	// fmt.Println("parts:", *parts)
+	// fmt.Println("rev:", rev)
+
+	// defer func() {
+	// 	fmt.Println("out:", ok, str)
+	// }()
+
+	switch state.component {
+	case componentNone:
+		switch digits {
+		case 4: // [2006](-01-02) => %Y
+			if sign == 0 {
+				sign = 1
+			}
+
+			state.component = componentDate
+			state.datePart = datePartYear
+			parts.year = v * sign
+			return "%Y", true
+		}
+	case componentDate:
+		switch d := state.d(rev); d {
+		case datePartNone:
+			switch digits {
+			case 2:
+				switch conf.DayFirst {
+				case false:
+					switch sign {
+					case 0: // 01-[02] => %d
+						state.component = componentDate
+						state.datePart = datePartDay
+						parts.day = v
+						return "%d", true
+					}
+				case true:
+					switch sign {
+					case 0: // 02-[01](-2006) => %m
+						state.component = componentDate
+						state.datePart = datePartMonth
+						parts.month = v
+						return "%m", true
+					}
+				}
+			case 4: // 02-[2006] => %Y
+				if sign == 0 {
+					sign = 1
+				}
+
+				state.component = componentDate
+				state.datePart = datePartYear
+				parts.year = v * sign
+				return "%Y", true
+			}
+		case datePartYear:
+			switch digits {
+			case 2:
+				switch conf.DayFirst {
+				case false:
+					switch sign {
+					case 0: // 2006-[01](-02) => %m
+						state.component = componentDate
+						state.datePart = datePartMonth
+						parts.month = v
+						return "%m", true
+					}
+				case true:
+					switch sign {
+					case 0: // 2006-[02](-01) => %d
+						state.component = componentDate
+						state.datePart = datePartDay
+						parts.day = v
+						return "%d", true
+					}
+				}
+			}
+		case datePartMonth:
+			switch digits {
+			case 2:
+				switch conf.DayFirst {
+				case false:
+					switch sign {
+					case 0: // (2006)-01-[02] => %d
+						state.component = componentDate
+						state.datePart = datePartDay
+						parts.day = v
+						return "%d", true
+					}
+				case true:
+					switch sign {
+					case 0: // // [02]-01(-2006) => %m
+						state.component = componentDate
+						state.datePart = datePartDay
+						parts.day = v
+						return "%d", true
+					}
+				}
+			}
+		case datePartDay:
+			switch digits {
+			case 2:
+				switch conf.DayFirst {
+				case true:
+					switch sign {
+					case 0: // 2006-02-[01] => %m
+						state.component = componentDate
+						state.datePart = datePartMonth
+						parts.month = v
+						return "%m", true
+					}
+				case false:
+					switch sign {
+					case 0: // [01]-2006 => %m
+						state.component = componentDate
+						state.datePart = datePartMonth
+						parts.month = v
+						return "%m", true
+					}
+				}
+			}
+		}
+	}
+
+	return "", false
 }

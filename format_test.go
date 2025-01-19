@@ -766,21 +766,3 @@ func TestLocalDate_Parse_invalid_specifier(t *testing.T) {
 		})
 	}
 }
-
-func TestParseToLayout(t *testing.T) {
-	for _, tt := range []struct {
-		name           string
-		value          string
-		conf           chrono.ParseConfig
-		expectedLayout string
-	}{
-		{"%Y-%m-%d", "2006-04-09", chrono.ParseConfig{}, "%Y-%m-%d"},
-		{"%m-%d", "04-09", chrono.ParseConfig{}, "%m-%d"},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			if actual := chrono.ParseToLayout(tt.value, tt.conf); actual != tt.expectedLayout {
-				t.Errorf("got %q, want %q", actual, tt.expectedLayout)
-			}
-		})
-	}
-}
