@@ -49,10 +49,27 @@ And parsing a time:
 
 ```golang
 var time chrono.LocalTime
-time.Parse("%H:%M:%S", "12:30:15")
+fmt.Println(time.Parse("%H:%M:%S", "12:30:15"))
 ```
 
 There are also predefined layouts, similar to the `time` package, but with the addition of layouts compatible with ISO 8601.
+
+### Experimental: Parsing without a layout
+
+The example above assumes that you know how a date time string is formatted, but that's not always the case. For these situations, `ParseToLayout` accepts just a string and attempts to parse it, also returning the layout string.
+
+```golang
+var c chrono.OffsetDateTime
+fmt.Println(chrono.ParseToLayout(
+    "2006-04-09",
+    chrono.ParseConfig{},
+    &c,
+)) // %Y-%m-%d
+```
+
+To access this function you need to build with `-tag parse`.
+
+*This API is incomplete and subject to change until a stable release is reached.*
 
 ## Parse and format ISO 8601 durations
 

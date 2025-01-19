@@ -19,11 +19,11 @@ type Chronological interface {
 	set(dv, tv, ov int64)
 }
 
-func Parse(value string, conf ParseConfig) (Chronological, error) {
-	// pick type
+// func Parse(value string, conf ParseConfig) (Chronological, error) {
+// 	// pick type
 
-	return nil, nil
-}
+// 	return nil, nil
+// }
 
 // ParseToLayout attempts to parse the input string as C and returns
 // the applicable layout string that would parse that string, or format C to that string.
