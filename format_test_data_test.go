@@ -8,6 +8,7 @@ import (
 
 const (
 	formatYear        = 807
+	formatCentury     = 8
 	formatMonth       = chrono.February
 	formatDay         = 9
 	formatHour        = 1
@@ -38,6 +39,12 @@ type date interface {
 func checkYear(t *testing.T, date date) {
 	if y, _, _ := date.Date(); y != formatYear {
 		t.Errorf("date.Date() year = %d, want %d", y, formatYear)
+	}
+}
+
+func checkCentury(t *testing.T, date date) {
+	if y, _, _ := date.Date(); y/100 != formatCentury {
+		t.Errorf("date.Date() year/100 = %d, want %d", y/100, formatCentury)
 	}
 }
 
@@ -148,6 +155,7 @@ var (
 		{"%-y", "7", checkYear, "7"},
 		{"%Ey", "07", checkYear, "07"},
 		{"%-Ey", "7", checkYear, "7"},
+		{"%C", "08", checkCentury, "08"},
 		{"%j", "040", checkYearDay, "040"},
 		{"%-j", "40", checkYearDay, "40"},
 		{"%m", "02", checkMonth, "02"},
