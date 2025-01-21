@@ -22,14 +22,8 @@ func (p Period) Equal(p2 Period) bool {
 }
 
 // String returns a string formatted according to ISO 8601.
-// It is equivalent to calling [Format] with no arguments.
-func (p Period) String() string {
-	return p.Format()
-}
-
-// Format the duration according to ISO 8601.
 // The output consists of only the period component - the time component is never included.
-func (p Period) Format() string {
+func (p Period) String() string {
 	if p.Years == 0 && p.Months == 0 && p.Weeks == 0 && p.Days == 0 {
 		return "P0D"
 	}
@@ -72,7 +66,7 @@ func (p *Period) Parse(s string) error {
 
 // FormatDuration formats a combined period and duration to a complete ISO 8601 duration.
 func FormatDuration(p Period, d Duration, exclusive ...Designator) string {
-	out := p.Format()
+	out := p.String()
 
 	t, neg := d.format(exclusive...)
 	out += t
