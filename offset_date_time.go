@@ -153,7 +153,16 @@ func (d *OffsetDateTime) Parse(layout, value string) error {
 		return err
 	}
 
+	d.set(dv, tv, ov)
+	return nil
+}
+
+func (d OffsetDateTime) get() (dv, tv, ov *int64) {
+	_dv, _tv := splitDateAndTime(d.v)
+	return &_dv, &_tv, &d.o
+}
+
+func (d *OffsetDateTime) set(dv, tv, ov int64) {
 	d.v = makeDateTime(dv, tv)
 	d.o = ov
-	return nil
 }

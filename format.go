@@ -60,13 +60,13 @@ import (
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
 // However, when parsing using these specifiers, it is not required that the input string contains any leading zeros.
 //
-// When parsing using specifier that represent textual values (month names, etc.), the input text is treated case insensitively.
+// When parsing using specifiers that represent textual values (e.g. month names, etc.), the input text is treated case insensitively.
 //
 // Depending on the context in which the layout is used, only a subset of specifiers may be supported by a particular function.
 // For example, %H is not supported when parsing or formatting a date.
 //
 // When parsing, if multiple instances of the same specifier, or multiple instances of a specifier that represent the same value,
-// are encountered, only the instance will be considered. See note (2).
+// are encountered, only the last instance will be considered. See note (2).
 //
 // If a specifier is encountered which is not recognized (defined in the list above), or not supported by a particular function,
 // the function will panic with a message that includes the unrecognized sequence.
@@ -163,11 +163,11 @@ NextChar:
 				return "", err
 			}
 
-			decimal := func(v int, len int) string {
+			decimal := func(v int, n int) string {
 				if nopad {
 					return strconv.Itoa(v)
 				}
-				return fmt.Sprintf("%0*d", len, v)
+				return fmt.Sprintf("%0*d", n, v)
 			}
 
 			switch {
@@ -311,6 +311,36 @@ const (
 	endOfStringErrMsg = "parsing time \"%s\": end of string"
 )
 
+type parts struct {
+	haveDate          bool
+	haveGregorianYear bool
+	isBCE             bool
+	year              int
+	yearCentury       *int
+	shortYear         *int
+	yearType          int // -1 = short/century, 0 = none, 1 = full year
+
+	month int
+	day   int
+
+	dayOfWeek int
+
+	dayOfYear int
+
+	haveISODate bool
+	isoYear     int
+	isoWeek     int
+
+	have12HourClock bool
+	isAfternoon     bool
+	hour            int
+	min             int
+	sec             int
+	nsec            int
+
+	offset int64
+}
+
 // parseDateAndTime parses the supplied value according to the specified layout.
 // date, time and offset must be provided in order for those components to be parsed.
 // If not provided, and the specifiers that pertain to those components are
@@ -318,48 +348,26 @@ const (
 // If non-zero, date, time, and offset and taken as starting points, where the individual values
 // that they represent are replaced only if present in the supplied layout.
 func parseDateAndTime(layout, value string, date, time, offset *int64) error {
-	var (
-		haveDate          bool
-		haveGregorianYear bool
-		isBCE             bool
-		year              int
-		yearCentury       *int
-		shortYear         *int
-		yearType          int // -1 = short/century, 0 = none, 1 = full year
-
-		month int
-		day   int
-
-		dayOfWeek int
-
-		dayOfYear int
-
-		haveISODate bool
-		isoYear     int
-		isoWeek     int
-
-		have12HourClock bool
-		isAfternoon     bool
-		hour            int
-		min             int
-		sec             int
-		nsec            int
-	)
+	var parts parts
 
 	var err error
 	if date != nil {
-		if year, month, day, err = fromDate(*date); err != nil {
+		if parts.year, parts.month, parts.day, err = fromDate(*date); err != nil {
 			return err
 		}
 
-		if isoYear, isoWeek, err = getISOWeek(*date); err != nil {
+		if parts.isoYear, parts.isoWeek, err = getISOWeek(*date); err != nil {
 			return err
 		}
 	}
 
 	if time != nil {
-		hour, min, sec, nsec = fromTime(*time)
-		_, isAfternoon = convert24To12HourClock(hour)
+		parts.hour, parts.min, parts.sec, parts.nsec = fromTime(*time)
+		_, parts.isAfternoon = convert24To12HourClock(parts.hour)
+	}
+
+	if offset != nil {
+		parts.offset = *offset
 	}
 
 	var pos int
@@ -495,35 +503,35 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 			case date != nil && main == 'a': // %a
 				lower, original := alphas(3)
 				var ok bool
-				if dayOfWeek, ok = shortDayNameLookup[lower]; !ok {
+				if parts.dayOfWeek, ok = shortDayNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short day name %q", original)
 				}
 			case date != nil && main == 'A': // %A
 				lower, original := alphas(9)
 				var ok bool
-				if dayOfWeek, ok = longDayNameLookup[lower]; !ok {
+				if parts.dayOfWeek, ok = longDayNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized day name %q", original)
 				}
 			case date != nil && main == 'b': // %b
 				lower, original := alphas(3)
 				var ok bool
-				if month, ok = shortMonthNameLookup[lower]; !ok {
+				if parts.month, ok = shortMonthNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized short month name %q", original)
 				}
 			case date != nil && main == 'B': // %B
 				lower, original := alphas(9)
 				var ok bool
-				if month, ok = longMonthNameLookup[lower]; !ok {
+				if parts.month, ok = longMonthNameLookup[lower]; !ok {
 					return fmt.Errorf("unrecognized month name %q", original)
 				}
 			case date != nil && main == 'C':
 				if localed { // %EC
-					haveGregorianYear = true
+					parts.haveGregorianYear = true
 					lower, original := alphas(3)
 					switch lower {
 					case "ce":
 					case "bce":
-						isBCE = true
+						parts.isBCE = true
 					default:
 						return fmt.Errorf("unrecognized era %q", original)
 					}
@@ -532,12 +540,12 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 					if v, err = integer(2); err != nil {
 						return err
 					}
-					yearCentury = &v
-					yearType = -1
+					parts.yearCentury = &v
+					parts.yearType = -1
 				}
 			case date != nil && main == 'd': // %d
-				haveDate = true
-				if day, err = integer(2); err != nil {
+				parts.haveDate = true
+				if parts.day, err = integer(2); err != nil {
 					return err
 				}
 			case time != nil && main == 'f': // %f
@@ -551,43 +559,43 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 					if err != nil {
 						return err
 					}
-					nsec = millis * 1000000
+					parts.nsec = millis * 1000000
 				case 6: // %6f
 					micros, err := integer(6)
 					if err != nil {
 						return err
 					}
-					nsec = micros * 1000
+					parts.nsec = micros * 1000
 				case 9: // %9f
-					if nsec, err = integer(9); err != nil {
+					if parts.nsec, err = integer(9); err != nil {
 						return err
 					}
 				default:
 				}
 			case date != nil && main == 'G': // %G
-				haveISODate = true
-				if isoYear, err = integer(4); err != nil {
+				parts.haveISODate = true
+				if parts.isoYear, err = integer(4); err != nil {
 					return err
 				}
 			case time != nil && main == 'H': // %H
-				if hour, err = integer(2); err != nil {
+				if parts.hour, err = integer(2); err != nil {
 					return err
 				}
 			case time != nil && main == 'I': // %I
-				have12HourClock = true
-				if hour, err = integer(2); err != nil {
+				parts.have12HourClock = true
+				if parts.hour, err = integer(2); err != nil {
 					return err
 				}
 			case date != nil && main == 'j': // %j
-				if dayOfYear, err = integer(3); err != nil {
+				if parts.dayOfYear, err = integer(3); err != nil {
 					return err
 				}
 			case date != nil && main == 'm': // %m
-				if month, err = integer(2); err != nil {
+				if parts.month, err = integer(2); err != nil {
 					return err
 				}
 			case time != nil && main == 'M': // %M
-				if min, err = integer(2); err != nil {
+				if parts.min, err = integer(2); err != nil {
 					return err
 				}
 			case time != nil && main == 'p': // %p
@@ -595,7 +603,7 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 				switch strings.ToUpper(lower) {
 				case "AM":
 				case "PM":
-					isAfternoon = true
+					parts.isAfternoon = true
 				default:
 					return fmt.Errorf("failed to parse time of day %q", original)
 				}
@@ -604,43 +612,43 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 				switch lower {
 				case "am":
 				case "pm":
-					isAfternoon = true
+					parts.isAfternoon = true
 				default:
 					return fmt.Errorf("failed to parse time of day %q", original)
 				}
 			case time != nil && main == 'S': // %S
-				if sec, err = integer(2); err != nil {
+				if parts.sec, err = integer(2); err != nil {
 					return err
 				}
 			case date != nil && main == 'u': // %u
-				if dayOfWeek, err = integer(1); err != nil {
+				if parts.dayOfWeek, err = integer(1); err != nil {
 					return err
 				}
 			case date != nil && main == 'V': // %V
-				haveISODate = true
-				if isoWeek, err = integer(2); err != nil {
+				parts.haveISODate = true
+				if parts.isoWeek, err = integer(2); err != nil {
 					return err
 				}
 			case date != nil && main == 'y': // %y
 				if localed { // %Ey
-					haveGregorianYear = true
+					parts.haveGregorianYear = true
 				}
 
 				var v int
 				if v, err = integer(2); err != nil {
 					return err
 				}
-				shortYear = &v
-				yearType = -1
+				parts.shortYear = &v
+				parts.yearType = -1
 			case date != nil && main == 'Y': // %Y
 				if localed { // %EY
-					haveGregorianYear = true
+					parts.haveGregorianYear = true
 				}
 
-				if year, err = integer(4); err != nil {
+				if parts.year, err = integer(4); err != nil {
 					return err
 				}
-				yearType = 1
+				parts.yearType = 1
 			case time != nil && main == 'z': // %z
 				// If at end of input and no offset is requested, break.
 				// But continue to parse in the case where offset is not requested, but may be present.
@@ -686,7 +694,7 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 				// Parsing %z into a type that contains no offset (e.g. LocalTime, LocalDateTime)
 				// is valid, although the value itself is ignored. But it needed to be consumed above, just now discarded.
 				if offset != nil {
-					*offset = v
+					parts.offset = v
 				}
 			case main == '%': // %%
 			default:
@@ -742,41 +750,46 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 		return fmt.Errorf(extraTextErrMsg, value, value[pos:])
 	}
 
+	return applyParts(parts, date, time, offset)
+}
+
+func applyParts(parts parts, date, time, offset *int64) error {
 	if date != nil {
 		// Check century according to note (9).
-		if yearCentury != nil {
-			if yearType == 1 && year/100 != *yearCentury {
-				return fmt.Errorf("year century %d does not agree with year %d", *yearCentury, year)
-			} else if yearType != 1 {
-				year = *yearCentury * 100
+		if parts.yearCentury != nil {
+			if parts.yearType == 1 && parts.year/100 != *parts.yearCentury {
+				return fmt.Errorf("year century %d does not agree with year %d", *parts.yearCentury, parts.year)
+			} else if parts.yearType != 1 {
+				parts.year = *parts.yearCentury * 100
 			}
 		}
 
 		// Check 2-digit year according to note (9).
-		if shortYear != nil {
-			_year := getCentury(*shortYear) + *shortYear
-			if yearCentury != nil {
-				_year = *yearCentury*100 + *shortYear
+		if parts.shortYear != nil {
+			_year := getCentury(*parts.shortYear) + *parts.shortYear
+			if parts.yearCentury != nil {
+				_year = *parts.yearCentury*100 + *parts.shortYear
 			}
 
-			if yearType == 1 && year-(year/100*100) != *shortYear {
-				return fmt.Errorf("short year %d (%d) does not agree with year %d", *shortYear, _year, year)
-			} else if yearType != 1 {
-				year = _year
+			if parts.yearType == 1 && parts.year-(parts.year/100*100) != *parts.shortYear {
+				return fmt.Errorf("short year %d (%d) does not agree with year %d", *parts.shortYear, _year, parts.year)
+			} else if parts.yearType != 1 {
+				parts.year = _year
 			}
 		}
 
-		if haveGregorianYear {
-			if year, err = convertGregorianToISOYear(year, isBCE); err != nil {
+		if parts.haveGregorianYear {
+			var err error
+			if parts.year, err = convertGregorianToISOYear(parts.year, parts.isBCE); err != nil {
 				return err
 			}
 		}
 
-		if !isDateValid(year, month, day) {
-			return fmt.Errorf("invalid date %q", simpleDateStr(year, month, day))
+		if !isDateValid(parts.year, parts.month, parts.day) {
+			return fmt.Errorf("invalid date %q", simpleDateStr(parts.year, parts.month, parts.day))
 		}
 
-		_date, err := makeDate(year, month, day)
+		_date, err := makeDate(parts.year, parts.month, parts.day)
 		if err != nil {
 			return err
 		}
@@ -784,16 +797,16 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 		*date = _date
 
 		// Check day of year according to note (2).
-		if dayOfYear != 0 {
-			doyDate, err := ofDayOfYear(year, dayOfYear)
+		if parts.dayOfYear != 0 {
+			doyDate, err := ofDayOfYear(parts.year, parts.dayOfYear)
 			if err != nil {
 				return err
 			}
 
-			if haveDate && (doyDate != _date) {
+			if parts.haveDate && (doyDate != _date) {
 				return fmt.Errorf("day-of-year date %q does not agree with date %q",
 					LocalDate(doyDate).String(),
-					simpleDateStr(year, month, day),
+					simpleDateStr(parts.year, parts.month, parts.day),
 				)
 			}
 
@@ -801,21 +814,21 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 		}
 
 		// Check ISO week-year according to note (2).
-		if haveISODate {
-			weekday := dayOfWeek
-			if dayOfWeek == 0 {
+		if parts.haveISODate {
+			weekday := parts.dayOfWeek
+			if parts.dayOfWeek == 0 {
 				weekday = int(Monday)
 			}
 
-			isoDate, err := ofISOWeek(isoYear, isoWeek, weekday)
+			isoDate, err := ofISOWeek(parts.isoYear, parts.isoWeek, weekday)
 			if err != nil {
-				return fmt.Errorf("invalid ISO week-year date %q", getISODateSimpleStr(isoYear, isoWeek, day))
+				return fmt.Errorf("invalid ISO week-year date %q", getISODateSimpleStr(parts.isoYear, parts.isoWeek, parts.day))
 			}
 
-			if haveDate && (isoDate != _date) {
+			if parts.haveDate && (isoDate != _date) {
 				return fmt.Errorf("ISO week-year date %q does not agree with date %q",
-					getISODateSimpleStr(isoYear, isoWeek, day),
-					simpleDateStr(year, month, day),
+					getISODateSimpleStr(parts.isoYear, parts.isoWeek, parts.day),
+					simpleDateStr(parts.year, parts.month, parts.day),
 				)
 			}
 
@@ -823,11 +836,11 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 		}
 
 		// Check day of week according to note (3).
-		haveDate = haveDate || dayOfYear != 0
-		if dayOfWeek != 0 && haveDate {
-			if actual := getWeekday(int32(*date)); dayOfWeek != actual {
+		parts.haveDate = parts.haveDate || parts.dayOfYear != 0
+		if parts.dayOfWeek != 0 && parts.haveDate {
+			if actual := getWeekday(int32(*date)); parts.dayOfWeek != actual {
 				return fmt.Errorf("day of week %q does not agree with actual day of week %q",
-					longWeekdayName(dayOfWeek),
+					longWeekdayName(parts.dayOfWeek),
 					longWeekdayName(actual),
 				)
 			}
@@ -836,18 +849,22 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 
 	if time != nil {
 		// Check validity of hour on 12-hour clock according to note (5).
-		if have12HourClock {
-			if hour < 1 || hour > 12 {
-				return fmt.Errorf("hour %d is not valid on the 12-hour clock", hour)
+		if parts.have12HourClock {
+			if parts.hour < 1 || parts.hour > 12 {
+				return fmt.Errorf("hour %d is not valid on the 12-hour clock", parts.hour)
 			}
-			hour = convert12To24HourClock(hour, isAfternoon)
+			parts.hour = convert12To24HourClock(parts.hour, parts.isAfternoon)
 		}
 
-		v, err := makeTime(hour, min, sec, nsec)
+		v, err := makeTime(parts.hour, parts.min, parts.sec, parts.nsec)
 		if err != nil {
 			return err
 		}
 		*time = v
+	}
+
+	if offset != nil {
+		*offset = parts.offset
 	}
 
 	return nil
