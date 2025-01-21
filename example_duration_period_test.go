@@ -32,7 +32,7 @@ func ExamplePeriod_Parse() {
 func ExamplePeriod_Format() {
 	p := chrono.Period{Years: 3, Months: 6, Days: 4}
 
-	fmt.Println(p.Format())
+	fmt.Println(p.String())
 	// Output: P3Y6M4D
 }
 

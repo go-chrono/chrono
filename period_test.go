@@ -90,7 +90,7 @@ func TestPeriod_Format(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			if out := tt.input.Format(); out != tt.expected {
+			if out := tt.input.String(); out != tt.expected {
 				t.Errorf("formatted period = %s, want %s", out, tt.expected)
 			}
 		})
