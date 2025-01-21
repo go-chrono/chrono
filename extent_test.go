@@ -89,11 +89,11 @@ func TestExtent_Parse(t *testing.T) {
 						}
 					}
 
-					t.Run("dots", func(t *testing.T) {
+					t.Run("dots", func(_ *testing.T) {
 						run()
 					})
 
-					t.Run("commas", func(t *testing.T) {
+					t.Run("commas", func(_ *testing.T) {
 						tt.input = strings.ReplaceAll(tt.input, ".", ",")
 						run()
 					})

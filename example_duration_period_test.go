@@ -29,7 +29,7 @@ func ExamplePeriod_Parse() {
 	// Output: 3 years; 6 months; 0 weeks; 4 days
 }
 
-func ExamplePeriod_Format() {
+func ExamplePeriod_String() {
 	p := chrono.Period{Years: 3, Months: 6, Days: 4}
 
 	fmt.Println(p.String())

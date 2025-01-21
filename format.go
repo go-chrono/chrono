@@ -163,11 +163,11 @@ NextChar:
 				return "", err
 			}
 
-			decimal := func(v int, len int) string {
+			decimal := func(v int, n int) string {
 				if nopad {
 					return strconv.Itoa(v)
 				}
-				return fmt.Sprintf("%0*d", len, v)
+				return fmt.Sprintf("%0*d", n, v)
 			}
 
 			switch {
