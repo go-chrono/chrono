@@ -60,7 +60,7 @@ import (
 // For example, '%m' may produce the string '04' (for March), but '%-m' produces '4'.
 // However, when parsing using these specifiers, it is not required that the input string contains any leading zeros.
 //
-// When parsing using specifiers that represent(2) textual values (e.g. month names, etc.), the input text is treated case insensitively.
+// When parsing using specifiers that represent textual values (e.g. month names, etc.), the input text is treated case insensitively.
 //
 // Depending on the context in which the layout is used, only a subset of specifiers may be supported by a particular function.
 // For example, %H is not supported when parsing or formatting a date.
