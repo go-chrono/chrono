@@ -678,6 +678,28 @@ func TestLocalDate_Parse_eras(t *testing.T) {
 		}
 	})
 
+	t.Run("AD", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%EY %EC", "2022 AD"); err != nil {
+			t.Errorf("failed to parse date: %v", err)
+		}
+
+		if year, _, _ := date.Date(); year != 2022 {
+			t.Errorf("got %d, want 2022", year)
+		}
+	})
+
+	t.Run("BC", func(t *testing.T) {
+		var date chrono.LocalDate
+		if err := date.Parse("%EY %EC", "2022 BC"); err != nil {
+			t.Errorf("failed to parse date: %v", err)
+		}
+
+		if year, _, _ := date.Date(); year != -2021 {
+			t.Errorf("got %d, want -2021", year)
+		}
+	})
+
 	t.Run("zero", func(t *testing.T) {
 		var date chrono.LocalDate
 		if err := date.Parse("%EY %EC", "1 BCE"); err != nil {

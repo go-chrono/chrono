@@ -9,17 +9,17 @@ import (
 // These are predefined layouts used for the parsing and formatting of dates, times and date-times.
 // Additional layouts can be composed using the specifiers detailed below:
 //
-//   - %Y: The ISO 8601 year as a decimal number, padded to 4 digits with leading 0s.
+//   - %Y:  The ISO 8601 year as a decimal number, padded to 4 digits with leading 0s.
 //   - %EY: The year in the era as a decimal number, padded to 4 digits with leading 0s.
-//   - %y: The ISO 8601 year without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
+//   - %y:  The ISO 8601 year without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See note (1).
 //   - %Ey: The year in the era without a century as a decimal number, padded to 2 digits with a leading 0, in the range 00 to 99. See notes (1) and (9).
-//   - %C: The century as a decimal number, padded to 2 digits with a leading 0, e.g. 19 for 1980. See note (9).
+//   - %C:  The century as a decimal number, padded to 2 digits with a leading 0, e.g. 19 for 1980. See note (9).
 //   - %EC: The name of the era, either "CE" (for Common Era) "BCE" (for Before the Common Era).
-//   - %j: The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366. See note (2).
-//   - %m: The month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
-//   - %B: The full month name, e.g. January, February, etc.
-//   - %b: The abbreviated month name, e.g. Jan, Feb, etc.
-//   - %d: The day of the month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 31.
+//   - %j:  The day of the year as a decimal number, padded to 3 digits with leading 0s, in the range 001 to 366. See note (2).
+//   - %m:  The month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 12.
+//   - %B:  The full month name, e.g. January, February, etc.
+//   - %b:  The abbreviated month name, e.g. Jan, Feb, etc.
+//   - %d:  The day of the month as a decimal number, padded to 2 digits with a leading 0, in the range 01 to 31.
 //
 // Days of week:
 //
@@ -46,14 +46,14 @@ import (
 //
 // Millisecond precisions:
 //
-//   - %f: Equivalent to %6f.
+//   - %f:  Equivalent to %6f.
 //   - %3f: The millisecond offset within the represented second, rounded either up or down and padded to 3 digits with leading 0s.
 //   - %6f: The microsecond offset within the represented second, rounded either up or down and padded to 6 digits with leading 0s.
 //   - %9f: The nanosecond offset within the represented second, padded to 9 digits with leading 0s.
 //
 // Time offsets:
 //
-//   - %z: The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See notes (6), (7), and (8).
+//   - %z:  The UTC offset in the format ±HHMM, preceded always by the sign ('+' or '-'), and padded to 4 digits with leading zeros. See notes (6), (7), and (8).
 //   - %Ez: Equivalent to %z, except that an offset of +0000 is formatted at 'Z', and other offsets as ±HH:MM. See notes (6) and (7).
 //
 // When formatting using specifiers that represent padded decimals, leading 0s can be omitted using the '-' character after the '%'.
@@ -99,6 +99,8 @@ import (
 //  8. When %z is used for parsing a UTC offset, 'Z' can be used to represent an offset of +0000.
 //  9. When parsing partial years (%Ey and %C) in combination with a full year (%Y or %EY),
 //     an error will be returned if the represented years to not match.
+//  10. When parsing era names (%EC), 'AD' and 'BC' are accepted in place of 'CE' and 'BCE',
+//     although only the latter are used to format.
 const (
 	// ISO 8601.
 	ISO8601                          = ISO8601DateTimeExtended
@@ -529,8 +531,9 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 					parts.haveGregorianYear = true
 					lower, original := alphas(3)
 					switch lower {
-					case "ce":
-					case "bce":
+					case "ce", "ad":
+						parts.isBCE = false
+					case "bce", "bc":
 						parts.isBCE = true
 					default:
 						return fmt.Errorf("unrecognized era %q", original)
