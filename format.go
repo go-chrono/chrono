@@ -99,6 +99,8 @@ import (
 //  8. When %z is used for parsing a UTC offset, 'Z' can be used to represent an offset of +0000.
 //  9. When parsing partial years (%Ey and %C) in combination with a full year (%Y or %EY),
 //     an error will be returned if the represented years to not match.
+//  10. When parsing era names (%EC), 'AD' and 'BC' are accepted in place of 'CE' and 'BCE',
+//     although only the latter are used to format.
 const (
 	// ISO 8601.
 	ISO8601                          = ISO8601DateTimeExtended
@@ -529,8 +531,9 @@ func parseDateAndTime(layout, value string, date, time, offset *int64) error {
 					parts.haveGregorianYear = true
 					lower, original := alphas(3)
 					switch lower {
-					case "ce":
-					case "bce":
+					case "ce", "ad":
+						parts.isBCE = false
+					case "bce", "bc":
 						parts.isBCE = true
 					default:
 						return fmt.Errorf("unrecognized era %q", original)
