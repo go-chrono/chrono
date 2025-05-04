@@ -56,11 +56,13 @@ func TestOffsetTime_String(t *testing.T) {
 		expected string
 	}{
 		{"simple", chrono.OffsetTimeOf(9, 0, 0, 0, 2, 30), "09:00:00+02:30"},
-		{"nanoseconds", chrono.OffsetTimeOf(9, 0, 0, 12345678, 2, 30), "09:00:00.012345678+02:30"},
+		{"micros", chrono.OffsetTimeOf(9, 0, 0, 1e3, 2, 30), "09:00:00.000001+02:30"},
+		{"millis", chrono.OffsetTimeOf(9, 0, 0, 1e6, 2, 30), "09:00:00.001+02:30"},
+		{"nanos", chrono.OffsetTimeOf(9, 0, 0, 12345678, 2, 30), "09:00:00.012345678+02:30"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if output := tt.time.String(); output != tt.expected {
-				t.Errorf("LocalTime.String() = %s, want %s", output, tt.expected)
+				t.Errorf("OffsetTime.String() = %s, want %s", output, tt.expected)
 			}
 		})
 	}

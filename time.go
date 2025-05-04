@@ -1,6 +1,9 @@
 package chrono
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 const (
 	oneHour   = int64(Hour)
@@ -15,8 +18,7 @@ func makeTime(hour, min, sec, nsec int) (int64, error) {
 		return 0, fmt.Errorf("invalid time")
 	}
 
-	h, m, s, n := int64(hour), int64(min), int64(sec), int64(nsec)
-	return h*oneHour + m*oneMinute + s*oneSecond + n, nil
+	return int64(hour)*oneHour + int64(min)*oneMinute + int64(sec)*oneSecond + int64(nsec), nil
 }
 
 func fromTime(v int64) (hour, min, sec, nsec int) {
@@ -50,7 +52,7 @@ func addTime(t, v int64) (int64, error) {
 func simpleTimeStr(hour, min, sec, nsec int, offset *int64) string {
 	out := fmt.Sprintf("%02d:%02d:%02d", hour, min, sec)
 	if nsec != 0 {
-		out += fmt.Sprintf(".%09d", nsec)
+		out += "." + strconv.FormatFloat(float64(nsec)/1e9, 'f', -1, 64)[2:]
 	}
 
 	if offset == nil {

@@ -70,6 +70,25 @@ func TestOfLocalDateTimeOffset(t *testing.T) {
 	}
 }
 
+func TestOffsetDateTime_String(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		datetime chrono.OffsetDateTime
+		expected string
+	}{
+		{"simple", chrono.OffsetDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 0, 2, 30), "2020-03-18 09:00:00+02:30"},
+		{"micros", chrono.OffsetDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 1e3, 2, 30), "2020-03-18 09:00:00.000001+02:30"},
+		{"millis", chrono.OffsetDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 1e6, 2, 30), "2020-03-18 09:00:00.001+02:30"},
+		{"nanos", chrono.OffsetDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 12345678, 2, 30), "2020-03-18 09:00:00.012345678+02:30"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if output := tt.datetime.String(); output != tt.expected {
+				t.Errorf("OffsetDateTime.String() = %s, want %s", output, tt.expected)
+			}
+		})
+	}
+}
+
 func TestOffsetDateTime_Compare(t *testing.T) {
 	for _, tt := range []struct {
 		name     string

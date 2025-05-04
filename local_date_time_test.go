@@ -53,6 +53,101 @@ func TestOfLocalDateTime(t *testing.T) {
 	}
 }
 
+func TestUnix(t *testing.T) {
+	for _, tt := range []struct {
+		name             string
+		secs             int64
+		nsecs            int64
+		expected         chrono.LocalDateTime
+		expectedUnix     int64
+		expectedUnixNano int64
+	}{
+		{"zero", 0, 0, chrono.LocalDateTime{}, 0, 0},
+		{"+secs", 1136171045, 0, chrono.LocalDateTimeOf(2006, chrono.January, 2, 3, 4, 5, 0), 1136171045, 1136171045000000000},
+		{"-secs", 820551845, 0, chrono.LocalDateTimeOf(1996, chrono.January, 2, 3, 4, 5, 0), 820551845, 820551845000000000},
+		{"+nsecs", 1136171045, 6e10 + 1e6, chrono.LocalDateTimeOf(2006, chrono.January, 2, 3, 5, 5, 1000000), 1136171105, 1136171105001000000},
+		{"-nsecs", 1136171045, -6e10 - 1e6, chrono.LocalDateTimeOf(2006, chrono.January, 2, 3, 3, 4, 999000000), 1136170984, 1136170984999000000},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			dt := chrono.Unix(tt.secs, tt.nsecs)
+			if dt.Compare(tt.expected) != 0 {
+				t.Errorf("Unix(%d, %d) = %s, want %s", tt.secs, tt.nsecs, dt, tt.expected)
+			}
+
+			if unix := dt.Unix(); unix != tt.expectedUnix {
+				t.Errorf("dt.Unix() = %d, want %d", unix, tt.expectedUnix)
+			}
+
+			if unix := dt.UnixNano(); unix != tt.expectedUnixNano {
+				t.Errorf("dt.UnixNano() = %d, want %d", unix, tt.expectedUnixNano)
+			}
+		})
+	}
+}
+
+func TestUnixMilli(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		msecs    int64
+		expected chrono.LocalDateTime
+	}{
+		{"zero", 0, chrono.LocalDateTime{}},
+		{"msecs", 1136171045000, chrono.LocalDateTimeOf(2006, chrono.January, 2, 3, 4, 5, 0)},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			dt := chrono.UnixMilli(tt.msecs)
+			if dt.Compare(tt.expected) != 0 {
+				t.Errorf("UnixMilli(%d) = %s, want %s", tt.msecs, dt, tt.expected)
+			}
+
+			if unix := dt.UnixMilli(); unix != tt.msecs {
+				t.Errorf("dt.UnixMilli() = %d, want %d", unix, tt.msecs)
+			}
+		})
+	}
+}
+
+func TestUnixMicro(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		usecs    int64
+		expected chrono.LocalDateTime
+	}{
+		{"zero", 0, chrono.LocalDateTime{}},
+		{"usecs", 1136171045000000, chrono.LocalDateTimeOf(2006, chrono.January, 2, 3, 4, 5, 0)},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			dt := chrono.UnixMicro(tt.usecs)
+			if dt.Compare(tt.expected) != 0 {
+				t.Errorf("UnixMicro(%d) = %s, want %s", tt.usecs, dt, tt.expected)
+			}
+
+			if unix := dt.UnixMicro(); unix != tt.usecs {
+				t.Errorf("dt.UnixMicro() = %d, want %d", unix, tt.usecs)
+			}
+		})
+	}
+}
+
+func TestLocalDateTime_String(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		time     chrono.LocalDateTime
+		expected string
+	}{
+		{"simple", chrono.LocalDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 0), "2020-03-18 09:00:00"},
+		{"micros", chrono.LocalDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 1e3), "2020-03-18 09:00:00.000001"},
+		{"millis", chrono.LocalDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 1e6), "2020-03-18 09:00:00.001"},
+		{"nanos", chrono.LocalDateTimeOf(2020, chrono.March, 18, 9, 0, 0, 12345678), "2020-03-18 09:00:00.012345678"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if output := tt.time.String(); output != tt.expected {
+				t.Errorf("LocalDateTime.String() = %s, want %s", output, tt.expected)
+			}
+		})
+	}
+}
+
 func TestLocalDateTime_Compare(t *testing.T) {
 	for _, tt := range []struct {
 		name     string

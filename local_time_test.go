@@ -35,7 +35,9 @@ func TestLocalTime_String(t *testing.T) {
 		expected string
 	}{
 		{"simple", chrono.LocalTimeOf(9, 0, 0, 0), "09:00:00"},
-		{"nanoseconds", chrono.LocalTimeOf(9, 0, 0, 12345678), "09:00:00.012345678"},
+		{"micros", chrono.LocalTimeOf(9, 0, 0, 1e3), "09:00:00.000001"},
+		{"millis", chrono.LocalTimeOf(9, 0, 0, 1e6), "09:00:00.001"},
+		{"nanos", chrono.LocalTimeOf(9, 0, 0, 12345678), "09:00:00.012345678"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			if output := tt.time.String(); output != tt.expected {
