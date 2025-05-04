@@ -32,6 +32,45 @@ func OfLocalDateTime(date LocalDate, time LocalTime) LocalDateTime {
 	return LocalDateTime{v: makeDateTime(int64(date), time.v)}
 }
 
+// Unix returns the LocalDateTime that is represented by the supplied Unix time
+// (seconds and/or nanoseconds elapsed since 1st January 1970).
+// nsecs may be outside of the range [0, 999999999].
+func Unix(secs, nsecs int64) LocalDateTime {
+	return LocalDateTime{v: unixToDateTime(secs, nsecs)}
+}
+
+// UnixMilli returns the LocalDateTime represented by the supplied Unix time
+// (milliseconds elapsed since 1st January 1970).
+func UnixMilli(msecs int64) LocalDateTime {
+	return LocalDateTime{v: unixMilliToDateTime(msecs)}
+}
+
+// UnixMicro returns the LocalDateTime represented by the supplied Unix time
+// (microseconds elapsed since 1st January 1970).
+func UnixMicro(usecs int64) LocalDateTime {
+	return LocalDateTime{v: unixMicroToDateTime(usecs)}
+}
+
+// Unix returns the Unix time (seconds elapsed since 1st January 1970).
+func (d LocalDateTime) Unix() int64 {
+	return dateTimeToUnix(d.v)
+}
+
+// UnixMilli returns the Unix time (milliseconds elapsed since 1st January 1970).
+func (d LocalDateTime) UnixMilli() int64 {
+	return dateTimeToUnixMilli(d.v)
+}
+
+// UnixMicro returns the Unix time (microseconds elapsed since 1st January 1970).
+func (d LocalDateTime) UnixMicro() int64 {
+	return dateTimeToUnixMicro(d.v)
+}
+
+// UnixNano returns the Unix time (nanoseconds elapsed since 1st January 1970).
+func (d LocalDateTime) UnixNano() int64 {
+	return dateTimeToUnixNano(d.v)
+}
+
 // Compare compares d with d2. If d is before d2, it returns -1;
 // if d is after d2, it returns 1; if they're the same, it returns 0.
 func (d LocalDateTime) Compare(d2 LocalDateTime) int {

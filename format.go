@@ -980,10 +980,6 @@ var shortDayNameLookup = map[string]int{
 	"sun": int(Sunday),
 }
 
-func (m Month) short() string {
-	return shortMonthName(int(m))
-}
-
 func shortMonthName(m int) string {
 	if m < int(January) || m > int(December) {
 		return fmt.Sprintf("%%!Month(%d)", m)

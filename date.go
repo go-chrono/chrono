@@ -236,6 +236,47 @@ func makeDateTime(date, time int64) big.Int {
 	return *out
 }
 
+func unixToDateTime(secs, nsecs int64) big.Int {
+	out := big.NewInt(secs)
+	out.Mul(out, bigIntSecondExtent)
+	out.Add(out, big.NewInt(nsecs))
+	return *out
+}
+
+func unixMilliToDateTime(usecs int64) big.Int {
+	out := big.NewInt(usecs)
+	out.Mul(out, bigIntMillisecondExtent)
+	return *out
+}
+
+func unixMicroToDateTime(msecs int64) big.Int {
+	out := big.NewInt(msecs)
+	out.Mul(out, bigIntMicrosecondExtent)
+	return *out
+}
+
+func dateTimeToUnix(v big.Int) int64 {
+	vv := new(big.Int).Set(&v)
+	vv.Div(vv, bigIntSecondExtent)
+	return vv.Int64()
+}
+
+func dateTimeToUnixMilli(v big.Int) int64 {
+	vv := new(big.Int).Set(&v)
+	vv.Div(vv, bigIntMillisecondExtent)
+	return vv.Int64()
+}
+
+func dateTimeToUnixMicro(v big.Int) int64 {
+	vv := new(big.Int).Set(&v)
+	vv.Div(vv, bigIntMicrosecondExtent)
+	return vv.Int64()
+}
+
+func dateTimeToUnixNano(v big.Int) int64 {
+	return v.Int64()
+}
+
 func addDurationToBigDate(d big.Int, v Duration) (big.Int, error) {
 	out := new(big.Int).Set(&d)
 	out.Add(out, &v.v)

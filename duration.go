@@ -272,7 +272,9 @@ var (
 	bigIntMinInt64 = new(big.Int).Lsh(big.NewInt(int64(-Second)), 63)
 	bigIntMaxInt64 = new(big.Int).Add(new(big.Int).Lsh(big.NewInt(int64(Second)), 63), big.NewInt(-1))
 
-	bigIntSecondExtent = big.NewInt(int64(Second))
+	bigIntSecondExtent      = big.NewInt(int64(Second))
+	bigIntMillisecondExtent = big.NewInt(int64(Millisecond))
+	bigIntMicrosecondExtent = big.NewInt(int64(Microsecond))
 
 	bigFloatMicrosecondExtent = big.NewFloat(float64(Microsecond))
 	bigFloatMillisecondExtent = big.NewFloat(float64(Millisecond))
